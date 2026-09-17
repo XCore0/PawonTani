@@ -1,58 +1,176 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PawonTani
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+PawonTani adalah aplikasi informasi dan administrasi kelompok tani berbasis Laravel. Aplikasi ini menyediakan pengelolaan data kelompok tani dan pengurus, termasuk tambah, lihat, edit, hapus, pencarian, filter, dan status data.
 
-## About Laravel
+## Teknologi
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3 atau lebih baru
+- Laravel 13
+- SQLite atau MySQL/MariaDB
+- Node.js dan npm
+- Vite dan Tailwind CSS
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Persyaratan Sistem
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Pastikan perangkat sudah memiliki PHP 8.3+, Composer, Node.js 20.19+ atau 22.12+, npm, Git, dan database SQLite, MySQL, atau MariaDB. Pada Windows, Laragon dapat digunakan sebagai web server lokal.
 
-## Learning Laravel
+## Instalasi
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Clone repository dan masuk ke folder project:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/XCore0/PawonTani.git
+cd PawonTani
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Install dependency PHP dan frontend:
 
-## Contributing
+```bash
+composer install
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Buat file environment:
 
-## Code of Conduct
+```bash
+cp .env.example .env
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Pada Windows PowerShell:
 
-## Security Vulnerabilities
+```powershell
+Copy-Item .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Generate application key:
 
-## License
+```bash
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Konfigurasi Database
+
+### SQLite
+
+Buat file database SQLite:
+
+```bash
+php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+```
+
+Pastikan `.env` berisi:
+
+```env
+DB_CONNECTION=sqlite
+```
+
+### MySQL atau MariaDB
+
+Buat database baru, kemudian sesuaikan `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pawontani
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Sesuaikan nilai tersebut dengan konfigurasi database lokal.
+
+## Migrasi dan Data Awal
+
+Jalankan migrasi:
+
+```bash
+php artisan migrate
+```
+
+Seeder kelompok tani dan pengurus dijalankan terpisah:
+
+```bash
+php artisan db:seed --class=KelompokTaniSeeder
+php artisan db:seed --class=PenggunaSeeder
+```
+
+Untuk menghapus database dan mengisi ulang data:
+
+```bash
+php artisan migrate:fresh
+php artisan db:seed --class=KelompokTaniSeeder
+php artisan db:seed --class=PenggunaSeeder
+```
+
+Data contoh pengurus menggunakan password `password123`. Gunakan hanya untuk pengembangan lokal dan jangan gunakan password tersebut di production.
+
+## Menjalankan Aplikasi
+
+Jalankan server Laravel:
+
+```bash
+php artisan serve
+```
+
+Buka `http://127.0.0.1:8000` di browser.
+
+Untuk menjalankan Vite dalam mode development, buka terminal kedua:
+
+```bash
+npm run dev
+```
+
+Untuk membuat asset production:
+
+```bash
+npm run build
+```
+
+## Menjalankan dengan Laragon
+
+1. Letakkan project di `C:\laragon\www\PawonTani`.
+2. Jalankan Apache/Nginx dan database dari Laragon.
+3. Buat `.env` dari `.env.example` dan konfigurasi database.
+4. Jalankan `composer install` dan `npm install`.
+5. Jalankan migrasi dan seeder.
+6. Buka `http://pawontani.test` jika auto virtual host Laragon aktif, atau gunakan `php artisan serve`.
+
+## Struktur Fitur
+
+- Beranda publik: `/`
+- Halaman login: `/login`
+- Dashboard admin: `/admin/dashboard`
+- Kelompok tani: `/admin/kelompok`
+- Pengurus: `/admin/pengurus`
+
+Navigasi antarhalaman admin menggunakan pemuatan content secara dinamis agar sidebar dan header tidak perlu dimuat ulang setiap berpindah menu.
+
+## Pengujian
+
+Jalankan test Laravel:
+
+```bash
+php artisan test
+```
+
+Atau gunakan script Composer:
+
+```bash
+composer test
+```
+
+## Keamanan
+
+Jangan commit atau upload file berikut ke repository:
+
+- `.env`
+- credential, token, dan secret
+- private key dan certificate
+- file upload pengguna
+- log aplikasi
+
+Gunakan `.env.example` sebagai template konfigurasi dan isi nilai rahasia hanya pada environment lokal atau server deployment.
+
+## Lisensi
+
+Project ini menggunakan lisensi MIT.
