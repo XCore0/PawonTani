@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@theme {
+	--font-sans: 'Plus Jakarta Sans', sans-serif;
+	--color-pawon-50: #F5F8F1;
+	--color-pawon-100: #EBF6E0;
+	--color-pawon-600: #72BE4A;
+	--color-pawon-700: #4D9830;
+	--color-pawon-800: #3D8024;
+	--color-pawon-900: #1A2D10;
+}
