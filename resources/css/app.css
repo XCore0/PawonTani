@@ -9,3 +9,13 @@
 	--color-pawon-800: #3D8024;
 	--color-pawon-900: #1A2D10;
 }
+
+@media (min-width: 1024px) {
+	.admin-shell-content {
+		margin-left: 230px;
+	}
+}
+
+.admin-placeholder-content {
+	min-height: calc(100vh - 9rem);
+}

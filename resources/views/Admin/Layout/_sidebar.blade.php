@@ -7,12 +7,12 @@
 
   <!-- 1. Sidebar Header (Brand Logo & Name) -->
   <div>
-    <div class="h-[76px] px-4 flex items-center border-b border-[#F0F7E8]">
-      <a href="{{ route('admin.pengurus') }}" class="flex items-center group py-1">
+    <div class="relative h-16 px-4 flex items-center justify-center border-b border-[#F0F7E8]">
+      <a href="{{ route('admin.pengurus') }}" class="flex items-center justify-center group py-1">
         <img src="{{ asset('images/Logo2.png') }}" alt="PawonTani Logo" class="h-9 sm:h-10 w-auto max-w-[170px] object-contain hover:opacity-95 transition-opacity">
       </a>
       <!-- Mobile Close Button -->
-      <button id="sidebar-close-btn" class="ml-auto lg:hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100" aria-label="Tutup Menu">
+      <button id="sidebar-close-btn" class="absolute right-4 lg:hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100" aria-label="Tutup Menu">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -35,70 +35,55 @@
 
           <!-- Kelompok Tani -->
           <a href="{{ route('admin.kelompok') }}"
-            class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.kelompok') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
-            @if(request()->routeIs('admin.kelompok'))
-              <div class="absolute -left-3 top-1.5 bottom-1.5 w-1 rounded-r-md bg-[#4D9830]"></div>
-            @endif
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.kelompok') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
             <i data-lucide="users" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('admin.kelompok') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
             <span>Kelompok Tani</span>
           </a>
 
           <!-- Pengurus (Active Item in mockup) -->
           <a href="{{ route('admin.pengurus') }}"
-            class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all group {{ request()->routeIs('admin.pengurus') ? 'bg-[#EBF6E0] text-[#4D9830]' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
-            @if(request()->routeIs('admin.pengurus'))
-              <div class="absolute -left-3 top-1.5 bottom-1.5 w-1 rounded-r-md bg-[#4D9830]"></div>
-            @endif
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all group {{ request()->routeIs('admin.pengurus') ? 'bg-[#EBF6E0] text-[#4D9830]' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
             <i data-lucide="user-check" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('admin.pengurus') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
             <span>Pengurus</span>
           </a>
 
           <!-- Verifikasi Lapangan -->
-          <a href="#" onclick="alert('Menu Verifikasi Lapangan'); return false;"
+          <a href="{{ route('admin.verifikasi') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
             <i data-lucide="file-check" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
             <span>Verifikasi Lapangan</span>
           </a>
 
-          <!-- Komoditas -->
-          <a href="#" onclick="alert('Menu Komoditas'); return false;"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
-            <i data-lucide="sprout" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
-            <span>Komoditas</span>
-          </a>
+          <!-- Edukasi -->
+          <details class="group">
+            <summary class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all cursor-pointer list-none">
+              <span class="flex items-center gap-3">
+                <i data-lucide="book-open" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
+                <span>Edukasi</span>
+              </span>
+              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#9AB880] transition-transform group-open:rotate-180"></i>
+            </summary>
+            <div class="mt-1 ml-7 space-y-1 border-l border-[#E4F0D6] pl-3">
+              <a href="{{ route('admin.edukasi.tips') }}"
+                class="block rounded-lg px-3 py-2 text-xs font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-colors">
+                Tips
+              </a>
+              <a href="{{ route('admin.edukasi.artikel') }}"
+                class="block rounded-lg px-3 py-2 text-xs font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-colors">
+                Artikel
+              </a>
+              <a href="{{ route('admin.edukasi.panduan') }}"
+                class="block rounded-lg px-3 py-2 text-xs font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-colors">
+                Panduan
+              </a>
+            </div>
+          </details>
 
           <!-- Aktivitas -->
-          <a href="#" onclick="alert('Menu Aktivitas'); return false;"
+          <a href="{{ route('admin.aktivitas') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
             <i data-lucide="activity" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
             <span>Aktivitas</span>
-          </a>
-        </nav>
-      </div>
-
-      <!-- Section: AKUN -->
-      <div>
-        <span class="block px-3 mb-2 text-[11px] font-semibold text-[#9AB880] tracking-wider uppercase">
-          Akun
-        </span>
-        <nav class="space-y-1">
-          <!-- Notifikasi with Badge -->
-          <a href="#" onclick="alert('3 Notifikasi Baru'); return false;"
-            class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
-            <div class="flex items-center gap-3">
-              <i data-lucide="bell" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
-              <span>Notifikasi</span>
-            </div>
-            <span class="px-2 py-0.5 text-[11px] font-bold text-white bg-[#F4A020] rounded-full">
-              3
-            </span>
-          </a>
-
-          <!-- Profil -->
-          <a href="#" onclick="alert('Profil Pengguna'); return false;"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
-            <i data-lucide="user" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
-            <span>Profil</span>
           </a>
         </nav>
       </div>
@@ -123,12 +108,6 @@
       </div>
     </div>
 
-    <!-- Keluar Button (matching SVG spec #FFF5F5 / border #FCA5A5 / text #DC2626) -->
-    <a href="{{ route('login') }}"
-      class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-[#FFF5F5] border border-[#FCA5A5] text-xs font-semibold text-[#DC2626] hover:bg-red-100 hover:border-red-300 transition-colors shadow-2xs">
-      <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-      <span>Keluar</span>
-    </a>
   </div>
 
 </aside>

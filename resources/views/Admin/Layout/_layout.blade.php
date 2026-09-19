@@ -56,14 +56,14 @@
   @include('Admin.Layout._sidebar')
 
   <!-- Main Content Wrapper (shifted by 230px on desktop lg:ml-[230px]) -->
-  <div class="flex-1 flex flex-col min-w-0 lg:ml-[230px] min-h-screen">
+  <div class="admin-shell-content flex-1 flex flex-col min-w-0 min-h-screen">
 
     <!-- Include Header (64px high) -->
     @include('Admin.Layout._header')
 
     <!-- Main Page Body -->
     <div class="relative flex-1 min-h-0">
-      <main id="admin-content" data-admin-content class="h-full p-4 sm:p-6 lg:p-8 overflow-y-auto">
+      <main id="admin-content" data-admin-content class="h-full min-w-0 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
         @yield('content')
       </main>
 
@@ -107,36 +107,64 @@
       if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
       if (backdrop) backdrop.addEventListener('click', closeSidebar);
 
+      document.querySelectorAll('[data-dropdown-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const dropdown = document.getElementById(trigger.dataset.dropdownTrigger);
+          if (!dropdown) return;
+
+          document.querySelectorAll('[data-header-dropdown] > div[id]').forEach((item) => {
+            if (item !== dropdown) item.classList.add('hidden');
+          });
+          dropdown.classList.toggle('hidden');
+        });
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('[data-header-dropdown]')) {
+          document.querySelectorAll('[data-header-dropdown] > div[id]').forEach((dropdown) => {
+            dropdown.classList.add('hidden');
+          });
+        }
+      });
+
       const adminContent = document.querySelector('[data-admin-content]');
       const adminLoading = document.getElementById('admin-loading');
-      const adminLinks = document.querySelectorAll('#sidebar a[href], header a[href]');
+      const adminLinks = document.querySelectorAll('#sidebar nav a[href], header a[href]');
 
       function updateAdminNavigation(url) {
         const currentPath = new URL(url, window.location.origin).pathname;
         let activeLabel = 'Pengurus';
 
-        document.querySelectorAll('#sidebar a[href]').forEach((link) => {
+        document.querySelectorAll('#sidebar nav a[href]').forEach((link) => {
+          if (link.getAttribute('href') === '#') return;
           const linkPath = new URL(link.href, window.location.origin).pathname;
           const isActive = linkPath === currentPath;
-          const marker = link.querySelector(':scope > div.absolute');
 
           link.classList.toggle('bg-[#EBF6E0]', isActive);
           link.classList.toggle('text-[#4D9830]', isActive);
           link.classList.toggle('font-semibold', isActive);
           link.classList.toggle('text-[#4A6030]', !isActive);
 
+          const icon = link.querySelector('[data-lucide]');
+          if (icon) {
+            icon.classList.toggle('text-[#4D9830]', isActive);
+            icon.classList.toggle('text-[#4A6030]', !isActive);
+            icon.classList.toggle('group-hover:text-[#1A2D10]', !isActive);
+          }
+
           if (isActive) {
-            activeLabel = link.querySelector('span')?.textContent.trim() || activeLabel;
-            if (!marker) {
-              const activeMarker = document.createElement('div');
-              activeMarker.className = 'absolute -left-3 top-1.5 bottom-1.5 w-1 rounded-r-md bg-[#4D9830]';
-              link.classList.add('relative');
-              link.prepend(activeMarker);
-            }
-          } else if (marker) {
-            marker.remove();
+            activeLabel = link.querySelector('span')?.textContent.trim() || link.textContent.trim() || activeLabel;
           }
         });
+
+        const currentAdminLink = Array.from(document.querySelectorAll('#sidebar nav a[href], header a[href]')).find((link) => {
+          if (link.getAttribute('href') === '#') return false;
+          return new URL(link.href, window.location.origin).pathname === currentPath;
+        });
+        if (currentAdminLink?.dataset.adminTitle) {
+          activeLabel = currentAdminLink.dataset.adminTitle;
+        }
 
         const pageTitle = document.querySelector('[data-admin-page-title]');
         if (pageTitle) pageTitle.textContent = activeLabel;
