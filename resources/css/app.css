@@ -19,3 +19,9 @@
 .admin-placeholder-content {
 	min-height: calc(100vh - 9rem);
 }
+
+@media (min-width: 1024px) {
+	.pengurus-shell-content {
+		margin-left: 230px;
+	}
+}

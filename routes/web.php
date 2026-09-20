@@ -14,14 +14,89 @@ Route::post('/login', function () {
     return redirect()->route('admin.pengurus');
 });
 
+/* ============================================================
+   Helper: Error / Coming Soon Page
+   ============================================================ */
+$errorPage = function (string $pageTitle, string $description, string $layout = 'Admin.Layout._layout') {
+    return view('Error', compact('pageTitle', 'description', 'layout'));
+};
+
+/* ============================================================
+   PENGURUS ROUTES
+   ============================================================ */
+Route::prefix('pengurus')->name('pengurus.')->group(function () use ($errorPage) {
+    // Implemented pages
+    Route::get('/dashboard', function () {
+        return view('Pengurus.Content.Dashboard');
+    })->name('dashboard');
+
+    Route::get('/anggota', function () {
+        return view('Pengurus.Content.Anggota');
+    })->name('anggota');
+
+    // Pages in development
+    Route::get('/lahan', fn () => $errorPage(
+        'Kelola Lahan',
+        'Kelola data lahan pertanian anggota kelompok tani.',
+        'Pengurus.Layout._layout'
+    ))->name('lahan');
+
+    Route::get('/monitoring', fn () => $errorPage(
+        'Monitoring Pertanian',
+        'Pantau kondisi dan perkembangan pertanian secara real-time.',
+        'Pengurus.Layout._layout'
+    ))->name('monitoring');
+
+    Route::get('/panen', fn () => $errorPage(
+        'Panen',
+        'Catat dan kelola data hasil panen kelompok tani.',
+        'Pengurus.Layout._layout'
+    ))->name('panen');
+
+    Route::get('/penjualan', fn () => $errorPage(
+        'Penjualan',
+        'Kelola transaksi dan riwayat penjualan hasil pertanian.',
+        'Pengurus.Layout._layout'
+    ))->name('penjualan');
+
+    Route::get('/laporan', fn () => $errorPage(
+        'Laporan',
+        'Lihat dan unduh laporan aktivitas kelompok tani.',
+        'Pengurus.Layout._layout'
+    ))->name('laporan');
+
+    Route::get('/informasi', fn () => $errorPage(
+        'Informasi & Prediksi',
+        'Dapatkan informasi cuaca dan prediksi hasil pertanian.',
+        'Pengurus.Layout._layout'
+    ))->name('informasi');
+
+    Route::get('/edukasi', fn () => $errorPage(
+        'Edukasi',
+        'Akses materi edukasi dan panduan pertanian.',
+        'Pengurus.Layout._layout'
+    ))->name('edukasi');
+
+    Route::get('/notifikasi', fn () => $errorPage(
+        'Notifikasi',
+        'Lihat semua notifikasi dan pemberitahuan.',
+        'Pengurus.Layout._layout'
+    ))->name('notifikasi');
+
+    Route::get('/profil', fn () => $errorPage(
+        'Profil',
+        'Kelola informasi profil dan preferensi akun.',
+        'Pengurus.Layout._layout'
+    ))->name('profil');
+});
+
+/* ============================================================
+   ADMIN ROUTES
+   ============================================================ */
 use App\Http\Controllers\Admin\KelompokTaniController;
 use App\Http\Controllers\Admin\PengurusController;
 
-$developmentPage = function (string $pageTitle, string $description, string $icon) {
-    return view('Admin.Content.ComingSoon', compact('pageTitle', 'description', 'icon'));
-};
-
-Route::prefix('admin')->name('admin.')->group(function () use ($developmentPage) {
+Route::prefix('admin')->name('admin.')->group(function () use ($errorPage) {
     Route::get('/dashboard', function () {
         return view('Admin.Content.Dashboard');
     })->name('dashboard');
@@ -39,16 +114,16 @@ Route::prefix('admin')->name('admin.')->group(function () use ($developmentPage)
     Route::delete('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'destroy'])->name('kelompok.destroy');
 
     // Pages in development
-    Route::get('/verifikasi-lapangan', fn () => $developmentPage(
+    Route::get('/verifikasi-lapangan', fn () => $errorPage(
         'Verifikasi Lapangan',
-        'Kelola proses verifikasi data dan kondisi kelompok tani di lapangan.',
-        'file-check'
+        'Kelola proses verifikasi data dan kondisi kelompok tani di lapangan.'
     ))->name('verifikasi');
-    Route::get('/aktivitas', fn () => $developmentPage(
+
+    Route::get('/aktivitas', fn () => $errorPage(
         'Aktivitas',
-        'Pantau aktivitas pertanian dan kegiatan kelompok tani secara terpusat.',
-        'activity'
+        'Pantau aktivitas pertanian dan kegiatan kelompok tani secara terpusat.'
     ))->name('aktivitas');
+
     Route::get('/edukasi/tips', fn () => view('Admin.Content.Tips', [
         'contentType' => 'Tips',
         'items' => [
@@ -57,6 +132,7 @@ Route::prefix('admin')->name('admin.')->group(function () use ($developmentPage)
             ['title' => 'Tips Mempercepat Pertumbuhan Akar Tanaman Muda', 'target' => 'Semua Kelompok', 'image' => 'akar-tanam.jpg', 'date' => '2024-10-15', 'status' => 'Draft'],
         ],
     ]))->name('edukasi.tips');
+
     Route::get('/edukasi/artikel', fn () => view('Admin.Content.Artikel', [
         'contentType' => 'Artikel',
         'items' => [
@@ -65,6 +141,7 @@ Route::prefix('admin')->name('admin.')->group(function () use ($developmentPage)
             ['title' => 'Mengenal Varietas Padi Unggul untuk Lahan Kering', 'target' => 'Semua Kelompok', 'image' => 'varietas.jpg', 'date' => '2024-10-20', 'status' => 'Publik'],
         ],
     ]))->name('edukasi.artikel');
+
     Route::get('/edukasi/panduan', fn () => view('Admin.Content.Panduan', [
         'contentType' => 'Panduan',
         'items' => [
@@ -73,11 +150,11 @@ Route::prefix('admin')->name('admin.')->group(function () use ($developmentPage)
             ['title' => 'Panduan Pengolahan Tanah Sebelum Tanam', 'target' => 'Semua Kelompok', 'image' => 'olah-tanah.jpg', 'date' => '2024-10-10', 'status' => 'Draft'],
         ],
     ]))->name('edukasi.panduan');
+
     Route::get('/notifikasi', fn () => view('Admin.Content.Notifications'))->name('notifikasi');
-    Route::get('/profil', fn () => $developmentPage(
+
+    Route::get('/profil', fn () => $errorPage(
         'Profil',
-        'Kelola informasi profil dan preferensi akun administrator.',
-        'user'
+        'Kelola informasi profil dan preferensi akun administrator.'
     ))->name('profil');
 });
-

@@ -1,9 +1,12 @@
-@extends('Admin.Layout._layout')
+@php
+  $layout = $layout ?? 'Admin.Layout._layout';
+@endphp
+@extends($layout)
 
 @section('title', $pageTitle)
 
 @section('content')
-<div class="admin-placeholder-content flex w-full items-center justify-center">
+<div class="flex w-full items-center justify-center" style="min-height: calc(100vh - 9rem);">
   <div class="w-full max-w-lg rounded-[24px] border border-[#E4F0D6] bg-white p-8 text-center shadow-2xs sm:p-10">
     <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EBF6E0] text-[#4D9830]">
       <i data-lucide="hard-hat" class="h-8 w-8 animate-pulse"></i>
