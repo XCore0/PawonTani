@@ -3,7 +3,10 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
-
+use App\Http\Controllers\Admin\KelompokTaniController;
+use App\Http\Controllers\Admin\PengurusController;
+use App\Http\Controllers\Admin\ArtikelController;
+use App\Http\Controllers\ArtikelController as FrontendArtikelController;
 /* ============================================================
    AUTH ROUTES
    ============================================================ */
@@ -21,6 +24,12 @@ Route::get('/', function () {
 $errorPage = function (string $pageTitle, string $description, string $layout = 'Admin.Layout._layout') {
     return view('Error', compact('pageTitle', 'description', 'layout'));
 };
+
+/* ============================================================
+   PUBLIC ARTICLE ROUTES
+   ============================================================ */
+Route::get('/artikel', [FrontendArtikelController::class, 'index'])->name('artikel.index');
+Route::get('/artikel/{id}', [FrontendArtikelController::class, 'show'])->whereNumber('id')->name('artikel.show');
 
 /* ============================================================
    PENGURUS ROUTES (role: Pengurus)
@@ -91,8 +100,6 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
 /* ============================================================
    ADMIN ROUTES (role: PPL)
    ============================================================ */
-use App\Http\Controllers\Admin\KelompokTaniController;
-use App\Http\Controllers\Admin\PengurusController;
 use App\Http\Controllers\Admin\TipsController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(function () use ($errorPage) {
@@ -130,14 +137,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
     Route::delete('/edukasi/tips/{id_tips}', [TipsController::class, 'destroy'])->name('edukasi.tips.destroy');
     Route::post('/edukasi/komoditas', [TipsController::class, 'storeKomoditas'])->name('edukasi.komoditas.store');
 
-    Route::get('/edukasi/artikel', fn () => view('Admin.Content.Artikel', [
-        'contentType' => 'Artikel',
-        'items' => [
-            ['title' => 'Cara Tepat Penggunaan Pupuk NPK untuk Padi', 'target' => 'Semua Kelompok', 'image' => 'pupuk-npk.jpg', 'date' => '2024-11-15', 'status' => 'Publik'],
-            ['title' => 'Memanfaatkan Limbah Pertanian sebagai Kompos Berkualitas', 'target' => 'Semua Kelompok', 'image' => 'kompos.jpg', 'date' => '2024-11-05', 'status' => 'Draft'],
-            ['title' => 'Mengenal Varietas Padi Unggul untuk Lahan Kering', 'target' => 'Semua Kelompok', 'image' => 'varietas.jpg', 'date' => '2024-10-20', 'status' => 'Publik'],
-        ],
-    ]))->name('edukasi.artikel');
+    Route::get('/edukasi/artikel', [ArtikelController::class, 'index'])->name('edukasi.artikel');
+    Route::get('/edukasi/artikel/create', [ArtikelController::class, 'create'])->name('edukasi.artikel.create');
+    Route::post('/edukasi/artikel', [ArtikelController::class, 'store'])->name('edukasi.artikel.store');
+    Route::get('/edukasi/artikel/{artikel}', [ArtikelController::class, 'show'])->name('edukasi.artikel.show');
+    Route::get('/edukasi/artikel/{artikel}/edit', [ArtikelController::class, 'edit'])->name('edukasi.artikel.edit');
+    Route::put('/edukasi/artikel/{artikel}', [ArtikelController::class, 'update'])->name('edukasi.artikel.update');
+    Route::delete('/edukasi/artikel/{artikel}', [ArtikelController::class, 'destroy'])->name('edukasi.artikel.destroy');
 
     Route::get('/edukasi/panduan', fn () => view('Admin.Content.Panduan', [
         'contentType' => 'Panduan',

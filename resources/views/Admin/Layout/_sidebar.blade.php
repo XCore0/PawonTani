@@ -55,7 +55,7 @@
           </a>
 
           <!-- Edukasi -->
-          <details class="group">
+          <details class="group" data-education-menu>
             <summary class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all cursor-pointer list-none">
               <span class="flex items-center gap-3">
                 <i data-lucide="book-open" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
@@ -69,7 +69,7 @@
                 Tips
               </a>
               <a href="{{ route('admin.edukasi.artikel') }}"
-                class="block rounded-lg px-3 py-2 text-xs font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-colors">
+                class="block rounded-lg px-3 py-2 text-xs font-medium transition-colors {{ request()->routeIs('admin.edukasi.artikel*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
                 Artikel
               </a>
               <a href="{{ route('admin.edukasi.panduan') }}"
