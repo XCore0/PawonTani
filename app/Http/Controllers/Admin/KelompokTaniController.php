@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\KelompokTani;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class KelompokTaniController extends Controller
 {
@@ -58,11 +59,19 @@ class KelompokTaniController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_kelompok' => 'required|string|max:255',
+            'nama_kelompok' => [
+                'required',
+                'string',
+                'max:150',
+                'regex:/^[\pL\s]+$/u',
+                Rule::unique('kelompok_tani', 'nama_kelompok'),
+            ],
             'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
         ], [
             'nama_kelompok.required' => 'Nama kelompok tani wajib diisi.',
+            'nama_kelompok.regex' => 'Nama kelompok tani hanya boleh berisi huruf dan spasi.',
+            'nama_kelompok.unique' => 'Nama kelompok tani sudah terdaftar.',
             'alamat.required' => 'Alamat kelompok tani wajib diisi.',
             'status.required' => 'Status kelompok tani wajib dipilih.',
             'status.in' => 'Status harus berupa Aktif atau Tidak Aktif.',
@@ -95,11 +104,19 @@ class KelompokTaniController extends Controller
         $kelompok = KelompokTani::findOrFail($id_kelompok);
 
         $validated = $request->validate([
-            'nama_kelompok' => 'required|string|max:255',
+            'nama_kelompok' => [
+                'required',
+                'string',
+                'max:150',
+                'regex:/^[\pL\s]+$/u',
+                Rule::unique('kelompok_tani', 'nama_kelompok')->ignore($id_kelompok, 'id_kelompok'),
+            ],
             'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
         ], [
             'nama_kelompok.required' => 'Nama kelompok tani wajib diisi.',
+            'nama_kelompok.regex' => 'Nama kelompok tani hanya boleh berisi huruf dan spasi.',
+            'nama_kelompok.unique' => 'Nama kelompok tani sudah terdaftar.',
             'alamat.required' => 'Alamat kelompok tani wajib diisi.',
             'status.required' => 'Status kelompok tani wajib dipilih.',
             'status.in' => 'Status harus berupa Aktif atau Tidak Aktif.',

@@ -690,6 +690,22 @@
     if (window.lucide) {
       lucide.createIcons();
     }
+
+    // Prevent double form submission
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function (e) {
+        if (this.dataset.submitted === 'true') {
+          e.preventDefault();
+          return false;
+        }
+        this.dataset.submitted = 'true';
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('opacity-60', 'cursor-not-allowed');
+        }
+      });
+    });
   });
 </script>
 @endsection
