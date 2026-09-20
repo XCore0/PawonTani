@@ -471,6 +471,7 @@
           </label>
           <input type="text" name="username" id="form-username" required placeholder="sutrisno123" value="{{ old('username') }}"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
+          <span id="form-username-feedback" class="text-[11px] mt-1 hidden"></span>
         </div>
         <div>
           <label for="form-password" class="block font-semibold text-[#1A2D10] mb-1">
@@ -703,6 +704,7 @@
           </label>
           <input type="text" name="username" id="edit-username" required placeholder="sutrisno123"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
+          <span id="edit-username-feedback" class="text-[11px] mt-1 hidden"></span>
         </div>
         <div>
           <label for="edit-password" class="block font-semibold text-[#1A2D10] mb-1">
@@ -1068,6 +1070,70 @@
     if (window.lucide) {
       lucide.createIcons();
     }
+
+    // Real-time username availability check
+    const checkUrl = "{{ route('ajax.check-username') }}";
+    let usernameTimer = null;
+
+    function setupUsernameCheck(inputId, feedbackId, getExcludeId) {
+      const input = document.getElementById(inputId);
+      const feedback = document.getElementById(feedbackId);
+      if (!input || !feedback) return;
+
+      input.addEventListener('input', function () {
+        clearTimeout(usernameTimer);
+        const val = this.value.trim().toLowerCase();
+        if (val.length < 2) {
+          feedback.classList.add('hidden');
+          feedback.textContent = '';
+          input.style.borderColor = '';
+          return;
+        }
+        usernameTimer = setTimeout(() => {
+          const url = checkUrl + '?username=' + encodeURIComponent(val) + (getExcludeId ? '&exclude_id=' + encodeURIComponent(getExcludeId()) : '');
+          fetch(url)
+            .then(r => r.json())
+            .then(data => {
+              if (data.available) {
+                feedback.textContent = '✓ Username tersedia';
+                feedback.className = 'text-[11px] mt-1 text-emerald-600 font-medium';
+                input.style.borderColor = '#4D9830';
+              } else {
+                feedback.textContent = '✗ Username sudah digunakan';
+                feedback.className = 'text-[11px] mt-1 text-red-600 font-medium';
+                input.style.borderColor = '#DC2626';
+              }
+            })
+            .catch(() => {});
+        }, 400);
+      });
+    }
+
+    // Create form username check
+    setupUsernameCheck('form-username', 'form-username-feedback', null);
+
+    // Edit form username check (exclude current pengurus)
+    setupUsernameCheck('edit-username', 'edit-username-feedback', () => {
+      const form = document.getElementById('form-edit-pengurus');
+      const parts = form ? form.action.split('/') : [];
+      return parts[parts.length - 1] || '';
+    });
+
+    // Prevent double form submission
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function (e) {
+        if (this.dataset.submitted === 'true') {
+          e.preventDefault();
+          return false;
+        }
+        this.dataset.submitted = 'true';
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('opacity-60', 'cursor-not-allowed');
+        }
+      });
+    });
   });
 </script>
 @endsection

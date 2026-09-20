@@ -243,7 +243,7 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div><label for="anggota-username" class="block font-semibold text-[#1A2D10] mb-1">Username Login <span class="text-red-500">*</span></label><input type="text" name="username" id="anggota-username" required placeholder="sutrisno123" value="{{ old('username') }}" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20"></div>
+        <div><label for="anggota-username" class="block font-semibold text-[#1A2D10] mb-1">Username Login <span class="text-red-500">*</span></label><input type="text" name="username" id="anggota-username" required placeholder="sutrisno123" value="{{ old('username') }}" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20"><span id="anggota-username-feedback" class="text-[11px] mt-1 hidden"></span></div>
         <div><label for="anggota-password" class="block font-semibold text-[#1A2D10] mb-1">Password Login <span class="text-red-500">*</span></label><input type="password" name="password" id="anggota-password" required placeholder="Minimal 6 karakter" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20"></div>
       </div>
 
@@ -270,7 +270,7 @@
       @csrf @method('PUT')
       <div><label class="block font-semibold text-[#1A2D10] mb-1">Nama Lengkap <span class="text-red-500">*</span></label><input type="text" name="nama" id="edit-anggota-nama" required pattern="[A-Za-zÀ-ÿ .'-]+" title="Nama hanya boleh berisi huruf, spasi, titik, apostrof, atau tanda hubung." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">NIK</label><input type="text" name="nik" id="edit-anggota-nik" inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" title="NIK harus tepat 16 digit angka." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">No. Telepon</label><input type="tel" name="no_telepon" id="edit-anggota-telepon" inputmode="numeric" pattern="[0-9]+" maxlength="15" title="Nomor HP hanya boleh berisi angka." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div></div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">Username <span class="text-red-500">*</span></label><input type="text" name="username" id="edit-anggota-username" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Status <span class="text-red-500">*</span></label><select name="status" id="edit-anggota-status" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><option>Aktif</option><option>Tidak Aktif</option></select></div></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">Username <span class="text-red-500">*</span></label><input type="text" name="username" id="edit-anggota-username" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><span id="edit-anggota-username-feedback" class="text-[11px] mt-1 hidden"></span></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Status <span class="text-red-500">*</span></label><select name="status" id="edit-anggota-status" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><option>Aktif</option><option>Tidak Aktif</option></select></div></div>
       <div><label class="block font-semibold text-[#1A2D10] mb-1">Email</label><input type="email" name="email" id="edit-anggota-email" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Alamat</label><textarea name="alamat" id="edit-anggota-alamat" rows="2" class="w-full p-3 rounded-xl border border-[#C5DFB0] resize-none"></textarea></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Password Baru</label><input type="password" name="password" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]" placeholder="Kosongkan jika tidak diubah"></div>
       <div class="flex justify-end gap-2 pt-3 border-t border-[#E4F0D6]"><button type="button" onclick="closeModal('modal-edit-anggota')" class="px-4 py-2.5 rounded-xl border border-[#C5DFB0] font-semibold cursor-pointer">Batal</button><button type="submit" class="px-5 py-2.5 rounded-xl bg-[#4D9830] text-white font-bold cursor-pointer">Simpan Perubahan</button></div>
     </form>
@@ -284,6 +284,54 @@
   const openModalTambahAnggota = () => { anggotaModal.classList.remove('hidden'); anggotaModal.classList.add('flex'); };
   const closeModalTambahAnggota = () => { anggotaModal.classList.add('hidden'); anggotaModal.classList.remove('flex'); };
   anggotaModal?.addEventListener('click', (event) => { if (event.target === anggotaModal) closeModalTambahAnggota(); });
+
+  // Real-time username availability check
+  const usernameCheckUrl = "{{ route('ajax.check-username') }}";
+  let usernameTimer = null;
+
+  function setupUsernameCheck(inputId, feedbackId, getExcludeId) {
+    const input = document.getElementById(inputId);
+    const feedback = document.getElementById(feedbackId);
+    if (!input || !feedback) return;
+
+    input.addEventListener('input', function () {
+      clearTimeout(usernameTimer);
+      const val = this.value.trim().toLowerCase();
+      if (val.length < 2) {
+        feedback.classList.add('hidden');
+        feedback.textContent = '';
+        input.style.borderColor = '';
+        return;
+      }
+      usernameTimer = setTimeout(() => {
+        const url = usernameCheckUrl + '?username=' + encodeURIComponent(val) + (getExcludeId ? '&exclude_id=' + encodeURIComponent(getExcludeId()) : '');
+        fetch(url)
+          .then(r => r.json())
+          .then(data => {
+            if (data.available) {
+              feedback.textContent = '✓ Username tersedia';
+              feedback.className = 'text-[11px] mt-1 text-emerald-600 font-medium';
+              input.style.borderColor = '#4D9830';
+            } else {
+              feedback.textContent = '✗ Username sudah digunakan';
+              feedback.className = 'text-[11px] mt-1 text-red-600 font-medium';
+              input.style.borderColor = '#DC2626';
+            }
+          })
+          .catch(() => {});
+      }, 400);
+    });
+  }
+
+  // Create form username check
+  setupUsernameCheck('anggota-username', 'anggota-username-feedback', null);
+
+  // Edit form username check (exclude current anggota)
+  setupUsernameCheck('edit-anggota-username', 'edit-anggota-username-feedback', () => {
+    const form = document.getElementById('form-edit-anggota');
+    const parts = form ? form.action.split('/') : [];
+    return parts[parts.length - 1] || '';
+  });
 
   const sanitizeInput = (selector, sanitizer, maxLength = null) => {
     document.querySelectorAll(selector).forEach((input) => {

@@ -87,20 +87,46 @@ class PengurusController extends Controller
      */
     public function store(Request $request)
     {
+        $namaRegex = '/^[\pL\s.\'-]+$/u';
+
+        // Lowercase username before validation for case-insensitive unique check
+        $request->merge(['username' => strtolower($request->input('username', ''))]);
+
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'jabatan' => 'required|string|max:50',
+            'nama' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:' . $namaRegex,
+            ],
+            'jabatan' => [
+                'required',
+                'string',
+                'max:30',
+                function ($attribute, $value, $fail) use ($request) {
+                    $idKelompok = $request->input('id_kelompok');
+                    $count = Pengguna::where('jabatan', $value)
+                        ->where('id_kelompok', $idKelompok)
+                        ->where('role', 'Pengurus')
+                        ->count();
+                    $max = in_array($value, ['Ketua', 'Sekretaris', 'Bendahara']) ? 1 : 3;
+                    if ($count >= $max) {
+                        $fail("Jabatan {$value} pada kelompok ini sudah terisi (maksimal {$max} orang).");
+                    }
+                },
+            ],
             'id_kelompok' => 'required|string|exists:kelompok_tani,id_kelompok',
-            'nik' => 'nullable|string|max:50|unique:pengguna,nik',
-            'username' => 'required|string|max:100|alpha_dash|unique:pengguna,username',
+            'nik' => 'nullable|string|max:16|unique:pengguna,nik',
+            'username' => 'required|string|max:50|alpha_dash|unique:pengguna,username',
             'password' => 'required|string|min:6',
             'email' => 'nullable|email|max:255|unique:pengguna,email',
-            'no_telepon' => 'nullable|string|max:50',
+            'no_telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama.required' => 'Nama lengkap pengurus wajib diisi.',
+            'nama.regex' => "Nama hanya boleh berisi huruf, spasi, titik (.), strip (-), dan tanda petik (').",
             'jabatan.required' => 'Jabatan pengurus (Ketua, Sekretaris, dll) wajib dipilih.',
             'id_kelompok.required' => 'Kelompok tani asal / binaan wajib dipilih.',
             'id_kelompok.exists' => 'Kelompok tani yang dipilih tidak valid atau tidak ditemukan.',
@@ -136,7 +162,7 @@ class PengurusController extends Controller
             'jabatan' => $validated['jabatan'],
             'id_kelompok' => $validated['id_kelompok'],
             'nik' => $validated['nik'] ?? null,
-            'username' => strtolower($validated['username']),
+            'username' => $validated['username'],
             'password' => Hash::make($validated['password']),
             'email' => $validated['email'] ?? null,
             'no_telepon' => $validated['no_telepon'] ?? null,
@@ -165,20 +191,51 @@ class PengurusController extends Controller
     {
         $pengurus = Pengguna::where('role', 'Pengurus')->where('id_pengguna', $id_pengguna)->firstOrFail();
 
+        $namaRegex = '/^[\pL\s.\'-]+$/u';
+
+        // Lowercase username before validation for case-insensitive unique check
+        $request->merge(['username' => strtolower($request->input('username', ''))]);
+
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'jabatan' => 'required|string|max:50',
+            'nama' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:' . $namaRegex,
+            ],
+            'jabatan' => [
+                'required',
+                'string',
+                'max:30',
+                function ($attribute, $value, $fail) use ($request, $pengurus) {
+                    $idKelompok = $request->input('id_kelompok');
+
+                    // If this pengurus already holds this jabatan, allow (they keep their slot)
+                    if ($pengurus->jabatan === $value && $pengurus->id_kelompok === $idKelompok) {
+                        return;
+                    }
+
+                    $count = Pengguna::where('jabatan', $value)
+                        ->where('id_kelompok', $idKelompok)
+                        ->where('role', 'Pengurus')
+                        ->count();
+                    $max = in_array($value, ['Ketua', 'Sekretaris', 'Bendahara']) ? 1 : 3;
+                    if ($count >= $max) {
+                        $fail("Jabatan {$value} pada kelompok ini sudah terisi (maksimal {$max} orang).");
+                    }
+                },
+            ],
             'id_kelompok' => 'required|string|exists:kelompok_tani,id_kelompok',
             'nik' => [
                 'nullable',
                 'string',
-                'max:50',
+                'max:16',
                 Rule::unique('pengguna', 'nik')->ignore($pengurus->id_pengguna, 'id_pengguna'),
             ],
             'username' => [
                 'required',
                 'string',
-                'max:100',
+                'max:50',
                 'alpha_dash',
                 Rule::unique('pengguna', 'username')->ignore($pengurus->id_pengguna, 'id_pengguna'),
             ],
@@ -189,12 +246,13 @@ class PengurusController extends Controller
                 'max:255',
                 Rule::unique('pengguna', 'email')->ignore($pengurus->id_pengguna, 'id_pengguna'),
             ],
-            'no_telepon' => 'nullable|string|max:50',
+            'no_telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama.required' => 'Nama lengkap pengurus wajib diisi.',
+            'nama.regex' => "Nama hanya boleh berisi huruf, spasi, titik (.), strip (-), dan tanda petik (').",
             'jabatan.required' => 'Jabatan pengurus wajib dipilih.',
             'id_kelompok.required' => 'Kelompok tani asal wajib dipilih.',
             'id_kelompok.exists' => 'Kelompok tani tidak valid.',
@@ -215,7 +273,7 @@ class PengurusController extends Controller
             'jabatan' => $validated['jabatan'],
             'id_kelompok' => $validated['id_kelompok'],
             'nik' => $validated['nik'] ?? null,
-            'username' => strtolower($validated['username']),
+            'username' => $validated['username'],
             'email' => $validated['email'] ?? null,
             'no_telepon' => $validated['no_telepon'] ?? null,
             'alamat' => $validated['alamat'] ?? null,
@@ -279,5 +337,27 @@ class PengurusController extends Controller
 
         return redirect()->route('admin.pengurus')
             ->with('success', "Pengurus {$deletedName} ({$deletedId}) berhasil dihapus!");
+    }
+
+    /**
+     * Check username availability via AJAX.
+     * Query params: username (required), exclude_id (optional, for edit mode)
+     */
+    public function checkUsername(Request $request)
+    {
+        $username = strtolower($request->query('username', ''));
+        $excludeId = $request->query('exclude_id');
+
+        if ($username === '') {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Pengguna::where('username', $username);
+
+        if ($excludeId) {
+            $query->where('id_pengguna', '!=', $excludeId);
+        }
+
+        return response()->json(['available' => !$query->exists()]);
     }
 }

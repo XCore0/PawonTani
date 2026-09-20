@@ -156,3 +156,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
         'Kelola informasi profil dan preferensi akun administrator.'
     ))->name('profil');
 });
+
+/* ============================================================
+   SHARED AUTHENTICATED ROUTES (AJAX helpers)
+   ============================================================ */
+Route::middleware(['auth'])->group(function () {
+    Route::get('/ajax/check-username', [PengurusController::class, 'checkUsername'])
+        ->name('ajax.check-username');
+});
