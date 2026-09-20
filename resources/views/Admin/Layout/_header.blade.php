@@ -76,21 +76,24 @@
     <div class="relative" data-header-dropdown>
       <button type="button" data-dropdown-trigger="profile-dropdown" class="flex items-center gap-2.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border border-[#E4F0D6] hover:bg-[#F5F8F1] transition-colors cursor-pointer select-none">
         <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-[#4D9830] to-[#72BE4A] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
-          A
+          {{ strtoupper(substr(auth()->user()->nama ?? 'A', 0, 1)) }}
         </div>
         <div class="hidden sm:flex flex-col text-left">
           <span class="text-xs font-bold text-[#1A2D10] leading-tight">
-            Ahmad Fauzi
+            {{ auth()->user()->nama ?? 'Admin' }}
           </span>
           <span class="text-[10px] text-[#9AB880] leading-tight">
-            Admin
+            {{ auth()->user()->role ?? 'Admin' }}
           </span>
         </div>
         <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#4A6030]"></i>
       </button>
       <div id="profile-dropdown" class="absolute right-0 top-12 z-50 hidden w-48 overflow-hidden rounded-2xl border border-[#E4F0D6] bg-white p-1.5 shadow-xl">
         <a href="{{ route('admin.profil') }}" data-admin-title="Profil" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]"><i data-lucide="user" class="h-4 w-4"></i>Profil</a>
-        <a href="{{ route('login') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50"><i data-lucide="log-out" class="h-4 w-4"></i>Keluar</a>
+        <form method="POST" action="{{ route('logout') }}" class="w-full">
+          @csrf
+          <button type="submit" class="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 cursor-pointer"><i data-lucide="log-out" class="h-4 w-4"></i>Keluar</button>
+        </form>
       </div>
     </div>
 

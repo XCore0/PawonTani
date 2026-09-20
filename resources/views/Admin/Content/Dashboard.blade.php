@@ -11,7 +11,7 @@
     <div class="relative z-10 max-w-2xl space-y-2">
       <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold backdrop-blur-xs">
         <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-300"></i>
-        <span>Selamat Datang, Ahmad Fauzi, S.P.</span>
+        <span>Selamat Datang, {{ auth()->user()->nama ?? 'Admin' }}</span>
       </span>
       <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
         Panel Administrasi PawonTani

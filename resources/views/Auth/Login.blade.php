@@ -85,6 +85,18 @@
         </div>
       @endif
 
+      <!-- Error Messages -->
+      @if($errors->any())
+        <div class="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-2">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0 mt-0.5"></i>
+          <div>
+            @foreach($errors->all() as $error)
+              <p>{{ $error }}</p>
+            @endforeach
+          </div>
+        </div>
+      @endif
+
       <!-- Form Section -->
       <form id="login-form" method="POST" action="{{ route('login') }}" class="mt-6 space-y-4">
         @csrf

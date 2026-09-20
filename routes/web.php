@@ -1,18 +1,18 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+
+/* ============================================================
+   AUTH ROUTES
+   ============================================================ */
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/', function () {
     return view('home');
 })->name('home');
-
-Route::get('/login', function () {
-    return view('Auth.Login');
-})->name('login');
-
-Route::post('/login', function () {
-    return redirect()->route('admin.pengurus');
-});
 
 /* ============================================================
    Helper: Error / Coming Soon Page
@@ -22,9 +22,9 @@ $errorPage = function (string $pageTitle, string $description, string $layout = 
 };
 
 /* ============================================================
-   PENGURUS ROUTES
+   PENGURUS ROUTES (role: Pengurus)
    ============================================================ */
-Route::prefix('pengurus')->name('pengurus.')->group(function () use ($errorPage) {
+Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus'])->group(function () use ($errorPage) {
     // Implemented pages
     Route::get('/dashboard', function () {
         return view('Pengurus.Content.Dashboard');
@@ -77,11 +77,7 @@ Route::prefix('pengurus')->name('pengurus.')->group(function () use ($errorPage)
         'Pengurus.Layout._layout'
     ))->name('edukasi');
 
-    Route::get('/notifikasi', fn () => $errorPage(
-        'Notifikasi',
-        'Lihat semua notifikasi dan pemberitahuan.',
-        'Pengurus.Layout._layout'
-    ))->name('notifikasi');
+    Route::get('/notifikasi', fn () => view('Notifications', ['layout' => 'Pengurus.Layout._layout']))->name('notifikasi');
 
     Route::get('/profil', fn () => $errorPage(
         'Profil',
@@ -91,12 +87,12 @@ Route::prefix('pengurus')->name('pengurus.')->group(function () use ($errorPage)
 });
 
 /* ============================================================
-   ADMIN ROUTES
+   ADMIN ROUTES (role: PPL)
    ============================================================ */
 use App\Http\Controllers\Admin\KelompokTaniController;
 use App\Http\Controllers\Admin\PengurusController;
 
-Route::prefix('admin')->name('admin.')->group(function () use ($errorPage) {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(function () use ($errorPage) {
     Route::get('/dashboard', function () {
         return view('Admin.Content.Dashboard');
     })->name('dashboard');
@@ -151,7 +147,7 @@ Route::prefix('admin')->name('admin.')->group(function () use ($errorPage) {
         ],
     ]))->name('edukasi.panduan');
 
-    Route::get('/notifikasi', fn () => view('Admin.Content.Notifications'))->name('notifikasi');
+    Route::get('/notifikasi', fn () => view('Notifications'))->name('notifikasi');
 
     Route::get('/profil', fn () => $errorPage(
         'Profil',

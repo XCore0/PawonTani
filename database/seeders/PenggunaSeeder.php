@@ -20,6 +20,22 @@ class PenggunaSeeder extends Seeder
         $poktan3 = $poktans->firstWhere('nama_kelompok', 'Kelompok Tani Sri Rejeki') ?? $poktans->skip(2)->first() ?? $poktan1;
 
         $pengurusList = [
+            // ===== ADMIN / PPL =====
+            [
+                'nama' => 'Ahmad Fauzi, S.P.',
+                'nik' => '3201010101900001',
+                'username' => 'admin',
+                'password' => Hash::make('admin123'),
+                'email' => 'admin@pawontani.id',
+                'no_telepon' => '081111111111',
+                'alamat' => 'Kantor Dinas Pertanian, Kabupaten Bogor',
+                'role' => 'PPL',
+                'jabatan' => 'PPL',
+                'id_kelompok' => null,
+                'status' => 'Aktif',
+            ],
+
+            // ===== PENGURUS =====
             [
                 'nama' => 'Bpk. Sutrisno, S.P.',
                 'nik' => '3302181205750001',
