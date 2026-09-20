@@ -208,7 +208,7 @@
     <div class="px-6 py-4 border-b border-[#E4F0D6] flex items-center justify-between bg-[#F5F8F1]">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center"><i data-lucide="user-plus" class="w-4 h-4"></i></div>
-        <div><h3 class="text-base font-bold text-[#1A2D10]">Tambah Data Anggota</h3><p class="text-xs text-[#9AB880]">Simpan data anggota ke database</p></div>
+        <div><h3 class="text-base font-bold text-[#1A2D10]">Tambah Data Anggota</h3><p class="text-xs text-[#9AB880]"></p></div>
       </div>
       <button type="button" onclick="closeModalTambahAnggota()" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-white cursor-pointer" aria-label="Tutup"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
