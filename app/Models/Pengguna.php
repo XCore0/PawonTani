@@ -39,6 +39,11 @@ class Pengguna extends Authenticatable
         return $this->belongsTo(KelompokTani::class, 'id_kelompok', 'id_kelompok');
     }
 
+    public function anggota()
+    {
+        return $this->hasOne(Anggota::class, 'id_pengguna', 'id_pengguna');
+    }
+
     protected $hidden = [
         'password',
     ];

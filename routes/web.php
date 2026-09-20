@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Pengurus\AnggotaController;
+use App\Models\Pengguna;
+use Illuminate\Support\Facades\Hash;
 
 Route::get('/', function () {
     return view('home');
@@ -10,7 +13,26 @@ Route::get('/login', function () {
     return view('Auth.Login');
 })->name('login');
 
-Route::post('/login', function () {
+Route::post('/login', function (\Illuminate\Http\Request $request) {
+    $credentials = $request->validate([
+        'login' => 'required|string',
+        'password' => 'required|string',
+    ]);
+
+    $pengurus = Pengguna::where('role', 'Pengurus')
+        ->where(function ($query) use ($credentials) {
+            $query->where('username', $credentials['login'])
+                ->orWhere('email', $credentials['login']);
+        })
+        ->first();
+
+    if ($pengurus && Hash::check($credentials['password'], $pengurus->password)) {
+        $request->session()->regenerate();
+        $request->session()->put('pengurus_id', $pengurus->id_pengguna);
+
+        return redirect()->route('pengurus.dashboard');
+    }
+
     return redirect()->route('admin.pengurus');
 });
 
@@ -30,9 +52,10 @@ Route::prefix('pengurus')->name('pengurus.')->group(function () use ($errorPage)
         return view('Pengurus.Content.Dashboard');
     })->name('dashboard');
 
-    Route::get('/anggota', function () {
-        return view('Pengurus.Content.Anggota');
-    })->name('anggota');
+    Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota');
+    Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
+    Route::put('/anggota/{id_pengguna}', [AnggotaController::class, 'update'])->name('anggota.update');
+    Route::delete('/anggota/{id_pengguna}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
 
     // Pages in development
     Route::get('/lahan', fn () => $errorPage(
