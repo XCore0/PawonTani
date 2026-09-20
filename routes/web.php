@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Pengurus\AnggotaController;
 
 /* ============================================================
    AUTH ROUTES
@@ -30,9 +31,10 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
         return view('Pengurus.Content.Dashboard');
     })->name('dashboard');
 
-    Route::get('/anggota', function () {
-        return view('Pengurus.Content.Anggota');
-    })->name('anggota');
+    Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota');
+    Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
+    Route::put('/anggota/{id_pengguna}', [AnggotaController::class, 'update'])->name('anggota.update');
+    Route::delete('/anggota/{id_pengguna}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
 
     // Pages in development
     Route::get('/lahan', fn () => $errorPage(

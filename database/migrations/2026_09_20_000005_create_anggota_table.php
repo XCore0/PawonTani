@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('anggota', function (Blueprint $table) {
-            $table->id('id_anggota');
+            $table->string('id_anggota', 8)->primary();
             $table->string('id_pengguna', 50);
             $table->string('status_keanggotaan', 50)->default('Aktif'); // Aktif, Tidak Aktif
             $table->timestamps();
