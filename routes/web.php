@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
+use App\Services\CommodityService;
+use App\Services\HarvestPredictionService;
 
 /* ============================================================
    AUTH ROUTES
@@ -67,11 +70,51 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
         'Pengurus.Layout._layout'
     ))->name('laporan');
 
-    Route::get('/informasi', fn () => $errorPage(
-        'Informasi & Prediksi',
-        'Dapatkan informasi cuaca dan prediksi hasil pertanian.',
-        'Pengurus.Layout._layout'
-    ))->name('informasi');
+    Route::get('/informasi', function () {
+        $pengurus = Auth::user();
+        $kelompok = $pengurus?->kelompokTani;
+
+        $commodityService = app(CommodityService::class);
+        $harvestService = app(HarvestPredictionService::class);
+
+        // Data cuaca statis untuk tampilan (tanpa integrasi API cuaca)
+        $weatherData = [
+            'current' => [
+                'icon' => 'sun',
+                'temp' => '28°C',
+                'condition' => 'Cerah',
+                'humidity' => '72%',
+                'windSpeed' => '12 km/h',
+                'date' => now()->locale('id')->isoFormat('dddd, D MMM YYYY'),
+            ],
+            'forecast' => [
+                ['day' => 'Senin', 'icon' => 'sun', 'temp' => '28°C', 'rain' => '10%'],
+                ['day' => 'Selasa', 'icon' => 'cloud-sun', 'temp' => '26°C', 'rain' => '30%'],
+                ['day' => 'Rabu', 'icon' => 'cloud-rain', 'temp' => '24°C', 'rain' => '80%'],
+                ['day' => 'Kamis', 'icon' => 'cloud-rain-wind', 'temp' => '25°C', 'rain' => '60%'],
+                ['day' => 'Jumat', 'icon' => 'sun', 'temp' => '29°C', 'rain' => '5%'],
+                ['day' => 'Sabtu', 'icon' => 'cloud-sun', 'temp' => '27°C', 'rain' => '20%'],
+                ['day' => 'Minggu', 'icon' => 'sun', 'temp' => '30°C', 'rain' => '5%'],
+            ],
+            'recommendation' => [
+                'status' => 'good',
+                'message' => 'Baik untuk pemupukan & penyemprotan',
+            ],
+        ];
+
+        $commodities = $commodityService->getCommodityPrices();
+        $ricePrediction = $commodityService->getRicePricePrediction();
+        $harvestPredictions = $kelompok ? $harvestService->getPredictions($kelompok->id_kelompok) : [];
+
+        return view('Pengurus.Content.InformasiPrediksi', compact(
+            'kelompok',
+            'pengurus',
+            'weatherData',
+            'commodities',
+            'ricePrediction',
+            'harvestPredictions'
+        ));
+    })->name('informasi');
 
     Route::get('/edukasi', fn () => $errorPage(
         'Edukasi',
