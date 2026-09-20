@@ -9,7 +9,11 @@ use App\Services\HarvestPredictionService;
 use App\Http\Controllers\Admin\KelompokTaniController;
 use App\Http\Controllers\Admin\PengurusController;
 use App\Http\Controllers\Admin\ArtikelController;
+use App\Http\Controllers\Admin\PanduanController;
+use App\Http\Controllers\Admin\TipsController;
 use App\Http\Controllers\ArtikelController as FrontendArtikelController;
+use App\Http\Controllers\PanduanController as PublicPanduanController;
+
 /* ============================================================
    AUTH ROUTES
    ============================================================ */
@@ -33,6 +37,12 @@ $errorPage = function (string $pageTitle, string $description, string $layout = 
    ============================================================ */
 Route::get('/artikel', [FrontendArtikelController::class, 'index'])->name('artikel.index');
 Route::get('/artikel/{id}', [FrontendArtikelController::class, 'show'])->whereNumber('id')->name('artikel.show');
+
+/* ============================================================
+   PUBLIC PANDUAN
+   ============================================================ */
+Route::get('/edukasi/panduan', [PublicPanduanController::class, 'index'])->name('edukasi.panduan');
+Route::get('/edukasi/panduan/{slug}', [PublicPanduanController::class, 'show'])->name('edukasi.panduan.show');
 
 /* ============================================================
    PENGURUS ROUTES (role: Pengurus)
@@ -143,7 +153,6 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
 /* ============================================================
    ADMIN ROUTES (role: PPL)
    ============================================================ */
-use App\Http\Controllers\Admin\TipsController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(function () use ($errorPage) {
     Route::get('/dashboard', function () {
@@ -188,14 +197,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
     Route::put('/edukasi/artikel/{artikel}', [ArtikelController::class, 'update'])->name('edukasi.artikel.update');
     Route::delete('/edukasi/artikel/{artikel}', [ArtikelController::class, 'destroy'])->name('edukasi.artikel.destroy');
 
-    Route::get('/edukasi/panduan', fn () => view('Admin.Content.Panduan', [
-        'contentType' => 'Panduan',
-        'items' => [
-            ['title' => 'Panduan Lengkap Budidaya Jagung Hibrida', 'target' => 'Semua Kelompok', 'image' => 'jagung-hibrida.jpg', 'date' => '2024-11-10', 'status' => 'Publik'],
-            ['title' => 'Pengairan Efisien dengan Sistem Irigasi Tetes', 'target' => 'Kelompok Tani Mekar Sari', 'image' => 'irigasi-tetes.jpg', 'date' => '2024-10-28', 'status' => 'Publik'],
-            ['title' => 'Panduan Pengolahan Tanah Sebelum Tanam', 'target' => 'Semua Kelompok', 'image' => 'olah-tanah.jpg', 'date' => '2024-10-10', 'status' => 'Draft'],
-        ],
-    ]))->name('edukasi.panduan');
+    // Panduan CRUD
+    Route::get('/edukasi/panduan', [PanduanController::class, 'index'])->name('edukasi.panduan');
+    Route::post('/edukasi/panduan', [PanduanController::class, 'store'])->name('edukasi.panduan.store');
+    Route::get('/edukasi/panduan/create', [PanduanController::class, 'create'])->name('edukasi.panduan.create');
+    Route::get('/edukasi/panduan/{panduan}', [PanduanController::class, 'show'])->name('edukasi.panduan.show');
+    Route::get('/edukasi/panduan/{panduan}/edit', [PanduanController::class, 'edit'])->name('edukasi.panduan.edit');
+    Route::put('/edukasi/panduan/{panduan}', [PanduanController::class, 'update'])->name('edukasi.panduan.update');
+    Route::patch('/edukasi/panduan/{panduan}', [PanduanController::class, 'update']);
+    Route::delete('/edukasi/panduan/{panduan}', [PanduanController::class, 'destroy'])->name('edukasi.panduan.destroy');
 
     Route::get('/notifikasi', fn () => view('Notifications'))->name('notifikasi');
 

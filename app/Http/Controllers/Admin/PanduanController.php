@@ -1,0 +1,177 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePanduanRequest;
+use App\Http\Requests\UpdatePanduanRequest;
+use App\Models\Panduan;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+
+class PanduanController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $search = trim((string) $request->input('search', ''));
+        $status = $request->input('status');
+        $kategori = trim((string) $request->input('kategori', ''));
+        $komoditas = trim((string) $request->input('komoditas', ''));
+
+        $query = Panduan::query()
+            ->search($search)
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($kategori, fn ($q) => $q->where('kategori', $kategori))
+            ->when($komoditas, fn ($q) => $q->where('komoditas', $komoditas));
+
+        $panduan = $query->with('author')
+            ->latest('tanggal')
+            ->latest('id_panduan')
+            ->paginate(10)
+            ->withQueryString();
+
+        $categories = Panduan::query()->whereNotNull('kategori')->where('kategori', '<>', '')
+            ->distinct()->orderBy('kategori')->pluck('kategori');
+
+        $commodities = Panduan::query()->whereNotNull('komoditas')->where('komoditas', '<>', '')
+            ->distinct()->orderBy('komoditas')->pluck('komoditas');
+
+        $counts = [
+            'total' => Panduan::count(),
+            'publik' => Panduan::publik()->count(),
+            'draft' => Panduan::draft()->count(),
+        ];
+
+        return view('Admin.Content.Panduan', compact(
+            'panduan', 'categories', 'commodities', 'counts',
+            'search', 'status', 'kategori', 'komoditas'
+        ));
+    }
+
+    public function create(): View
+    {
+        return view('Admin.Content.PanduanForm', [
+            'panduan' => new Panduan(['tanggal' => now()->toDateString(), 'status' => 'draft']),
+            'formAction' => route('admin.edukasi.panduan.store'),
+            'formMethod' => 'POST',
+        ]);
+    }
+
+    public function store(StorePanduanRequest $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $data = $request->validated();
+        $data['slug'] = $this->uniqueSlug($data['judul']);
+        $data['created_by'] = auth()->id();
+
+        if ($request->hasFile('gambar')) {
+            $data['gambar'] = $this->storeImage($request);
+        }
+
+        $panduan = Panduan::create($data);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Panduan berhasil ditambahkan.',
+                'data' => $panduan->load('author'),
+                'redirect' => route('admin.edukasi.panduan'),
+            ], 201);
+        }
+
+        return redirect()->route('admin.edukasi.panduan')
+            ->with('success', 'Panduan berhasil ditambahkan.');
+    }
+
+    public function show(Panduan $panduan): View
+    {
+        return view('Admin.Content.PanduanShow', compact('panduan'));
+    }
+
+    public function edit(Panduan $panduan): View
+    {
+        return view('Admin.Content.PanduanForm', [
+            'panduan' => $panduan,
+            'formAction' => route('admin.edukasi.panduan.update', $panduan),
+            'formMethod' => 'PUT',
+        ]);
+    }
+
+    public function update(UpdatePanduanRequest $request, Panduan $panduan): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $data = $request->validated();
+
+        if ($panduan->judul !== $data['judul']) {
+            $data['slug'] = $this->uniqueSlug($data['judul'], $panduan->id_panduan);
+        }
+
+        if ($request->hasFile('gambar')) {
+            $this->deleteImage($panduan->gambar);
+            $data['gambar'] = $this->storeImage($request);
+        }
+
+        $panduan->update($data);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Panduan berhasil diperbarui.',
+                'data' => $panduan->fresh('author'),
+                'redirect' => route('admin.edukasi.panduan'),
+            ]);
+        }
+
+        return redirect()->route('admin.edukasi.panduan')
+            ->with('success', 'Panduan berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, Panduan $panduan): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $this->deleteImage($panduan->gambar);
+        $panduan->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Panduan berhasil dihapus.',
+                'redirect' => route('admin.edukasi.panduan'),
+            ]);
+        }
+
+        return redirect()->route('admin.edukasi.panduan')
+            ->with('success', 'Panduan berhasil dihapus.');
+    }
+
+    private function uniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title) ?: 'panduan';
+        $slug = $base;
+        $suffix = 2;
+
+        while (Panduan::query()->where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id_panduan', '<>', $ignoreId))
+            ->exists()) {
+            $slug = $base . '-' . $suffix++;
+        }
+
+        return $slug;
+    }
+
+    private function storeImage(Request $request): string
+    {
+        $directory = public_path('uploads/panduan');
+        File::ensureDirectoryExists($directory);
+
+        $file = $request->file('gambar');
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $file->move($directory, $filename);
+
+        return 'uploads/panduan/' . $filename;
+    }
+
+    private function deleteImage(?string $path): void
+    {
+        if ($path && File::exists(public_path($path))) {
+            File::delete(public_path($path));
+        }
+    }
+}

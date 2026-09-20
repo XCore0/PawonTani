@@ -55,11 +55,11 @@
           </a>
 
           <!-- Edukasi -->
-          <details class="group" data-education-menu>
+          <details class="group" data-education-menu {{ request()->routeIs('admin.edukasi.*') ? 'open' : '' }}>
             <summary class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all cursor-pointer list-none">
               <span class="flex items-center gap-3">
                 <i data-lucide="book-open" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
-                <span>Edukasi</span>
+                <span>Konten &amp; Edukasi</span>
               </span>
               <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#9AB880] transition-transform group-open:rotate-180"></i>
             </summary>

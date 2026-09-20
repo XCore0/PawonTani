@@ -159,6 +159,7 @@
 
           if (isActive) {
             activeLabel = link.querySelector('span')?.textContent.trim() || link.textContent.trim() || activeLabel;
+            link.closest('details')?.setAttribute('open', '');
           }
         });
 

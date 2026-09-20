@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             PenggunaSeeder::class,
             KomoditasSeeder::class,
             TipsSeeder::class,
+            PanduanSeeder::class,
         ]);
     }
 }
