@@ -56,7 +56,7 @@
       <div>
         <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Total Anggota</span>
         <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ count($anggota) }}</span>
-        <span class="text-[11px] text-[#4A6030] block mt-0.5 font-medium">Tercatat di Database</span>
+        <span class="text-[11px] text-[#4A6030] block mt-0.5 font-medium">Anggota terdaftar</span>
       </div>
     </div>
 
