@@ -130,7 +130,11 @@
 
       const adminContent = document.querySelector('[data-admin-content]');
       const adminLoading = document.getElementById('admin-loading');
-      const adminLinks = document.querySelectorAll('#sidebar nav a[href], header a[href]');
+      const isAdminNavigation = (link) => {
+        if (!link || link.getAttribute('href') === '#') return false;
+        const url = new URL(link.href, window.location.origin);
+        return url.origin === window.location.origin && url.pathname.startsWith('/admin/');
+      };
 
       function updateAdminNavigation(url) {
         const currentPath = new URL(url, window.location.origin).pathname;
@@ -139,7 +143,7 @@
         document.querySelectorAll('#sidebar nav a[href]').forEach((link) => {
           if (link.getAttribute('href') === '#') return;
           const linkPath = new URL(link.href, window.location.origin).pathname;
-          const isActive = linkPath === currentPath;
+          const isActive = linkPath === currentPath || (linkPath === '/admin/edukasi/artikel' && currentPath.startsWith('/admin/edukasi/artikel/'));
 
           link.classList.toggle('bg-[#EBF6E0]', isActive);
           link.classList.toggle('text-[#4D9830]', isActive);
@@ -165,6 +169,9 @@
         if (currentAdminLink?.dataset.adminTitle) {
           activeLabel = currentAdminLink.dataset.adminTitle;
         }
+
+        const educationDetails = document.querySelector('#sidebar details[data-education-menu]');
+        if (educationDetails) educationDetails.open = currentPath.startsWith('/admin/edukasi/');
 
         const pageTitle = document.querySelector('[data-admin-page-title]');
         if (pageTitle) pageTitle.textContent = activeLabel;
@@ -216,16 +223,15 @@
         }
       }
 
-      adminLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-          if (link.getAttribute('href') === '#') return;
-          const url = new URL(link.href, window.location.origin);
-          if (url.origin !== window.location.origin || !url.pathname.startsWith('/admin/')) return;
-          event.preventDefault();
-          loadAdminContent(url.href);
-          document.getElementById('sidebar-backdrop')?.classList.add('hidden');
-          document.getElementById('sidebar')?.classList.add('-translate-x-full');
-        });
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!isAdminNavigation(link)) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        event.preventDefault();
+        const url = new URL(link.href, window.location.origin);
+        loadAdminContent(url.href);
+        document.getElementById('sidebar-backdrop')?.classList.add('hidden');
+        document.getElementById('sidebar')?.classList.add('-translate-x-full');
       });
 
       window.addEventListener('popstate', () => loadAdminContent(window.location.href, false));
