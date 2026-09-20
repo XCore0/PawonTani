@@ -93,6 +93,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
    ============================================================ */
 use App\Http\Controllers\Admin\KelompokTaniController;
 use App\Http\Controllers\Admin\PengurusController;
+use App\Http\Controllers\Admin\TipsController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(function () use ($errorPage) {
     Route::get('/dashboard', function () {
@@ -122,14 +123,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
         'Pantau aktivitas pertanian dan kegiatan kelompok tani secara terpusat.'
     ))->name('aktivitas');
 
-    Route::get('/edukasi/tips', fn () => view('Admin.Content.Tips', [
-        'contentType' => 'Tips',
-        'items' => [
-            ['title' => '5 Tips Mengendalikan Hama Wereng Secara Alami', 'target' => 'Kelompok Tani Harapan Jaya', 'image' => 'wereng.jpg', 'date' => '2024-11-12', 'status' => 'Publik'],
-            ['title' => 'Tips Hemat Air Saat Musim Kemarau', 'target' => 'Semua Kelompok', 'image' => 'hemat-air.jpg', 'date' => '2024-10-30', 'status' => 'Publik'],
-            ['title' => 'Tips Mempercepat Pertumbuhan Akar Tanaman Muda', 'target' => 'Semua Kelompok', 'image' => 'akar-tanam.jpg', 'date' => '2024-10-15', 'status' => 'Draft'],
-        ],
-    ]))->name('edukasi.tips');
+    // Tips Edukasi CRUD
+    Route::get('/edukasi/tips', [TipsController::class, 'index'])->name('edukasi.tips');
+    Route::post('/edukasi/tips', [TipsController::class, 'store'])->name('edukasi.tips.store');
+    Route::put('/edukasi/tips/{id_tips}', [TipsController::class, 'update'])->name('edukasi.tips.update');
+    Route::delete('/edukasi/tips/{id_tips}', [TipsController::class, 'destroy'])->name('edukasi.tips.destroy');
+    Route::post('/edukasi/komoditas', [TipsController::class, 'storeKomoditas'])->name('edukasi.komoditas.store');
 
     Route::get('/edukasi/artikel', fn () => view('Admin.Content.Artikel', [
         'contentType' => 'Artikel',
