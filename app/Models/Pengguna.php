@@ -29,6 +29,13 @@ class Pengguna extends Authenticatable
         'jabatan',
         'id_kelompok',
         'status',
+        'provinsi_id',
+        'kabupaten_id',
+        'kecamatan_id',
+        'desa_id',
+        'lokasi_nama',
+        'latitude',
+        'longitude',
     ];
 
     /**

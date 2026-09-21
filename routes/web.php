@@ -76,48 +76,129 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     ))->name('laporan');
 
     Route::get('/informasi', function () {
+        /** @var \App\Models\Pengguna|null $pengurus */
         $pengurus = Auth::user();
         $kelompok = $pengurus?->kelompokTani;
 
         $commodityService = app(CommodityService::class);
         $harvestService = app(HarvestPredictionService::class);
 
-        // Data cuaca statis untuk tampilan (tanpa integrasi API cuaca)
-        $weatherData = [
-            'current' => [
-                'icon' => 'sun',
-                'temp' => '28°C',
-                'condition' => 'Cerah',
-                'humidity' => '72%',
-                'windSpeed' => '12 km/h',
-                'date' => now()->locale('id')->isoFormat('dddd, D MMM YYYY'),
-            ],
-            'forecast' => [
-                ['day' => 'Senin', 'icon' => 'sun', 'temp' => '28°C', 'rain' => '10%'],
-                ['day' => 'Selasa', 'icon' => 'cloud-sun', 'temp' => '26°C', 'rain' => '30%'],
-                ['day' => 'Rabu', 'icon' => 'cloud-rain', 'temp' => '24°C', 'rain' => '80%'],
-                ['day' => 'Kamis', 'icon' => 'cloud-rain-wind', 'temp' => '25°C', 'rain' => '60%'],
-                ['day' => 'Jumat', 'icon' => 'sun', 'temp' => '29°C', 'rain' => '5%'],
-                ['day' => 'Sabtu', 'icon' => 'cloud-sun', 'temp' => '27°C', 'rain' => '20%'],
-                ['day' => 'Minggu', 'icon' => 'sun', 'temp' => '30°C', 'rain' => '5%'],
-            ],
-            'recommendation' => [
-                'status' => 'good',
-                'message' => 'Baik untuk pemupukan & penyemprotan',
-            ],
-        ];
-
         $commodities = $commodityService->getCommodityPrices();
         $ricePrediction = $commodityService->getRicePricePrediction();
         $harvestPredictions = $kelompok ? $harvestService->getPredictions($kelompok->id_kelompok) : [];
+
+        // Weather data: fetch from Open-Meteo using stored coordinates
+        $weatherData = null;
+        $weatherError = null;
+        if ($pengurus && $pengurus->latitude && $pengurus->longitude) {
+            $lat = $pengurus->latitude;
+            $lon = $pengurus->longitude;
+            $lokasiNama = $pengurus->lokasi_nama ?? 'Lokasi tersimpan';
+
+            $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $lat . '&longitude=' . $lon .
+                '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' .
+                '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min' .
+                '&timezone=Asia%2FJakarta&forecast_days=7';
+            $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
+            $response = @file_get_contents($url, false, $ctx);
+            if ($response) {
+                $weatherData = json_decode($response, true);
+                if ($weatherData) {
+                    $weatherData['_lokasi_nama'] = $lokasiNama;
+                } else {
+                    $weatherError = 'Gagal memproses data cuaca.';
+                    $weatherData = null;
+                }
+            } else {
+                $weatherError = 'Gagal terhubung ke layanan cuaca. Coba lagi nanti.';
+            }
+        } elseif ($pengurus && $pengurus->kecamatan_id && !$pengurus->latitude) {
+            // Auto-geocode using kabupaten name from regions data
+            $regionsData = require app_path('Data/regions.php');
+            $kabupatenNama = null;
+            $lokasiNama = $pengurus->lokasi_nama ?? '';
+            
+            // Find kabupaten name from regions data
+            foreach ($regionsData as $prov) {
+                if (isset($prov['kotkab'][$pengurus->kabupaten_id])) {
+                    $kabupatenNama = $prov['kotkab'][$pengurus->kabupaten_id]['nama'] ?? null;
+                    break;
+                }
+            }
+            
+            // Clean up kabupaten name for geocoding (remove "KABUPATEN " or "KOTA " prefix)
+            $kabupatenClean = $kabupatenNama ? preg_replace('/^(KABUPATEN|KOTA)\s+/i', '', $kabupatenNama) : null;
+            
+            // Try geocoding with cleaned kabupaten name first, then original, then lokasi_nama
+            $searchTerms = array_filter([$kabupatenClean, $kabupatenNama, $lokasiNama]);
+            $lat = null;
+            $lon = null;
+            $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
+            
+            foreach ($searchTerms as $term) {
+                if (!$term) continue;
+                $geocodeUrl = 'https://geocoding-api.open-meteo.com/v1/search?name=' . urlencode($term) . '&count=3&language=id&format=json';
+                $geocodeResponse = @file_get_contents($geocodeUrl, false, $ctx);
+                if ($geocodeResponse) {
+                    $geocodeData = json_decode($geocodeResponse, true);
+                    if ($geocodeData && !empty($geocodeData['results'])) {
+                        // Find result that matches Indonesia
+                        foreach ($geocodeData['results'] as $result) {
+                            if (($result['country_code'] ?? '') === 'ID') {
+                                $lat = $result['latitude'] ?? null;
+                                $lon = $result['longitude'] ?? null;
+                                break;
+                            }
+                        }
+                        if ($lat && $lon) break;
+                    }
+                }
+            }
+            
+            if ($lat && $lon) {
+                // Save coordinates to database
+                $pengurus->update(['latitude' => $lat, 'longitude' => $lon]);
+                
+                // Fetch weather with the new coordinates
+                $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $lat . '&longitude=' . $lon .
+                    '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' .
+                    '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min' .
+                    '&timezone=Asia%2FJakarta&forecast_days=7';
+                $response = @file_get_contents($url, false, $ctx);
+                if ($response) {
+                    $weatherData = json_decode($response, true);
+                    if ($weatherData) {
+                        $weatherData['_lokasi_nama'] = $lokasiNama ?: $kabupatenNama;
+                    } else {
+                        $weatherError = 'Gagal memproses data cuaca.';
+                    }
+                } else {
+                    $weatherError = 'Gagal terhubung ke layanan cuaca.';
+                }
+            }
+            
+            if (!$weatherData && !$weatherError) {
+                $weatherError = 'Koordinat belum tersimpan. Silakan pilih lokasi dan simpan ulang.';
+            }
+        }
+
+        // Get all provinces for dropdown
+        $regions = require app_path('Data/regions.php');
+        $provinces = [];
+        foreach ($regions as $id => $data) {
+            $provinces[$id] = $data['nama'];
+        }
 
         return view('Pengurus.Content.InformasiPrediksi', compact(
             'kelompok',
             'pengurus',
             'weatherData',
+            'weatherError',
             'commodities',
             'ricePrediction',
-            'harvestPredictions'
+            'harvestPredictions',
+            'provinces',
+            'regions'
         ));
     })->name('informasi');
 
@@ -200,4 +281,107 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
 Route::middleware(['auth'])->group(function () {
     Route::get('/ajax/check-username', [PengurusController::class, 'checkUsername'])
         ->name('ajax.check-username');
+
+    // Location API for Pengurus
+    Route::get('/api/lokasi/kabupaten', function () {
+        $provId = request('provinsi_id');
+        if (!$provId) return response()->json([]);
+        $regions = require app_path('Data/regions.php');
+        $kotkab = $regions[$provId]['kotkab'] ?? [];
+        return response()->json($kotkab);
+    })->name('api.lokasi.kabupaten');
+
+    Route::get('/api/lokasi/kecamatan', function () {
+        $kabId = request('kabupaten_id');
+        if (!$kabId) return response()->json([]);
+        $regions = require app_path('Data/regions.php');
+        foreach ($regions as $prov) {
+            if (isset($prov['kotkab'][$kabId])) {
+                return response()->json($prov['kotkab'][$kabId]['kecamatan'] ?? []);
+            }
+        }
+        return response()->json([]);
+    })->name('api.lokasi.kecamatan');
+
+    Route::get('/api/lokasi/cuaca', function () {
+        $lat = request('lat');
+        $lon = request('lon');
+        if (!$lat || !$lon) return response()->json(['error' => 'lat dan lon diperlukan'], 400);
+
+        $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $lat . '&longitude=' . $lon .
+            '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' .
+            '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min' .
+            '&timezone=Asia%2FJakarta&forecast_days=7';
+        $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
+        $response = @file_get_contents($url, false, $ctx);
+
+        if (!$response) return response()->json(['error' => 'Gagal mengambil data cuaca'], 502);
+
+        $data = json_decode($response, true);
+        if (!$data) {
+            return response()->json(['error' => 'Data cuaca tidak tersedia'], 404);
+        }
+
+        return response()->json($data);
+    })->name('api.lokasi.cuaca');
+
+    Route::post('/api/lokasi/simpan', function () {
+        /** @var \App\Models\Pengguna $user */
+        $user = Auth::user();
+        $data = request()->validate([
+            'provinsi_id' => 'nullable|string|max:10',
+            'kabupaten_id' => 'nullable|string|max:10',
+            'kecamatan_id' => 'nullable|string|max:10',
+            'desa_id' => 'nullable|string|max:20',
+            'lokasi_nama' => 'nullable|string|max:200',
+        ]);
+        
+        // Geocode location name to get coordinates using Open-Meteo Geocoding API
+        $lat = null;
+        $lon = null;
+        if (!empty($data['lokasi_nama']) || !empty($data['kabupaten_id'])) {
+            // Get kabupaten name from regions data for better geocoding
+            $regionsData = require app_path('Data/regions.php');
+            $kabupatenNama = null;
+            if (!empty($data['kabupaten_id'])) {
+                foreach ($regionsData as $prov) {
+                    if (isset($prov['kotkab'][$data['kabupaten_id']])) {
+                        $kabupatenNama = $prov['kotkab'][$data['kabupaten_id']]['nama'] ?? null;
+                        break;
+                    }
+                }
+            }
+            
+            // Clean up kabupaten name (remove "KABUPATEN " or "KOTA " prefix)
+            $kabupatenClean = $kabupatenNama ? preg_replace('/^(KABUPATEN|KOTA)\s+/i', '', $kabupatenNama) : null;
+            
+            // Try multiple search terms
+            $searchTerms = array_filter([$kabupatenClean, $kabupatenNama, $data['lokasi_nama'] ?? null]);
+            $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
+            
+            foreach ($searchTerms as $term) {
+                $geocodeUrl = 'https://geocoding-api.open-meteo.com/v1/search?name=' . urlencode($term) . '&count=3&language=id&format=json';
+                $geocodeResponse = @file_get_contents($geocodeUrl, false, $ctx);
+                if ($geocodeResponse) {
+                    $geocodeData = json_decode($geocodeResponse, true);
+                    if ($geocodeData && !empty($geocodeData['results'])) {
+                        // Find result that matches Indonesia
+                        foreach ($geocodeData['results'] as $result) {
+                            if (($result['country_code'] ?? '') === 'ID') {
+                                $lat = $result['latitude'] ?? null;
+                                $lon = $result['longitude'] ?? null;
+                                break;
+                            }
+                        }
+                        if ($lat && $lon) break;
+                    }
+                }
+            }
+        }
+        
+        $data['latitude'] = $lat;
+        $data['longitude'] = $lon;
+        $user->update($data);
+        return response()->json(['success' => true, 'lokasi' => $user->lokasi_nama, 'lat' => $lat, 'lon' => $lon]);
+    })->name('api.lokasi.simpan');
 });
