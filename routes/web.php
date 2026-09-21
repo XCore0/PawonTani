@@ -11,8 +11,6 @@ use App\Http\Controllers\Admin\PengurusController;
 use App\Http\Controllers\Admin\ArtikelController;
 use App\Http\Controllers\Admin\PanduanController;
 use App\Http\Controllers\Admin\TipsController;
-use App\Http\Controllers\ArtikelController as FrontendArtikelController;
-use App\Http\Controllers\PanduanController as PublicPanduanController;
 
 /* ============================================================
    AUTH ROUTES
@@ -31,18 +29,6 @@ Route::get('/', function () {
 $errorPage = function (string $pageTitle, string $description, string $layout = 'Admin.Layout._layout') {
     return view('Error', compact('pageTitle', 'description', 'layout'));
 };
-
-/* ============================================================
-   PUBLIC ARTICLE ROUTES
-   ============================================================ */
-Route::get('/artikel', [FrontendArtikelController::class, 'index'])->name('artikel.index');
-Route::get('/artikel/{id}', [FrontendArtikelController::class, 'show'])->whereNumber('id')->name('artikel.show');
-
-/* ============================================================
-   PUBLIC PANDUAN
-   ============================================================ */
-Route::get('/edukasi/panduan', [PublicPanduanController::class, 'index'])->name('edukasi.panduan');
-Route::get('/edukasi/panduan/{slug}', [PublicPanduanController::class, 'show'])->name('edukasi.panduan.show');
 
 /* ============================================================
    PENGURUS ROUTES (role: Pengurus)
