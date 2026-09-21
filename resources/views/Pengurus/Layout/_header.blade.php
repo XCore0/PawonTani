@@ -27,7 +27,7 @@
 
     <!-- Kelompok Badge -->
     <span class="hidden rounded-full border border-[#B8D99B] bg-[#EBF6E0] px-3 py-1.5 text-[10px] font-semibold text-[#4D9830] sm:block">
-      <i data-lucide="sprout" class="mr-1 inline h-3 w-3"></i>Kelompok Tani Maju Bersama
+      <i data-lucide="sprout" class="mr-1 inline h-3 w-3"></i>{{ auth()->user()->kelompokTani->nama_kelompok ?? 'Kelompok Tani' }}
     </span>
 
     <!-- Notification Dropdown -->

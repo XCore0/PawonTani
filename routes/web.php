@@ -97,7 +97,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
 
             $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $lat . '&longitude=' . $lon .
                 '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' .
-                '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min' .
+                '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_mean' .
                 '&timezone=Asia%2FJakarta&forecast_days=7';
             $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
             $response = @file_get_contents($url, false, $ctx);
@@ -162,7 +162,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
                 // Fetch weather with the new coordinates
                 $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $lat . '&longitude=' . $lon .
                     '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' .
-                    '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min' .
+                    '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_mean' .
                     '&timezone=Asia%2FJakarta&forecast_days=7';
                 $response = @file_get_contents($url, false, $ctx);
                 if ($response) {
@@ -310,7 +310,7 @@ Route::middleware(['auth'])->group(function () {
 
         $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $lat . '&longitude=' . $lon .
             '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' .
-            '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min' .
+            '&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_mean' .
             '&timezone=Asia%2FJakarta&forecast_days=7';
         $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
         $response = @file_get_contents($url, false, $ctx);

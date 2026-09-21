@@ -18,26 +18,26 @@
   <!-- ==================== CUACA CARD ==================== -->
   <div class="rounded-2xl border border-[#E4F0D6] shadow-sm overflow-hidden">
     <!-- Location Selector Header -->
-    <div class="px-6 pt-5 pb-3 flex flex-wrap items-center gap-2 border-b border-[#E4F0D6] bg-white">
+    <div class="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 flex flex-wrap items-center gap-2 border-b border-[#E4F0D6] bg-white">
       <i data-lucide="map-pin" class="w-4 h-4 text-[#4D9830] shrink-0"></i>
       <span class="text-sm font-semibold text-[#1A2D10] mr-2">Lokasi Cuaca:</span>
   
-      <select id="select-provinsi" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830]">
+      <select id="select-provinsi" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830] w-full sm:w-auto">
         <option value="">Pilih Provinsi</option>
         @foreach($provinces as $id => $nama)
         <option value="{{ $id }}" {{ (string)($pengurus->provinsi_id ?? '') === (string)$id ? 'selected' : '' }}>{{ $nama }}</option>
         @endforeach
       </select>
   
-      <select id="select-kabupaten" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830] {{ !$pengurus->provinsi_id ? 'hidden' : '' }}">
+      <select id="select-kabupaten" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830] {{ !$pengurus->provinsi_id ? 'hidden' : '' }} w-full sm:w-auto">
         <option value="">Pilih Kabupaten</option>
       </select>
   
-      <select id="select-kecamatan" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830] {{ !$pengurus->kabupaten_id ? 'hidden' : '' }}">
+      <select id="select-kecamatan" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830] {{ !$pengurus->kabupaten_id ? 'hidden' : '' }} w-full sm:w-auto">
         <option value="">Pilih Kecamatan</option>
       </select>
   
-      <button type="button" id="btn-simpan-lokasi" class="ml-auto h-9 px-4 rounded-lg bg-[#4D9830] text-white text-sm font-medium hover:bg-[#3D8024] transition cursor-pointer disabled:opacity-50 {{ !$pengurus->kecamatan_id ? 'hidden' : '' }}" {{ !$pengurus->kecamatan_id ? 'disabled' : '' }}>
+      <button type="button" id="btn-simpan-lokasi" class="ml-auto h-9 px-4 rounded-lg bg-[#4D9830] text-white text-sm font-medium hover:bg-[#3D8024] transition cursor-pointer disabled:opacity-50 {{ !$pengurus->kecamatan_id ? 'hidden' : '' }} w-full sm:w-auto" {{ !$pengurus->kecamatan_id ? 'disabled' : '' }}>
         Simpan Lokasi
       </button>
     </div>
@@ -90,23 +90,24 @@
       else { $recMsg = 'Baik untuk pemupukan & penyemprotan.'; }
     @endphp
 
-    <!-- Green Weather Section -->
-    <div style="background: linear-gradient(to right, #2D8B4E, #3DA55E);" class="px-6 py-6">
-      <div class="flex items-start justify-between">
+    <!-- Green Weather Section + Forecast (1 gradient) -->
+    <div style="background: linear-gradient(135deg, #2E7D32 0%, #43A047 40%, #81C784 100%);">
+    <div class="px-4 sm:px-6 py-5 sm:py-6">
+      <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
         <!-- Left: Current Weather -->
-        <div class="flex items-start gap-4">
-          <i data-lucide="{{ $wmoIcon($currentWeatherCode) }}" class="w-14 h-14 {{ $wmoIconColor($currentWeatherCode) }} shrink-0 mt-1"></i>
+        <div class="flex items-start gap-3 sm:gap-4">
+          <i data-lucide="{{ $wmoIcon($currentWeatherCode) }}" class="w-12 h-12 sm:w-16 sm:h-16 text-white shrink-0 mt-1"></i>
           <div>
             <div class="flex items-baseline gap-1">
-              <span class="text-5xl font-bold text-white">{{ $currentTemp }}</span>
-              <span class="text-xl text-white/80">°C</span>
+              <span class="text-4xl sm:text-6xl font-bold text-white">{{ $currentTemp }}</span>
+              <span class="text-lg sm:text-2xl text-white/80">°C</span>
             </div>
-            <p class="text-sm text-white/90 mt-0.5">{{ $weatherDesc }} · {{ $lokasiDisplay }}</p>
-            <p class="text-xs text-white/60 mt-1">Kelembapan: {{ $currentHumidity ?? '--' }}% · Kecepatan Angin: {{ $currentWind ?? '--' }} km/h · {{ $currentDate }}</p>
+            <p class="text-xs sm:text-base text-white/90 mt-0.5">{{ $weatherDesc }} · {{ $lokasiDisplay }}</p>
+            <p class="text-[10px] sm:text-xs text-white/60 mt-1">Kelembapan: {{ $currentHumidity ?? '--' }}% · Kecepatan Angin: {{ $currentWind ?? '--' }} km/h · {{ $currentDate }}</p>
           </div>
         </div>
         <!-- Right: Rekomendasi -->
-        <div class="text-right shrink-0 ml-4">
+        <div class="text-right shrink-0 w-full sm:w-auto">
           <p class="text-xs text-white/70 mb-1.5">Rekomendasi Pertanian</p>
           <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-sm">
             <i data-lucide="check-circle" class="w-4 h-4 text-green-200"></i>
@@ -123,22 +124,44 @@
       $dailyMaxTemps = $daily['temperature_2m_max'] ?? [];
       $dailyMinTemps = $daily['temperature_2m_min'] ?? [];
       $dailyCodes = $daily['weather_code'] ?? [];
+      $dailyPrecip = $daily['precipitation_probability_mean'] ?? $daily['precipitation_probability_max'] ?? [];
     @endphp
-    <div class="bg-[#F0F7EB] p-4">
-      <div class="grid grid-cols-7 gap-2">
+    <div class="px-3 sm:px-6 pb-4 sm:pb-6">
+      <div class="flex gap-2 overflow-x-auto pb-1 sm:hidden">
         @foreach($dailyTimes as $dayIndex => $date)
         @php
-          $dayLo = round($dailyMinTemps[$dayIndex] ?? 0);
           $dayHi = round($dailyMaxTemps[$dayIndex] ?? 0);
           $dayCode = $dailyCodes[$dayIndex] ?? -1;
+          $dayPrecip = $dailyPrecip[$dayIndex] ?? null;
           $dayDate = \Carbon\Carbon::parse($date);
           $dayName = $dayIndex === 0 ? 'Hari ini' : $dayDate->locale('id')->isoFormat('ddd');
         @endphp
-        <div class="bg-white rounded-xl p-3 text-center shadow-sm">
-          <p class="text-xs font-medium text-[#6B7F5E] mb-2">{{ $dayName }}</p>
-          <i data-lucide="{{ $wmoIcon($dayCode) }}" class="w-7 h-7 mx-auto mb-2 {{ $wmoIconColor($dayCode) }}"></i>
-          <p class="text-lg font-bold text-[#1A2D10]">{{ $dayHi }}°</p>
-          <p class="text-xs text-[#9AB880] mt-0.5">{{ $dayLo }}°</p>
+        <div class="rounded-xl p-3 text-center min-w-[80px] flex-shrink-0" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);">
+          <p class="text-xs font-medium text-white/90 mb-2">{{ $dayName }}</p>
+          <i data-lucide="{{ $wmoIcon($dayCode) }}" class="w-7 h-7 mx-auto mb-2 text-white"></i>
+          <p class="text-lg font-bold text-white">{{ $dayHi }}°C</p>
+          @if($dayPrecip !== null)
+          <p class="text-[10px] text-white/70 mt-1">🌧 {{ round($dayPrecip) }}%</p>
+          @endif
+        </div>
+        @endforeach
+      </div>
+      <div class="hidden sm:grid sm:grid-cols-7 sm:gap-3">
+        @foreach($dailyTimes as $dayIndex => $date)
+        @php
+          $dayHi = round($dailyMaxTemps[$dayIndex] ?? 0);
+          $dayCode = $dailyCodes[$dayIndex] ?? -1;
+          $dayPrecip = $dailyPrecip[$dayIndex] ?? null;
+          $dayDate = \Carbon\Carbon::parse($date);
+          $dayName = $dayIndex === 0 ? 'Hari ini' : $dayDate->locale('id')->isoFormat('ddd');
+        @endphp
+        <div class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);">
+          <p class="text-xs font-medium text-white/90 mb-2">{{ $dayName }}</p>
+          <i data-lucide="{{ $wmoIcon($dayCode) }}" class="w-7 h-7 mx-auto mb-2 text-white"></i>
+          <p class="text-lg font-bold text-white">{{ $dayHi }}°C</p>
+          @if($dayPrecip !== null)
+          <p class="text-[10px] text-white/70 mt-1">🌧 {{ round($dayPrecip) }}%</p>
+          @endif
         </div>
         @endforeach
       </div>
@@ -146,8 +169,9 @@
     @endif
 
     <!-- Sumber Data -->
-    <div class="px-6 py-2 bg-white text-center border-t border-[#E4F0D6]">
-      <span class="text-[10px] text-[#9AB880]">Sumber data: Open-Meteo.com</span>
+    <div class="px-6 py-2 text-center">
+      <span class="text-[10px] text-white/40">Sumber data: Open-Meteo.com</span>
+    </div>
     </div>
     @else
     <!-- Belum pilih lokasi / Error -->
@@ -173,25 +197,6 @@
         <h2 class="text-lg font-bold text-[#1A2D10]">Harga Komoditas</h2>
         <span class="text-xs text-[#9AB880] font-medium">Update: {{ now()->locale('id')->isoFormat('D MMM YYYY') }}</span>
       </div>
-
-      <div class="space-y-4">
-        @foreach($commodities as $item)
-        <div class="pb-4 border-b border-[#E4F0D6] last:border-0 last:pb-0">
-          <div class="flex items-start justify-between">
-            <div>
-              <span class="text-sm font-semibold text-[#1A2D10] block">{{ $item['nama'] }}</span>
-              <span class="text-xs text-[#9AB880]">Sebelumnya: {{ $item['sebelum'] }}</span>
-            </div>
-            <div class="text-right">
-              <span class="text-lg font-bold text-[#1A2D10]">{{ $item['harga'] }}</span>
-              <span class="text-xs {{ $item['up'] ? 'text-emerald-600' : 'text-red-600' }} font-medium block">
-                {{ $item['up'] ? '↑' : '↓' }} {{ $item['change'] }}
-              </span>
-            </div>
-          </div>
-        </div>
-        @endforeach
-      </div>
     </div>
 
     <!-- RIGHT: Prediksi Panen & Harga -->
@@ -203,29 +208,6 @@
           <i data-lucide="wheat" class="w-5 h-5 text-[#4D9830]"></i>
           <h2 class="text-lg font-bold text-[#1A2D10]">Prediksi Panen</h2>
         </div>
-
-        <div class="space-y-4">
-          @forelse($harvestPredictions as $prediction)
-          <div class="p-4 rounded-xl bg-[#F5F8F1]">
-            <span class="text-sm font-semibold text-[#1A2D10] block">{{ $prediction['nama'] }}</span>
-            <span class="text-base font-bold text-[#4D9830] block mt-1">{{ $prediction['hasil'] }}</span>
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs text-[#9AB880]">Est. panen: {{ $prediction['est'] }}</span>
-              <span class="text-xs font-semibold {{ $prediction['color'] === 'green' ? 'text-[#4D9830]' : 'text-orange-600' }}">
-                Kepercayaan: {{ $prediction['confidence'] }}%
-              </span>
-            </div>
-            <div class="h-2 bg-[#E4F0D6] rounded-full overflow-hidden mt-2">
-              <div class="h-full {{ $prediction['color'] === 'green' ? 'bg-[#4D9830]' : 'bg-orange-500' }} rounded-full w-(--bar-width)" style="--bar-width: {{ $prediction['confidence'] }}%"></div>
-            </div>
-          </div>
-          @empty
-          <div class="text-center py-8 text-[#9AB880]">
-            <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-            <p class="text-sm">Belum ada data prediksi panen</p>
-          </div>
-          @endforelse
-        </div>
       </div>
 
       <!-- Prediksi Harga Padi -->
@@ -233,15 +215,6 @@
         <div class="flex items-center gap-2 mb-4">
           <i data-lucide="trending-up" class="w-5 h-5 text-[#4D9830]"></i>
           <h2 class="text-lg font-bold text-[#1A2D10]">Prediksi Harga Padi</h2>
-        </div>
-
-        <div>
-          <span class="text-xs text-[#9AB880] block mb-1">Prediksi {{ $ricePrediction['period'] }}</span>
-          <span class="text-3xl font-bold text-[#4D9830]">{{ $ricePrediction['minPrice'] }} – {{ $ricePrediction['maxPrice'] }}</span>
-          <div class="flex items-center gap-2 mt-2">
-            <i data-lucide="{{ $ricePrediction['trend'] === 'up' ? 'arrow-up' : 'arrow-down' }}" class="w-4 h-4 {{ $ricePrediction['trend'] === 'up' ? 'text-emerald-600' : 'text-red-600' }}"></i>
-            <span class="text-sm font-semibold {{ $ricePrediction['trend'] === 'up' ? 'text-emerald-600' : 'text-red-600' }}">{{ $ricePrediction['change'] }} dari bulan ini</span>
-          </div>
         </div>
       </div>
 

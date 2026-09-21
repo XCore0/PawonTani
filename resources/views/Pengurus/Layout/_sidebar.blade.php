@@ -98,30 +98,6 @@
           </a>
         </nav>
       </div>
-
-      <!-- Section: AKUN -->
-      <div>
-        <span class="block px-3 mb-2 text-[11px] font-semibold text-[#9AB880] tracking-wider uppercase">
-          Akun
-        </span>
-        <nav class="space-y-1">
-          <!-- Notifikasi -->
-          <a href="{{ route('pengurus.notifikasi') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group {{ request()->routeIs('pengurus.notifikasi') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : '' }}">
-            <i data-lucide="bell" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('pengurus.notifikasi') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
-            <span>Notifikasi</span>
-            <span class="ml-auto rounded-full bg-orange-400 px-1.5 py-0.5 text-[10px] font-bold text-white">3</span>
-          </a>
-
-          <!-- Profil -->
-          <a href="{{ route('pengurus.profil') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group {{ request()->routeIs('pengurus.profil') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : '' }}">
-            <i data-lucide="user" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('pengurus.profil') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
-            <span>Profil</span>
-          </a>
-        </nav>
-      </div>
-
     </div>
   </div>
 
