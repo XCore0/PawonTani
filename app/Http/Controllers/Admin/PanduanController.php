@@ -51,15 +51,6 @@ class PanduanController extends Controller
         ));
     }
 
-    public function create(): View
-    {
-        return view('Admin.Content.PanduanForm', [
-            'panduan' => new Panduan(['tanggal' => now()->toDateString(), 'status' => 'draft']),
-            'formAction' => route('admin.edukasi.panduan.store'),
-            'formMethod' => 'POST',
-        ]);
-    }
-
     public function store(StorePanduanRequest $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $data = $request->validated();
@@ -82,20 +73,6 @@ class PanduanController extends Controller
 
         return redirect()->route('admin.edukasi.panduan')
             ->with('success', 'Panduan berhasil ditambahkan.');
-    }
-
-    public function show(Panduan $panduan): View
-    {
-        return view('Admin.Content.PanduanShow', compact('panduan'));
-    }
-
-    public function edit(Panduan $panduan): View
-    {
-        return view('Admin.Content.PanduanForm', [
-            'panduan' => $panduan,
-            'formAction' => route('admin.edukasi.panduan.update', $panduan),
-            'formMethod' => 'PUT',
-        ]);
     }
 
     public function update(UpdatePanduanRequest $request, Panduan $panduan): RedirectResponse|\Illuminate\Http\JsonResponse

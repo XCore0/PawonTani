@@ -12,9 +12,11 @@
           'komoditas' => $item->komoditas,
           'ringkasan' => $item->ringkasan,
           'isi' => $item->isi,
-          'tanggal' => $item->tanggal?->format('Y-m-d'),
+          'tanggal' => $item->tanggal?->format('d F Y'),
           'status' => $item->status,
           'gambar' => $item->gambar ? asset($item->gambar) : null,
+          'slug' => $item->slug,
+          'author' => $item->author?->nama ?? '-',
           'update_url' => route('admin.edukasi.panduan.update', $item),
           'delete_url' => route('admin.edukasi.panduan.destroy', $item),
       ]];
@@ -31,25 +33,25 @@
 
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div class="flex items-start gap-3">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
         <i data-lucide="book-open" class="h-5 w-5"></i>
       </div>
       <div>
         <h1 class="text-xl font-extrabold tracking-tight text-[#1A2D10] sm:text-2xl">Manajemen Panduan</h1>
-        <p class="mt-1 text-xs font-medium text-[#9AB880]">Kelola panduan pertanian yang akan dibaca oleh pengguna.</p>
+        <p class="mt-1 text-xs font-medium text-[#9AB880]">Kelola tips praktis, panduan cepat, dan trik budidaya pertanian.</p>
       </div>
     </div>
 
     <button type="button" onclick="openPanduanCreateModal()"
-      class="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#3D8024]">
-      <i data-lucide="plus" class="h-4 w-4"></i>
-      Tambah Panduan
+      class="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#3D8024] cursor-pointer active:scale-95">
+      <i data-lucide="plus" class="h-4 w-4 stroke-[2.5]"></i>
+      <span>Tambah Panduan</span>
     </button>
   </div>
 
   <div class="flex flex-wrap gap-2">
-    <div class="flex items-center gap-2 rounded-lg border border-[#E4F0D6] bg-[#F5F8F1] px-3.5 py-2.5 text-xs text-[#4A6030]">
-      <strong class="text-lg leading-none text-[#4D9830]">{{ $counts['total'] }}</strong>
+    <div class="flex items-center gap-2 rounded-lg bg-[#FFF4D6] px-3.5 py-2.5 text-xs text-[#4A6030]">
+      <strong class="text-lg leading-none text-[#D97706]">{{ $counts['total'] }}</strong>
       <span>Total Panduan</span>
     </div>
     <div class="flex items-center gap-2 rounded-lg bg-[#DFF7E7] px-3.5 py-2.5 text-xs text-[#287442]">
@@ -62,112 +64,144 @@
     </div>
   </div>
 
-  <div class="overflow-hidden rounded-[20px] border border-[#E4F0D6] bg-white shadow-2xs">
-    <form method="GET" action="{{ route('admin.edukasi.panduan') }}" class="flex flex-col gap-3 border-b border-[#E4F0D6] px-4 py-4 lg:flex-row lg:items-center">
-      <div class="relative flex-1">
-        <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AB880]"></i>
-        <input type="search" name="search" value="{{ $search }}" placeholder="Cari judul, kategori, atau komoditas..."
-          class="h-10 w-full rounded-xl border border-[#C5DFB0] bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
+  <div class="overflow-hidden rounded-2xl border border-[#C5DFB0] bg-white shadow-2xs">
+    <!-- Filter Toolbar -->
+    <form method="GET" action="{{ route('admin.edukasi.panduan') }}" class="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between border-b border-[#F0F7E8]">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AB880]"></i>
+          <input type="search" name="search" value="{{ $search }}" placeholder="Cari judul panduan..."
+            class="h-9 w-full rounded-lg border border-[#C5DFB0] bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 sm:w-56">
+        </div>
+
+        <select name="kategori" onchange="this.form.submit()" class="h-9 rounded-lg border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830] transition cursor-pointer">
+          <option value="">Semua Kategori</option>
+          @foreach($categories as $category)
+            <option value="{{ $category }}" @selected($kategori === $category)>{{ $category }}</option>
+          @endforeach
+        </select>
+
+        <select name="status" onchange="this.form.submit()" class="h-9 rounded-lg border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830] transition cursor-pointer">
+          <option value="">Semua Status</option>
+          <option value="publik" @selected($status === 'publik')>Publik</option>
+          <option value="draft" @selected($status === 'draft')>Draft</option>
+        </select>
       </div>
 
-      <select name="status" class="h-10 rounded-xl border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830]">
-        <option value="">Semua Status</option>
-        <option value="publik" @selected($status === 'publik')>Publik</option>
-        <option value="draft" @selected($status === 'draft')>Draft</option>
-      </select>
-
-      <select name="kategori" class="h-10 rounded-xl border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830]">
-        <option value="">Semua Kategori</option>
-        @foreach($categories as $category)
-          <option value="{{ $category }}" @selected($kategori === $category)>{{ $category }}</option>
-        @endforeach
-      </select>
-
-      <select name="komoditas" class="h-10 rounded-xl border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830]">
-        <option value="">Semua Komoditas</option>
-        @foreach($commodities as $commodity)
-          <option value="{{ $commodity }}" @selected($komoditas === $commodity)>{{ $commodity }}</option>
-        @endforeach
-      </select>
-
-      <button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#4D9830] px-4 text-xs font-bold text-white hover:bg-[#3D8024]">
-        <i data-lucide="filter" class="h-4 w-4"></i>
-        Filter
-      </button>
-      @if($search || $status || $kategori || $komoditas)
-        <a href="{{ route('admin.edukasi.panduan') }}" class="inline-flex h-10 items-center justify-center rounded-xl border border-[#C5DFB0] px-4 text-xs font-bold text-[#4A6030] hover:bg-[#F5F8F1]">
-          Reset
-        </a>
-      @endif
+      <span class="text-xs text-[#9AB880]">
+        <strong class="font-bold text-[#1A2D10]">{{ $panduan->total() }}</strong> panduan
+      </span>
     </form>
 
-    <div class="px-4 py-3 text-xs text-[#9AB880]">
-      Menampilkan {{ $panduan->count() }} dari {{ $panduan->total() }} panduan
-    </div>
-
     <div class="overflow-x-auto">
-      <table class="w-full min-w-[900px] border-collapse text-left text-xs">
+      <table class="w-full min-w-[860px] border-collapse text-left text-xs" id="panduan-table">
         <thead>
-          <tr class="bg-[#F5F8F1] text-[10px] font-bold uppercase tracking-wider text-[#4A6030]">
-            <th class="w-12 px-3 py-3">No</th>
-            <th class="px-3 py-3">Judul</th>
+          <tr class="bg-[#EBF6E0] text-[10px] font-bold uppercase tracking-wider text-[#4A6030]">
+            <th class="w-12 px-3 py-3 text-center">No</th>
+            <th class="px-3 py-3">Judul & Inti Panduan</th>
+            <th class="w-36 px-3 py-3">Kategori</th>
+            <th class="w-36 px-3 py-3">Komoditas</th>
             <th class="w-28 px-3 py-3">Gambar</th>
-            <th class="w-28 px-3 py-3">Kategori</th>
-            <th class="w-28 px-3 py-3">Komoditas</th>
             <th class="w-28 px-3 py-3">Tanggal</th>
-            <th class="w-24 px-3 py-3">Status</th>
-            <th class="w-48 px-3 py-3">Aksi</th>
+            <th class="w-20 px-3 py-3 text-center">Status</th>
+            <th class="w-48 px-3 py-3 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-[#E4F0D6]/70 text-[#4A6030]">
           @forelse($panduan as $index => $item)
-            <tr class="transition-colors hover:bg-[#F5F8F1]/60">
-              <td class="px-3 py-3.5 text-[#9AB880]">{{ $panduan->firstItem() + $index }}</td>
+            <tr class="transition-colors hover:bg-[#F5F8F1]/60 panduan-row"
+                data-id="{{ $item->id_panduan }}"
+                data-title="{{ strtolower($item->judul) }}"
+                data-category="{{ $item->kategori }}"
+                data-commodity="{{ strtolower($item->komoditas) }}"
+                data-status="{{ $item->status }}"
+                data-raw-title="{{ $item->judul }}"
+                data-raw-excerpt="{{ $item->ringkasan }}"
+                data-raw-content="{{ $item->isi }}"
+                data-raw-image="{{ $item->gambar }}"
+                data-image-url="{{ $item->gambar ? asset($item->gambar) : '' }}"
+                data-raw-date="{{ $item->tanggal?->format('Y-m-d') }}">
+              <td class="px-3 py-3.5 text-center text-[#9AB880] font-medium">{{ $panduan->firstItem() + $index }}</td>
               <td class="px-3 py-3.5">
-                <div class="max-w-[310px]">
-                  <p class="truncate font-bold text-[#1A2D10]" title="{{ $item->judul }}">{{ $item->judul }}</p>
-                  <p class="mt-1 truncate text-[10px] text-[#9AB880]">{{ $item->ringkasan }}</p>
+                <div class="max-w-[340px]">
+                  <p class="font-bold text-[#1A2D10] line-clamp-1 hover:text-[#4D9830] transition-colors cursor-pointer"
+                     onclick="openPanduanDetailModal('{{ $item->id_panduan }}')"
+                     title="{{ $item->judul }}">
+                    {{ $item->judul }}
+                  </p>
+                  <p class="mt-1 line-clamp-1 text-[11px] text-[#6B7F5B] flex items-center gap-1" title="{{ $item->ringkasan }}">
+                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-[#4D9830] shrink-0"></span>
+                    <span>{{ $item->ringkasan }}</span>
+                  </p>
                 </div>
               </td>
               <td class="px-3 py-3.5">
-                @if($item->gambar)
-                  <img src="{{ asset($item->gambar) }}" alt="{{ $item->judul }}" class="h-12 w-16 rounded-lg border border-[#E4F0D6] object-cover">
-                @else
-                  <div class="flex h-12 w-16 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
-                    <i data-lucide="book-open" class="h-4 w-4"></i>
-                  </div>
-                @endif
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-[#EBF6E0] text-[#4D9830] border border-[#C5DFB0]">
+                  <i data-lucide="book-open" class="h-3 w-3 shrink-0"></i>
+                  <span>{{ $item->kategori }}</span>
+                </span>
               </td>
-              <td class="px-3 py-3.5">{{ $item->kategori }}</td>
-              <td class="px-3 py-3.5">{{ $item->komoditas ?: '-' }}</td>
-              <td class="whitespace-nowrap px-3 py-3.5 text-[#9AB880]">{{ $item->tanggal?->format('d M Y') }}</td>
               <td class="px-3 py-3.5">
+                <div class="flex items-center gap-1.5 text-[11px]">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#EBF6E0] text-[#4D9830]">
+                    <i data-lucide="sprout" class="h-3.5 w-3.5"></i>
+                  </span>
+                  <span class="font-semibold text-[#1A2D10]">{{ $item->komoditas ?: '-' }}</span>
+                </div>
+              </td>
+              <td class="px-3 py-3.5">
+                <div class="flex items-center gap-2">
+                  @if($item->gambar)
+                    <img src="{{ asset($item->gambar) }}" alt="{{ $item->judul }}" class="h-8 w-8 shrink-0 rounded-md object-cover border border-[#C5DFB0]">
+                  @else
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF4D6] text-[#D97706] border border-[#F6E0B0]">
+                      <i data-lucide="image" class="h-4 w-4"></i>
+                    </span>
+                  @endif
+                  <span class="max-w-16 truncate text-[10px] font-mono text-[#9AB880]" title="{{ basename($item->gambar ?? '') }}">
+                    {{ $item->gambar ? basename($item->gambar) : '-' }}
+                  </span>
+                </div>
+              </td>
+              <td class="whitespace-nowrap px-3 py-3.5 text-[#9AB880] font-mono text-[11px]">
+                {{ $item->tanggal?->format('Y-m-d') ?: '-' }}
+              </td>
+              <td class="px-3 py-3.5 text-center">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold {{ $item->status === 'publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]' }}">
                   {{ ucfirst($item->status) }}
                 </span>
               </td>
-              <td class="px-3 py-3.5">
-                <div class="flex items-center gap-1">
-                  <a href="{{ route('admin.edukasi.panduan.show', $item) }}" class="inline-flex items-center gap-1 rounded-lg bg-[#EAF5DE] px-2.5 py-1.5 text-[10px] font-bold text-[#4D9830] hover:bg-[#DDF0CC]" data-admin-title="Detail Panduan">
-                    <i data-lucide="eye" class="h-3 w-3"></i>Detail
-                  </a>
-                  <button type="button" onclick="openPanduanEditModal('{{ $item->id_panduan }}')" class="inline-flex items-center gap-1 rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEFA0]">
-                    <i data-lucide="edit-3" class="h-3 w-3"></i>Edit
+              <td class="px-3 py-3.5 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button type="button" onclick="openPanduanDetailModal('{{ $item->id_panduan }}')"
+                    class="inline-flex items-center gap-1 rounded-lg bg-[#EAF5DE] px-2.5 py-1.5 text-[10px] font-bold text-[#4D9830] hover:bg-[#DDF0CC] transition cursor-pointer"
+                    title="Lihat Rincian Panduan">
+                    <i data-lucide="eye" class="h-3 w-3"></i>
+                    <span>Detail</span>
                   </button>
-                  <button type="button" onclick="openPanduanDeleteModal('{{ $item->id_panduan }}')" class="inline-flex items-center gap-1 rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD2D2]">
-                    <i data-lucide="trash-2" class="h-3 w-3"></i>Hapus
+                  <button type="button" onclick="openPanduanEditModal('{{ $item->id_panduan }}')"
+                    class="inline-flex items-center gap-1 rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEFA0] transition cursor-pointer"
+                    title="Ubah Data Panduan">
+                    <i data-lucide="edit-3" class="h-3 w-3"></i>
+                    <span>Edit</span>
+                  </button>
+                  <button type="button" onclick="openPanduanDeleteModal('{{ $item->id_panduan }}')"
+                    class="inline-flex items-center gap-1 rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD2D2] transition cursor-pointer"
+                    title="Hapus Panduan">
+                    <i data-lucide="trash-2" class="h-3 w-3"></i>
+                    <span>Hapus</span>
                   </button>
                 </div>
               </td>
             </tr>
           @empty
-            <tr>
-              <td colspan="8" class="px-4 py-14 text-center">
-                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5F8F1] text-[#4D9830]">
+            <tr id="panduan-empty-row">
+              <td colspan="8" class="px-4 py-12 text-center text-xs text-[#9AB880]">
+                <div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F8F1] text-[#9AB880]">
                   <i data-lucide="book-open" class="h-6 w-6"></i>
                 </div>
-                <p class="mt-3 text-sm font-bold text-[#1A2D10]">Belum ada panduan</p>
-                <p class="mt-1 text-xs text-[#9AB880]">Tambahkan panduan pertama untuk mulai mengisi konten edukasi.</p>
+                <p class="font-semibold text-slate-600">Belum ada panduan pertanian yang tersimpan di database.</p>
+                <p class="mt-1 text-[11px] text-[#9AB880]">Klik tombol "+ Tambah Panduan" untuk membuat panduan pertama.</p>
               </td>
             </tr>
           @endforelse
@@ -176,15 +210,464 @@
     </div>
 
     @if($panduan->hasPages())
-      <div class="border-t border-[#E4F0D6] px-4 py-4">
+      <div class="border-t border-[#F0F7E8] px-4 py-4">
         {{ $panduan->links() }}
       </div>
     @endif
   </div>
 </div>
 
-@include('Admin.Content._PanduanFormModal')
+<!-- MODAL DETAIL PANDUAN -->
+<div id="modal-detail-panduan" class="fixed inset-0 z-[85] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity" aria-hidden="true">
+  <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="flex items-center justify-between border-b border-[#E4F0D6] bg-[#EBF6E0] px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#4D9830]">
+          <i data-lucide="book-open" class="h-4 w-4"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-[#1A2D10]">Detail Panduan</h3>
+          <p class="text-xs text-[#9AB880]">Informasi lengkap panduan</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeDetailPanduanModal()" class="rounded-lg p-1 text-slate-400 transition-colors hover:bg-white hover:text-slate-700" aria-label="Tutup">
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </button>
+    </div>
 
-@include('Admin.Content._PanduanModalScript', ['panduanModalData' => $panduanModalData])
+    <div class="min-h-0 overflow-y-auto p-5 sm:p-6">
+      <!-- Gambar -->
+      <div id="detail-panduan-image-container" class="mb-5 overflow-hidden rounded-xl border border-[#E4F0D6] bg-[#F5F8F1]">
+        <img id="detail-panduan-image" src="" alt="" class="h-56 w-full object-cover sm:h-64">
+      </div>
+
+      <!-- Header info -->
+      <div class="mb-4 flex flex-wrap items-center gap-2">
+        <span id="detail-panduan-kategori" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-[#EBF6E0] text-[#4D9830] border border-[#C5DFB0]"></span>
+        <span id="detail-panduan-status" class="rounded-full px-3 py-1 text-[10px] font-bold"></span>
+        <span id="detail-panduan-tanggal" class="text-xs text-[#9AB880] font-mono"></span>
+      </div>
+
+      <h2 id="detail-panduan-judul" class="text-2xl font-extrabold tracking-tight text-[#1A2D10] sm:text-3xl"></h2>
+
+      <!-- Ringkasan -->
+      <div class="mt-6 rounded-xl bg-[#F5F8F1] p-4">
+        <p class="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Ringkasan</p>
+        <p id="detail-panduan-ringkasan" class="text-sm font-semibold leading-7 text-[#4A6030]"></p>
+      </div>
+
+      <!-- Info grid -->
+      <dl class="mt-5 grid gap-4 rounded-xl border border-[#E4F0D6] p-4 sm:grid-cols-3">
+        <div>
+          <dt class="text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Komoditas</dt>
+          <dd id="detail-panduan-komoditas" class="mt-1 text-sm font-semibold text-[#1A2D10]"></dd>
+        </div>
+        <div>
+          <dt class="text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Slug</dt>
+          <dd id="detail-panduan-slug" class="mt-1 break-all text-sm font-semibold text-[#1A2D10] font-mono"></dd>
+        </div>
+        <div>
+          <dt class="text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Pembuat</dt>
+          <dd id="detail-panduan-author" class="mt-1 text-sm font-semibold text-[#1A2D10]"></dd>
+        </div>
+      </dl>
+
+      <!-- Isi -->
+      <div class="mt-5 border-t border-[#E4F0D6] pt-5">
+        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Isi Panduan</p>
+        <div id="detail-panduan-isi" class="whitespace-pre-line text-sm leading-8 text-slate-700"></div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2.5 border-t border-[#E4F0D6] bg-[#EBF6E0] px-6 py-3">
+      <button type="button" onclick="closeDetailPanduanModal()" class="rounded-lg border border-[#C5DFB0] bg-white px-4 py-2.5 text-xs font-bold text-[#4A6030] hover:bg-[#F5F8F1] transition cursor-pointer">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Form Tambah / Edit Panduan -->
+<div id="modal-panduan-form" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity" aria-hidden="true">
+  <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-[#F0F7E8] px-5 py-4 bg-[#F5F8F1]">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
+          <i data-lucide="book-open" class="h-4 w-4"></i>
+        </div>
+        <div>
+          <h3 id="modal-panduan-form-title" class="text-sm font-bold text-[#1A2D10]">Tambah Panduan Baru</h3>
+          <p id="modal-panduan-form-subtitle" class="text-[11px] text-[#9AB880]">Simpan data panduan ke database</p>
+        </div>
+      </div>
+      <button type="button" data-panduan-modal-close class="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </button>
+    </div>
+
+    <!-- Form Body -->
+    <form id="form-panduan-modal" method="POST" action="{{ route('admin.edukasi.panduan.store') }}" enctype="multipart/form-data" class="overflow-y-auto p-5 space-y-4 text-xs">
+      @csrf
+      <input type="hidden" name="_method" id="panduan-modal-method" value="POST">
+
+      <div id="panduan-modal-errors" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"></div>
+
+      <div>
+        <label class="block font-semibold text-[#1A2D10] mb-1">Judul Panduan <span class="text-red-500">*</span></label>
+        <input id="panduan-modal-judul" name="judul" type="text" required maxlength="255" placeholder="Contoh: Panduan Budidaya Jagung Hibrida"
+          class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Kategori <span class="text-red-500">*</span></label>
+          <input id="panduan-modal-kategori" name="kategori" type="text" required maxlength="100" placeholder="Contoh: Budidaya"
+            class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+        </div>
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Komoditas</label>
+          <input id="panduan-modal-komoditas" name="komoditas" type="text" maxlength="100" placeholder="Contoh: Jagung"
+            class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Tanggal <span class="text-red-500">*</span></label>
+          <input id="panduan-modal-tanggal" name="tanggal" type="date" required
+            class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+        </div>
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Status Publikasi</label>
+          <select id="panduan-modal-status" name="status" required
+            class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="draft">Draft</option>
+            <option value="publik">Publik</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#1A2D10] mb-1">Ringkasan <span class="text-red-500">*</span></label>
+        <textarea id="panduan-modal-ringkasan" name="ringkasan" rows="2" required placeholder="Tuliskan ringkasan singkat panduan..."
+          class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#1A2D10] mb-1">Isi Panduan <span class="text-red-500">*</span></label>
+        <textarea id="panduan-modal-isi" name="isi" rows="4" required placeholder="Tuliskan langkah-langkah atau materi panduan secara lengkap..."
+          class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-[#1A2D10] mb-1">Upload File Gambar Ilustrasi</label>
+        <input id="panduan-modal-gambar" name="gambar" type="file" accept=".jpg,.jpeg,.png,.webp"
+          class="w-full rounded-lg border border-[#C5DFB0] p-1.5 text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#EBF6E0] file:text-[#4D9830] hover:file:bg-[#dff0cc] cursor-pointer">
+        <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP (Maks 2MB)</p>
+        <div id="panduan-modal-current-image" class="mt-2 hidden items-center gap-2">
+          <img id="panduan-modal-current-image-preview" src="" alt="Gambar panduan" class="h-12 w-16 rounded-lg object-cover border border-[#E4F0D6]">
+          <span class="text-[10px] text-[#6B7F5B]">Gambar saat ini. Upload baru untuk mengganti.</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F7E8]">
+        <button type="button" data-panduan-modal-close
+          class="rounded-xl border border-[#C5DFB0] px-4 py-2 text-xs font-semibold text-[#4A6030] hover:bg-[#F5F8F1] transition cursor-pointer">
+          Batal
+        </button>
+        <button type="submit" id="btn-submit-panduan-modal"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-[#4D9830] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#3D8024] transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+          <i data-lucide="check" class="h-3.5 w-3.5"></i>
+          <span>Simpan Panduan</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus Panduan -->
+<div id="modal-delete-panduan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity" aria-hidden="true">
+  <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-red-100 overflow-hidden">
+    <form id="form-delete-panduan" method="POST">
+      @csrf
+      @method('DELETE')
+
+      <div class="p-5 text-center">
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFE1E1] text-[#C24141]">
+          <i data-lucide="trash-2" class="h-6 w-6"></i>
+        </div>
+        <h3 id="modal-delete-panduan-title" class="text-base font-bold text-[#1A2D10]">Hapus Data Panduan?</h3>
+        <p class="mt-1 text-xs text-slate-500">
+          Apakah Anda yakin ingin menghapus panduan <span id="delete-panduan-nama" class="font-bold text-[#1A2D10]"></span>?
+        </p>
+      </div>
+      <div class="flex items-center justify-center gap-2 border-t border-[#F0F7E8] bg-[#F5F8F1] px-5 py-3.5">
+        <button type="button" data-panduan-delete-close
+          class="rounded-xl border border-[#C5DFB0] bg-white px-4 py-2 text-xs font-semibold text-[#4A6030] hover:bg-slate-100 transition cursor-pointer">
+          Batal
+        </button>
+        <button type="submit"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-[#C24141] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-red-700 transition cursor-pointer">
+          <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+          <span>Ya, Hapus</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<input type="hidden" id="panduan-modal-data" value="{{ htmlspecialchars(json_encode($panduanModalData)) }}">
+<input type="hidden" id="panduan-store-url" value="{{ route('admin.edukasi.panduan.store') }}">
+<input type="hidden" id="panduan-index-url" value="{{ route('admin.edukasi.panduan') }}">
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('panduan-modal-data').value);
+  const modal = document.getElementById('modal-panduan-form');
+  const form = document.getElementById('form-panduan-modal');
+  const methodInput = document.getElementById('panduan-modal-method');
+  const title = document.getElementById('modal-panduan-form-title');
+  const subtitle = document.getElementById('modal-panduan-form-subtitle');
+  const submitText = document.querySelector('#btn-submit-panduan-modal span');
+  const errorBox = document.getElementById('panduan-modal-errors');
+  const imageBox = document.getElementById('panduan-modal-current-image');
+  const imagePreview = document.getElementById('panduan-modal-current-image-preview');
+  const deleteModal = document.getElementById('modal-delete-panduan');
+  const deleteForm = document.getElementById('form-delete-panduan');
+  const deleteName = document.getElementById('delete-panduan-nama');
+
+  if (!modal || !form || !deleteModal || !deleteForm) return;
+
+  const fields = {
+    judul: document.getElementById('panduan-modal-judul'),
+    kategori: document.getElementById('panduan-modal-kategori'),
+    komoditas: document.getElementById('panduan-modal-komoditas'),
+    tanggal: document.getElementById('panduan-modal-tanggal'),
+    status: document.getElementById('panduan-modal-status'),
+    ringkasan: document.getElementById('panduan-modal-ringkasan'),
+    isi: document.getElementById('panduan-modal-isi'),
+    gambar: document.getElementById('panduan-modal-gambar'),
+  };
+
+  function setErrors(messages) {
+    if (!messages || !messages.length) {
+      errorBox.classList.add('hidden');
+      errorBox.innerHTML = '';
+      return;
+    }
+    errorBox.innerHTML = '<p class="font-bold">Periksa kembali data yang diisi.</p><ul class="mt-1 list-inside list-disc"></ul>';
+    const list = errorBox.querySelector('ul');
+    messages.forEach(message => {
+      const li = document.createElement('li');
+      li.textContent = message;
+      list.appendChild(li);
+    });
+    errorBox.classList.remove('hidden');
+  }
+
+  function resetFields() {
+    form.reset();
+    methodInput.value = 'POST';
+    form.action = document.getElementById('panduan-store-url').textContent;
+    fields.tanggal.value = new Date().toISOString().slice(0, 10);
+    fields.status.value = 'draft';
+    imageBox.classList.add('hidden');
+    imageBox.classList.remove('flex');
+    imagePreview.src = '';
+    setErrors([]);
+  }
+
+  function openModal() {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+    if (window.lucide) window.lucide.createIcons();
+    setTimeout(() => fields.judul.focus(), 50);
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  window.openPanduanCreateModal = function () {
+    resetFields();
+    title.textContent = 'Tambah Data Panduan';
+    subtitle.textContent = 'Simpan data panduan ke database';
+    submitText.textContent = 'Simpan Panduan';
+    openModal();
+  };
+
+  window.openPanduanEditModal = function (id, itemOverride = null) {
+    const item = itemOverride || data[String(id)];
+    if (!item) return;
+
+    form.reset();
+    methodInput.value = 'PUT';
+    form.action = item.update_url;
+    fields.judul.value = item.judul || '';
+    fields.kategori.value = item.kategori || '';
+    fields.komoditas.value = item.komoditas || '';
+    fields.tanggal.value = item.tanggal || '';
+    fields.status.value = item.status || 'draft';
+    fields.ringkasan.value = item.ringkasan || '';
+    fields.isi.value = item.isi || '';
+    fields.gambar.value = '';
+    setErrors([]);
+
+    title.textContent = 'Edit Data Panduan';
+    subtitle.textContent = 'Perbarui data panduan yang tersimpan';
+    submitText.textContent = 'Simpan Perubahan';
+
+    if (item.gambar) {
+      imagePreview.src = item.gambar;
+      imageBox.classList.remove('hidden');
+      imageBox.classList.add('flex');
+    } else {
+      imageBox.classList.add('hidden');
+      imageBox.classList.remove('flex');
+      imagePreview.src = '';
+    }
+
+    openModal();
+  };
+
+  window.openPanduanDeleteModal = function (id, itemOverride = null) {
+    const item = itemOverride || data[String(id)];
+    if (!item) return;
+
+    deleteForm.action = item.delete_url;
+    deleteName.textContent = item.judul || 'ini';
+    deleteModal.classList.remove('hidden');
+    deleteModal.classList.add('flex');
+    deleteModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+    if (window.lucide) window.lucide.createIcons();
+  };
+
+  // Detail Modal
+  const detailModal = document.getElementById('modal-detail-panduan');
+
+  window.openPanduanDetailModal = function (id) {
+    const item = data[String(id)];
+    if (!item || !detailModal) return;
+
+    const imageContainer = document.getElementById('detail-panduan-image-container');
+    const image = document.getElementById('detail-panduan-image');
+
+    // Populate data
+    document.getElementById('detail-panduan-judul').textContent = item.judul || '';
+    document.getElementById('detail-panduan-kategori').textContent = item.kategori || '';
+    document.getElementById('detail-panduan-tanggal').textContent = item.tanggal || 'Tanggal belum ditentukan';
+    document.getElementById('detail-panduan-ringkasan').textContent = item.ringkasan || '';
+    document.getElementById('detail-panduan-isi').textContent = item.isi || '';
+    document.getElementById('detail-panduan-slug').textContent = item.slug || '-';
+    document.getElementById('detail-panduan-author').textContent = item.author || '-';
+
+    // Status badge
+    const statusBadge = document.getElementById('detail-panduan-status');
+    statusBadge.textContent = item.status === 'publik' ? 'Publik' : 'Draft';
+    statusBadge.className = 'rounded-full px-3 py-1 text-[10px] font-bold ' +
+      (item.status === 'publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]');
+
+    // Komoditas
+    document.getElementById('detail-panduan-komoditas').textContent = item.komoditas || '-';
+
+    // Image
+    if (item.gambar) {
+      image.src = item.gambar;
+      image.alt = item.judul || '';
+      imageContainer.style.display = '';
+    } else {
+      imageContainer.style.display = 'none';
+    }
+
+    // Show modal
+    detailModal.classList.remove('hidden');
+    detailModal.classList.add('flex');
+    detailModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+    if (window.lucide) window.lucide.createIcons();
+  };
+
+  window.closeDetailPanduanModal = function () {
+    if (!detailModal) return;
+    detailModal.classList.add('hidden');
+    detailModal.classList.remove('flex');
+    detailModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('overflow-hidden');
+  };
+
+  if (detailModal) {
+    detailModal.addEventListener('click', (event) => {
+      if (event.target === detailModal) window.closeDetailPanduanModal();
+    });
+  }
+
+  function closeDeleteModal() {
+    deleteModal.classList.add('hidden');
+    deleteModal.classList.remove('flex');
+    deleteModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  document.querySelectorAll('[data-panduan-modal-close]').forEach(button => button.addEventListener('click', closeModal));
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.querySelector('[data-panduan-delete-close]')?.addEventListener('click', closeDeleteModal);
+  deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) closeDeleteModal(); });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    setErrors([]);
+
+    const submitButton = document.getElementById('btn-submit-panduan-modal');
+    const originalButton = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span><span>Menyimpan...</span>';
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json') ? await response.json() : null;
+
+      if (!response.ok) {
+        if (payload?.errors) {
+          setErrors(Object.values(payload.errors).flat());
+          return;
+        }
+        throw new Error(payload?.message || 'Gagal menyimpan panduan.');
+      }
+
+      closeModal();
+      window.location.href = payload?.redirect || document.getElementById('panduan-index-url').textContent;
+    } catch (error) {
+      setErrors([error.message || 'Terjadi kesalahan. Silakan coba lagi.']);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.innerHTML = originalButton;
+      if (window.lucide) window.lucide.createIcons();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (!modal.classList.contains('hidden')) closeModal();
+    if (!deleteModal.classList.contains('hidden')) closeDeleteModal();
+    if (detailModal && !detailModal.classList.contains('hidden')) window.closeDetailPanduanModal();
+  });
+
+  if (window.lucide) window.lucide.createIcons();
+})();
+</script>
 
 @endsection

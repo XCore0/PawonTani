@@ -20,75 +20,155 @@
 
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div class="flex items-start gap-3">
-      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EBF6E0] text-[#4D9830]"><i data-lucide="newspaper" class="h-5 w-5"></i></div>
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
+        <i data-lucide="newspaper" class="h-5 w-5"></i>
+      </div>
       <div>
         <h1 class="text-xl font-extrabold tracking-tight text-[#1A2D10] sm:text-2xl">Manajemen Artikel</h1>
-        <p class="mt-1 text-xs font-medium text-[#9AB880]">Kelola artikel edukasi pertanian yang tampil di halaman publik.</p>
+        <p class="mt-1 text-xs font-medium text-[#9AB880]">Kelola tips praktis, panduan cepat, dan trik budidaya pertanian.</p>
       </div>
     </div>
-    <button type="button" onclick="openArtikelModal()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#3D8024]">
-      <i data-lucide="plus" class="h-4 w-4"></i>Tambah Artikel
+
+    <button type="button" onclick="openArtikelModal()"
+      class="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#3D8024] cursor-pointer active:scale-95">
+      <i data-lucide="plus" class="h-4 w-4 stroke-[2.5]"></i>
+      <span>Tambah Artikel</span>
     </button>
   </div>
 
-  <div class="grid gap-3 sm:grid-cols-3">
-    @foreach([
-      ['label'=>'Total Artikel','value'=>$stats['total'],'tone'=>'bg-[#EBF6E0] text-[#4D9830]','icon'=>'newspaper'],
-      ['label'=>'Artikel Publik','value'=>$stats['publik'],'tone'=>'bg-[#DFF7E7] text-[#287442]','icon'=>'globe-2'],
-      ['label'=>'Artikel Draft','value'=>$stats['draft'],'tone'=>'bg-[#FFF4D6] text-[#8A5A0A]','icon'=>'file-edit'],
-    ] as $stat)
-      <div class="rounded-[18px] border border-[#E4F0D6] bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-2xl {{ $stat['tone'] }}"><i data-lucide="{{ $stat['icon'] }}" class="h-4 w-4"></i></div>
-          <div><p class="text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">{{ $stat['label'] }}</p><p class="mt-0.5 text-2xl font-extrabold text-[#1A2D10]">{{ $stat['value'] }}</p></div>
-        </div>
-      </div>
-    @endforeach
+  <div class="flex flex-wrap gap-2">
+    <div class="flex items-center gap-2 rounded-lg bg-[#FFF4D6] px-3.5 py-2.5 text-xs text-[#4A6030]">
+      <strong class="text-lg leading-none text-[#D97706]">{{ $stats['total'] }}</strong>
+      <span>Total Artikel</span>
+    </div>
+    <div class="flex items-center gap-2 rounded-lg bg-[#DFF7E7] px-3.5 py-2.5 text-xs text-[#287442]">
+      <strong class="text-lg leading-none text-[#237A3B]">{{ $stats['publik'] }}</strong>
+      <span>Publik</span>
+    </div>
+    <div class="flex items-center gap-2 rounded-lg bg-[#FFF4D6] px-3.5 py-2.5 text-xs text-[#8A5A0A]">
+      <strong class="text-lg leading-none text-[#8A5A0A]">{{ $stats['draft'] }}</strong>
+      <span>Draft</span>
+    </div>
   </div>
 
   <div class="overflow-hidden rounded-[20px] border border-[#E4F0D6] bg-white shadow-sm">
-    <form method="GET" action="{{ route('admin.edukasi.artikel') }}" class="flex flex-col gap-3 border-b border-[#E4F0D6] p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex flex-col gap-2 sm:flex-row">
+    <!-- Filter Toolbar -->
+    <div class="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between border-b border-[#F0F7E8]">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div class="relative">
           <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AB880]"></i>
-          <input name="search" value="{{ request('search') }}" type="search" placeholder="Cari judul, kategori, komoditas..." class="h-10 w-full rounded-xl border border-[#C5DFB0] pl-9 pr-3 text-xs outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 sm:w-72">
+          <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari judul artikel..."
+            class="h-9 w-full rounded-lg border border-[#C5DFB0] bg-white pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 sm:w-56">
         </div>
-        <select name="status" class="h-10 rounded-xl border border-[#C5DFB0] bg-white px-3 text-xs outline-none focus:border-[#4D9830]">
+
+        <select name="kategori" class="h-9 rounded-lg border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830] transition cursor-pointer">
+          <option value="">Semua Kategori</option>
+          @foreach(($kategoriOptions ?? collect()) as $kategori)
+            <option value="{{ $kategori }}" @selected(request('kategori') === $kategori)>{{ $kategori }}</option>
+          @endforeach
+        </select>
+
+        <select name="status" class="h-9 rounded-lg border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830] transition cursor-pointer">
           <option value="">Semua Status</option>
           <option value="Publik" @selected(request('status') === 'Publik')>Publik</option>
           <option value="Draft" @selected(request('status') === 'Draft')>Draft</option>
         </select>
-        <button class="h-10 rounded-xl border border-[#C5DFB0] px-4 text-xs font-bold text-[#4A6030] hover:bg-[#F5F8F1]">Terapkan</button>
       </div>
-      <span class="text-xs text-[#9AB880]">{{ $artikelList->total() }} artikel ditemukan</span>
-    </form>
+
+      <span class="text-xs text-[#9AB880]">
+        <strong class="font-bold text-[#1A2D10]">{{ $artikelList->total() }}</strong> artikel
+      </span>
+    </div>
 
     @if($artikelList->count())
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[850px] border-collapse text-left text-xs">
+        <table class="w-full min-w-[860px] border-collapse text-left text-xs" id="artikel-table">
           <thead>
-            <tr class="bg-[#F5F8F1] text-[11px] font-bold uppercase tracking-wider text-[#4A6030]">
-              <th class="px-4 py-3">Artikel</th><th class="px-4 py-3">Kategori</th><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th>
+            <tr class="bg-[#EBF6E0] text-[10px] font-bold uppercase tracking-wider text-[#4A6030]">
+              <th class="w-12 px-3 py-3 text-center">No</th>
+              <th class="px-3 py-3">Judul & Inti Artikel</th>
+              <th class="w-36 px-3 py-3">Kategori</th>
+              <th class="w-36 px-3 py-3">Komoditas</th>
+              <th class="w-28 px-3 py-3">Gambar</th>
+              <th class="w-28 px-3 py-3">Tanggal</th>
+              <th class="w-20 px-3 py-3 text-center">Status</th>
+              <th class="w-48 px-3 py-3 text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[#E4F0D6]/60">
-          @foreach($artikelList as $artikel)
-            <tr class="transition hover:bg-[#F5F8F1]/50">
-              <td class="px-4 py-3.5">
-                <div class="flex items-center gap-3">
-                  <div class="h-12 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E4F0D6] bg-[#F5F8F1]">
-                    @if($artikel->gambar)<img src="{{ asset($artikel->gambar) }}" alt="" class="h-full w-full object-cover">@else<div class="flex h-full w-full items-center justify-center text-[#9AB880]"><i data-lucide="image-off" class="h-4 w-4"></i></div>@endif
-                  </div>
-                  <div class="min-w-0"><p class="max-w-[360px] truncate font-bold text-[#1A2D10]">{{ $artikel->judul }}</p><p class="mt-1 max-w-[360px] truncate text-[10px] text-[#9AB880]">{{ $artikel->komoditas ?: 'Komoditas tidak ditentukan' }}</p></div>
+          <tbody class="divide-y divide-[#E4F0D6]/70 text-[#4A6030]">
+          @foreach($artikelList as $index => $artikel)
+            <tr class="transition-colors hover:bg-[#F5F8F1]/60 artikel-row"
+                data-id="{{ $artikel->id_artikel }}"
+                data-title="{{ strtolower($artikel->judul) }}"
+                data-category="{{ $artikel->kategori }}"
+                data-commodity="{{ strtolower($artikel->komoditas) }}"
+                data-status="{{ $artikel->status }}"
+                data-raw-title="{{ $artikel->judul }}"
+                data-raw-excerpt="{{ $artikel->ringkasan }}"
+                data-raw-content="{{ $artikel->isi }}"
+                data-raw-image="{{ $artikel->gambar }}"
+                data-image-url="{{ $artikel->gambar ? asset($artikel->gambar) : '' }}"
+                data-raw-date="{{ optional($artikel->tanggal)->format('Y-m-d') }}">
+              <td class="px-3 py-3.5 text-center text-[#9AB880] font-medium">{{ $artikelList->firstItem() + $index }}</td>
+              <td class="px-3 py-3.5">
+                <div class="max-w-[340px]">
+                  <p class="font-bold text-[#1A2D10] line-clamp-1 hover:text-[#4D9830] transition-colors cursor-pointer"
+                     onclick="openDetailArtikelModal(this.closest('tr'))"
+                     title="{{ $artikel->judul }}">
+                    {{ $artikel->judul }}
+                  </p>
+                  <p class="mt-1 line-clamp-1 text-[11px] text-[#6B7F5B] flex items-center gap-1" title="{{ $artikel->ringkasan }}">
+                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-[#4D9830] shrink-0"></span>
+                    <span>{{ $artikel->ringkasan }}</span>
+                  </p>
                 </div>
               </td>
-              <td class="px-4 py-3.5 text-[#4A6030]">{{ $artikel->kategori }}</td>
-              <td class="whitespace-nowrap px-4 py-3.5 text-[#9AB880]">{{ optional($artikel->tanggal)->format('d M Y') ?: '-' }}</td>
-              <td class="px-4 py-3.5"><span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold {{ $artikel->status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]' }}">{{ $artikel->status }}</span></td>
-              <td class="px-4 py-3.5">
-                <div class="flex items-center gap-1.5">
-                  <a href="{{ route('admin.edukasi.artikel.show', $artikel) }}" class="inline-flex items-center gap-1 rounded-lg bg-[#EAF5DE] px-2.5 py-1.5 text-[10px] font-bold text-[#4D9830] hover:bg-[#DDF0CC]"><i data-lucide="eye" class="h-3 w-3"></i>Detail</a>
-                  <button type="button" class="js-edit-artikel inline-flex items-center gap-1 rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEFA0]"
+              <td class="px-3 py-3.5">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-[#EBF6E0] text-[#4D9830] border border-[#C5DFB0]">
+                  <i data-lucide="newspaper" class="h-3 w-3 shrink-0"></i>
+                  <span>{{ $artikel->kategori }}</span>
+                </span>
+              </td>
+              <td class="px-3 py-3.5">
+                <div class="flex items-center gap-1.5 text-[11px]">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#EBF6E0] text-[#4D9830]">
+                    <i data-lucide="sprout" class="h-3.5 w-3.5"></i>
+                  </span>
+                  <span class="font-semibold text-[#1A2D10]">{{ $artikel->komoditas ?: '-' }}</span>
+                </div>
+              </td>
+              <td class="px-3 py-3.5">
+                <div class="flex items-center gap-2">
+                  @if($artikel->gambar)
+                    <img src="{{ asset($artikel->gambar) }}" alt="{{ $artikel->judul }}" class="h-8 w-8 shrink-0 rounded-md object-cover border border-[#C5DFB0]">
+                  @else
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF4D6] text-[#D97706] border border-[#F6E0B0]">
+                      <i data-lucide="image" class="h-4 w-4"></i>
+                    </span>
+                  @endif
+                  <span class="max-w-16 truncate text-[10px] font-mono text-[#9AB880]" title="{{ basename($artikel->gambar ?? '') }}">
+                    {{ $artikel->gambar ? basename($artikel->gambar) : '-' }}
+                  </span>
+                </div>
+              </td>
+              <td class="whitespace-nowrap px-3 py-3.5 text-[#9AB880] font-mono text-[11px]">
+                {{ optional($artikel->tanggal)->format('Y-m-d') ?: '-' }}
+              </td>
+              <td class="px-3 py-3.5 text-center">
+                <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold {{ $artikel->status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]' }}">
+                  {{ $artikel->status }}
+                </span>
+              </td>
+              <td class="px-3 py-3.5 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button type="button" onclick="openDetailArtikelModal(this.closest('tr'))"
+                    class="inline-flex items-center gap-1 rounded-lg bg-[#EAF5DE] px-2.5 py-1.5 text-[10px] font-bold text-[#4D9830] hover:bg-[#DDF0CC] transition cursor-pointer"
+                    title="Lihat Rincian Artikel">
+                    <i data-lucide="eye" class="h-3 w-3"></i>
+                    <span>Detail</span>
+                  </button>
+                  <button type="button" class="js-edit-artikel inline-flex items-center gap-1 rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEFA0] transition cursor-pointer"
+                    title="Ubah Data Artikel"
                     data-artikel="{{ json_encode([
                       'id' => $artikel->id_artikel,
                       'judul' => $artikel->judul,
@@ -101,11 +181,14 @@
                       'gambar' => $artikel->gambar ? asset($artikel->gambar) : null,
                       'action' => route('admin.edukasi.artikel.update', $artikel),
                     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}">
-                    <i data-lucide="edit-3" class="h-3 w-3"></i>Edit
+                    <i data-lucide="edit-3" class="h-3 w-3"></i>
+                    <span>Edit</span>
                   </button>
-                  <button type="button" class="js-delete-artikel inline-flex items-center gap-1 rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD2D2]"
+                  <button type="button" class="js-delete-artikel inline-flex items-center gap-1 rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD2D2] transition cursor-pointer"
+                    title="Hapus Artikel"
                     data-delete-action="{{ route('admin.edukasi.artikel.destroy', $artikel) }}" data-delete-title="{{ $artikel->judul }}">
-                    <i data-lucide="trash-2" class="h-3 w-3"></i>Hapus
+                    <i data-lucide="trash-2" class="h-3 w-3"></i>
+                    <span>Hapus</span>
                   </button>
                 </div>
               </td>
@@ -116,108 +199,133 @@
       </div>
       <div class="border-t border-[#E4F0D6] px-4 py-3">{{ $artikelList->links() }}</div>
     @else
-      <div class="px-6 py-14 text-center"><div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EBF6E0] text-[#4D9830]"><i data-lucide="newspaper" class="h-6 w-6"></i></div><h2 class="mt-4 text-sm font-extrabold text-[#1A2D10]">Belum ada artikel.</h2><p class="mt-1 text-xs text-[#9AB880]">Tambahkan artikel edukasi pertama untuk mulai mengisi halaman publik.</p><button type="button" onclick="openArtikelModal()" class="mt-4 inline-flex rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#3D8024]">Tambah Artikel</button></div>
+      <tr id="artikel-empty-row">
+        <td colspan="8" class="px-4 py-12 text-center text-xs text-[#9AB880]">
+          <div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F8F1] text-[#9AB880]">
+            <i data-lucide="newspaper" class="h-6 w-6"></i>
+          </div>
+          <p class="font-semibold text-slate-600">Belum ada artikel pertanian yang tersimpan di database.</p>
+          <p class="mt-1 text-[11px] text-[#9AB880]">Klik tombol "+ Tambah Artikel" untuk membuat artikel pertama.</p>
+        </td>
+      </tr>
     @endif
   </div>
 </div>
 
-<!-- MODAL TAMBAH / EDIT ARTIKEL: mengikuti pola modal Tambah Pengurus -->
-<div id="modal-artikel" class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/50 p-3 backdrop-blur-xs sm:p-4">
-  <div id="modal-artikel-container" class="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[22px] border border-[#E4F0D6] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-    <div class="flex shrink-0 items-center justify-between border-b border-[#E4F0D6] bg-[#F5F8F1] px-5 py-4 sm:px-6">
+<!-- MODAL TAMBAH / EDIT ARTIKEL: mengikuti pola modal Tips -->
+<div id="modal-artikel" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
+  <div id="modal-artikel-container" class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="flex items-center justify-between border-b border-[#F0F7E8] px-5 py-4 bg-[#F5F8F1]">
       <div class="flex items-center gap-2.5">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EBF6E0] text-[#4D9830]"><i id="artikel-modal-icon" data-lucide="file-plus-2" class="h-4 w-4"></i></div>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
+          <i id="artikel-modal-icon" data-lucide="file-plus-2" class="h-4 w-4"></i>
+        </div>
         <div>
-          <h3 id="artikel-modal-title" class="text-base font-bold text-[#1A2D10]">Tambah Artikel</h3>
-          <p id="artikel-modal-subtitle" class="text-xs text-[#9AB880]">Simpan artikel edukasi ke database</p>
+          <h3 id="artikel-modal-title" class="text-sm font-bold text-[#1A2D10]">Tambah Artikel</h3>
+          <p id="artikel-modal-subtitle" class="text-[11px] text-[#9AB880]">Simpan artikel edukasi ke database</p>
         </div>
       </div>
-      <button type="button" onclick="closeArtikelModal()" class="rounded-lg p-1 text-slate-400 transition-colors hover:bg-white hover:text-slate-700" aria-label="Tutup"><i data-lucide="x" class="h-5 w-5"></i></button>
+      <button type="button" onclick="closeArtikelModal()" class="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </button>
     </div>
 
-    <form id="form-artikel-modal" action="{{ route('admin.edukasi.artikel.store') }}" method="POST" enctype="multipart/form-data" class="min-h-0 overflow-y-auto p-5 text-xs sm:p-6 sm:text-sm">
+    <form id="form-artikel-modal" action="{{ route('admin.edukasi.artikel.store') }}" method="POST" enctype="multipart/form-data" class="overflow-y-auto p-5 space-y-4 text-xs">
       @csrf
       <input type="hidden" name="_method" id="artikel-form-method" value="POST">
       <input type="hidden" name="id_artikel" id="artikel-form-id" value="">
 
-      <div class="space-y-4">
+      <div>
+        <label class="block font-semibold text-[#1A2D10] mb-1">Judul Artikel <span class="text-red-500">*</span></label>
+        <input type="text" name="judul" id="artikel-judul" required maxlength="255" placeholder="Contoh: 5 Tips Mengatasi Hama Wereng Alami"
+          class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label for="artikel-judul" class="mb-1 block font-semibold text-[#1A2D10]">Judul Artikel <span class="text-red-500">*</span></label>
-          <input type="text" name="judul" id="artikel-judul" required maxlength="255" placeholder="Contoh: Teknik Budidaya Padi yang Efisien" class="h-11 w-full rounded-xl border border-[#C5DFB0] bg-white px-3.5 text-slate-800 placeholder-[#9AB880] outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
+          <label class="block font-semibold text-[#1A2D10] mb-1">Kategori <span class="text-red-500">*</span></label>
+          <select name="kategori" id="artikel-kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="">Pilih Kategori</option>
+            @foreach(($kategoriOptions ?? collect()) as $kategori)
+              <option value="{{ $kategori }}">{{ $kategori }}</option>
+            @endforeach
+            <option value="__custom__">Kategori lainnya...</option>
+          </select>
+          <input type="text" id="artikel-kategori-custom" placeholder="Ketik kategori baru" class="mt-2 hidden h-9 w-full rounded-lg border border-[#C5DFB0] px-3 text-xs outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
         </div>
-
-        <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-          <div>
-            <label for="artikel-kategori" class="mb-1 block font-semibold text-[#1A2D10]">Kategori <span class="text-red-500">*</span></label>
-            <select name="kategori" id="artikel-kategori" required class="h-11 w-full cursor-pointer rounded-xl border border-[#C5DFB0] bg-white px-3.5 text-slate-800 outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-              <option value="">Pilih Kategori</option>
-              @foreach(($kategoriOptions ?? collect()) as $kategori)
-                <option value="{{ $kategori }}">{{ $kategori }}</option>
-              @endforeach
-              <option value="__custom__">Kategori lainnya...</option>
-            </select>
-            <input type="text" id="artikel-kategori-custom" placeholder="Ketik kategori baru" class="mt-2 hidden h-10 w-full rounded-xl border border-[#C5DFB0] px-3.5 text-sm outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-          </div>
-          <div>
-            <label for="artikel-komoditas" class="mb-1 block font-semibold text-[#1A2D10]">Komoditas</label>
-            <select name="komoditas" id="artikel-komoditas" class="h-11 w-full cursor-pointer rounded-xl border border-[#C5DFB0] bg-white px-3.5 text-slate-800 outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-              <option value="">Pilih Komoditas</option>
-              @foreach(($komoditasOptions ?? collect()) as $komoditas)
-                <option value="{{ $komoditas }}">{{ $komoditas }}</option>
-              @endforeach
-              <option value="__custom__">Komoditas lainnya...</option>
-            </select>
-            <input type="text" id="artikel-komoditas-custom" placeholder="Ketik komoditas baru" class="mt-2 hidden h-10 w-full rounded-xl border border-[#C5DFB0] px-3.5 text-sm outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-          <div>
-            <label for="artikel-tanggal" class="mb-1 block font-semibold text-[#1A2D10]">Tanggal Publikasi</label>
-            <input type="date" name="tanggal" id="artikel-tanggal" class="h-11 w-full rounded-xl border border-[#C5DFB0] bg-white px-3.5 text-slate-800 outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-          <div>
-            <label for="artikel-status" class="mb-1 block font-semibold text-[#1A2D10]">Status <span class="text-red-500">*</span></label>
-            <select name="status" id="artikel-status" required class="h-11 w-full cursor-pointer rounded-xl border border-[#C5DFB0] bg-white px-3.5 text-slate-800 outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-              <option value="Draft">Draft</option>
-              <option value="Publik">Publik</option>
-            </select>
-          </div>
-          <div class="flex items-end">
-            <div class="w-full rounded-xl border border-[#E4F0D6] bg-[#F5F8F1] px-3.5 py-2.5 text-[11px] leading-5 text-[#6B7F5B]">
-              <span class="font-bold text-[#4A6030]">Catatan:</span> hanya artikel berstatus <b>Publik</b> yang tampil di halaman frontend.
-            </div>
-          </div>
-        </div>
-
         <div>
-          <div class="flex items-center justify-between gap-3"><label for="artikel-ringkasan" class="mb-1 block font-semibold text-[#1A2D10]">Ringkasan <span class="text-red-500">*</span></label><span id="artikel-ringkasan-count" class="text-[10px] text-[#9AB880]">0/1000</span></div>
-          <textarea name="ringkasan" id="artikel-ringkasan" rows="3" required maxlength="1000" placeholder="Tulis ringkasan singkat artikel..." class="w-full resize-none rounded-xl border border-[#C5DFB0] p-3 text-sm leading-6 text-slate-800 placeholder-[#9AB880] outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20"></textarea>
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between gap-3"><label for="artikel-isi" class="mb-1 block font-semibold text-[#1A2D10]">Isi Artikel <span class="text-red-500">*</span></label><span id="artikel-isi-count" class="text-[10px] text-[#9AB880]">0 karakter</span></div>
-          <textarea name="isi" id="artikel-isi" rows="10" required placeholder="Tulis isi artikel di sini...&#10;&#10;Gunakan paragraf dan baris baru agar artikel nyaman dibaca." class="w-full resize-y rounded-xl border border-[#C5DFB0] p-3 text-sm leading-7 text-slate-800 placeholder-[#9AB880] outline-none transition-all focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20"></textarea>
-          <p class="mt-1 text-[10px] text-[#9AB880]">Isi artikel disimpan sebagai teks biasa dan ditampilkan dengan aman.</p>
-        </div>
-
-        <div>
-          <label for="artikel-gambar" class="mb-1 block font-semibold text-[#1A2D10]">Gambar Artikel</label>
-          <label for="artikel-gambar" class="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#C5DFB0] bg-[#F5F8F1]/50 p-3.5 transition hover:border-[#4D9830] hover:bg-[#F5F8F1]">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EBF6E0] text-[#4D9830]"><i data-lucide="upload-cloud" class="h-5 w-5"></i></span>
-            <span class="min-w-0"><span class="block text-xs font-bold text-[#4A6030]">Klik untuk mengunggah gambar</span><span id="artikel-file-label" class="mt-0.5 block truncate text-[10px] text-[#9AB880]">JPG, JPEG, PNG, WEBP (Maks. 4 MB)</span></span>
-          </label>
-          <input type="file" name="gambar" id="artikel-gambar" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="sr-only">
-          <div id="artikel-current-image" class="mt-2 hidden items-center gap-3 rounded-xl border border-[#E4F0D6] bg-[#F5F8F1] p-2.5"><img id="artikel-current-image-preview" src="" alt="Gambar artikel" class="h-14 w-20 rounded-lg object-cover"><div class="min-w-0"><p class="text-[10px] font-bold text-[#4A6030]">Gambar saat ini</p><p class="truncate text-[10px] text-[#9AB880]">Biarkan kosong jika tidak ingin mengganti gambar.</p></div></div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Komoditas</label>
+          <select name="komoditas" id="artikel-komoditas" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="">Pilih Komoditas</option>
+            @foreach(($komoditasOptions ?? collect()) as $komoditas)
+              <option value="{{ $komoditas }}">{{ $komoditas }}</option>
+            @endforeach
+            <option value="__custom__">Komoditas lainnya...</option>
+          </select>
+          <input type="text" id="artikel-komoditas-custom" placeholder="Ketik komoditas baru" class="mt-2 hidden h-9 w-full rounded-lg border border-[#C5DFB0] px-3 text-xs outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
         </div>
       </div>
 
-      <div class="mt-5 flex items-center justify-end gap-2.5 border-t border-[#E4F0D6] pt-4">
-        <button type="button" onclick="closeArtikelModal()" class="rounded-xl border border-[#C5DFB0] px-4 py-2.5 font-semibold text-[#4A6030] transition-colors hover:bg-[#F5F8F1]">Batal</button>
-        <button id="artikel-submit-button" type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-[#4D9830] px-5 py-2.5 font-bold text-white shadow-sm shadow-[#4D9830]/20 transition-all hover:bg-[#3D8024]"><i data-lucide="check" class="h-4 w-4"></i><span>Simpan Artikel</span></button>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Tanggal Publikasi</label>
+          <input type="date" name="tanggal" id="artikel-tanggal" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+        </div>
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Status <span class="text-red-500">*</span></label>
+          <select name="status" id="artikel-status" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="Draft">Draft</option>
+            <option value="Publik">Publik</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="block font-semibold text-[#1A2D10]">Ringkasan <span class="text-red-500">*</span></label>
+          <span id="artikel-ringkasan-count" class="text-[10px] text-[#9AB880]">0/1000</span>
+        </div>
+        <textarea name="ringkasan" id="artikel-ringkasan" rows="2" required maxlength="1000" placeholder="Tuliskan rangkuman artikel yang langsung bisa dipraktikkan petani..."
+          class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="block font-semibold text-[#1A2D10]">Isi Artikel <span class="text-red-500">*</span></label>
+          <span id="artikel-isi-count" class="text-[10px] text-[#9AB880]">0 karakter</span>
+        </div>
+        <textarea name="isi" id="artikel-isi" rows="4" required placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
+          class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Upload File Gambar Ilustrasi</label>
+          <input type="file" name="gambar" id="artikel-gambar" accept=".jpg,.jpeg,.png,.webp,image/*"
+            class="w-full rounded-lg border border-[#C5DFB0] p-1.5 text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#EBF6E0] file:text-[#4D9830] hover:file:bg-[#dff0cc] cursor-pointer">
+          <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP (Maks 2MB)</p>
+          <div id="artikel-current-image" class="mt-2 hidden items-center gap-2">
+            <img id="artikel-current-image-preview" src="" alt="Gambar artikel" class="h-12 w-16 rounded-lg object-cover border border-[#E4F0D6]">
+            <span class="text-[10px] text-[#6B7F5B]">Gambar saat ini. Upload baru untuk mengganti.</span>
+          </div>
+        </div>
+        <div class="flex items-end">
+          <div class="w-full rounded-lg border border-[#E4F0D6] bg-[#F5F8F1] px-3 py-2 text-[11px] leading-5 text-[#6B7F5B]">
+            <span class="font-bold text-[#4A6030]">Catatan:</span> hanya artikel berstatus <b>Publik</b> yang tampil di halaman frontend.
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F7E8]">
+        <button type="button" onclick="closeArtikelModal()"
+          class="rounded-xl border border-[#C5DFB0] px-4 py-2 text-xs font-semibold text-[#4A6030] hover:bg-[#F5F8F1] transition cursor-pointer">
+          Batal
+        </button>
+        <button id="artikel-submit-button" type="submit"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-[#4D9830] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#3D8024] transition cursor-pointer">
+          <i data-lucide="check" class="h-3.5 w-3.5"></i>
+          <span>Simpan Artikel</span>
+        </button>
       </div>
     </form>
   </div>
@@ -263,6 +371,71 @@
   </div>
 </div>
 
+<!-- MODAL DETAIL ARTIKEL -->
+<div id="modal-detail-artikel" class="fixed inset-0 z-[85] hidden items-center justify-center bg-slate-900/50 p-3 backdrop-blur-xs sm:p-4">
+  <div class="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[22px] border border-[#E4F0D6] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div class="flex shrink-0 items-center justify-between border-b border-[#E4F0D6] bg-[#F5F8F1] px-5 py-4 sm:px-6">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EBF6E0] text-[#4D9830]"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+        <div>
+          <h3 class="text-base font-bold text-[#1A2D10]">Detail Artikel</h3>
+          <p class="text-xs text-[#9AB880]">Informasi lengkap artikel</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeDetailArtikelModal()" class="rounded-lg p-1 text-slate-400 transition-colors hover:bg-white hover:text-slate-700" aria-label="Tutup"><i data-lucide="x" class="h-5 w-5"></i></button>
+    </div>
+
+    <div class="min-h-0 overflow-y-auto p-5 sm:p-6">
+      <!-- Gambar -->
+      <div id="detail-artikel-image-container" class="mb-5 overflow-hidden rounded-2xl border border-[#E4F0D6] bg-[#F5F8F1]">
+        <img id="detail-artikel-image" src="" alt="" class="h-56 w-full object-cover sm:h-64">
+      </div>
+
+      <!-- Header info -->
+      <div class="mb-4 flex flex-wrap items-center gap-2">
+        <span id="detail-artikel-kategori" class="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-700"></span>
+        <span id="detail-artikel-status" class="rounded-full px-3 py-1 text-[10px] font-bold"></span>
+      </div>
+
+      <h2 id="detail-artikel-judul" class="text-2xl font-extrabold tracking-tight text-[#1A2D10] sm:text-3xl"></h2>
+
+      <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#9AB880]">
+        <span id="detail-artikel-tanggal"></span>
+        <span id="detail-artikel-komoditas-wrapper">Komoditas: <strong id="detail-artikel-komoditas" class="text-[#4A6030]"></strong></span>
+      </div>
+
+      <!-- Ringkasan -->
+      <div class="mt-6 rounded-2xl bg-[#F5F8F1] p-4">
+        <p class="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Ringkasan</p>
+        <p id="detail-artikel-ringkasan" class="text-sm font-semibold leading-7 text-[#4A6030]"></p>
+      </div>
+
+      <!-- Isi -->
+      <div class="mt-5">
+        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Isi Artikel</p>
+        <div id="detail-artikel-isi" class="whitespace-pre-line text-sm leading-8 text-slate-700"></div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2.5 border-t border-[#E4F0D6] bg-[#F5F8F1] px-5 py-3 sm:px-6">
+      <button type="button" onclick="closeDetailArtikelModal()" class="rounded-xl border border-[#C5DFB0] bg-white px-4 py-2.5 text-xs font-bold text-[#4A6030] hover:bg-[#F5F8F1]">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="artikel-store-url" value="{{ route('admin.edukasi.artikel.store') }}">
+@if($errors->any())
+<input type="hidden" id="artikel-old-id" value="{{ old('id_artikel') }}">
+<input type="hidden" id="artikel-old-judul" value="{{ old('judul', '') }}">
+<input type="hidden" id="artikel-old-kategori" value="{{ old('kategori', '') }}">
+<input type="hidden" id="artikel-old-komoditas" value="{{ old('komoditas', '') }}">
+<input type="hidden" id="artikel-old-tanggal" value="{{ old('tanggal', '') }}">
+<input type="hidden" id="artikel-old-status" value="{{ old('status', 'Draft') }}">
+<input type="hidden" id="artikel-old-ringkasan" value="{{ old('ringkasan', '') }}">
+<input type="hidden" id="artikel-old-isi" value="{{ old('isi', '') }}">
+<input type="hidden" id="artikel-has-errors" value="1">
+@endif
+
 <script>
 (function () {
   const modal = document.getElementById('modal-artikel');
@@ -285,7 +458,6 @@
     ringkasan: document.getElementById('artikel-ringkasan'),
     isi: document.getElementById('artikel-isi'),
     gambar: document.getElementById('artikel-gambar'),
-    fileLabel: document.getElementById('artikel-file-label'),
     currentImage: document.getElementById('artikel-current-image'),
     currentImagePreview: document.getElementById('artikel-current-image-preview'),
     title: document.getElementById('artikel-modal-title'),
@@ -295,7 +467,7 @@
     contentCount: document.getElementById('artikel-isi-count'),
   };
 
-  const storeAction = @js(route('admin.edukasi.artikel.store'));
+  const storeAction = document.getElementById('artikel-store-url').value;
   const defaultDate = new Date().toISOString().slice(0, 10);
 
   function setFieldValue(select, value) {
@@ -325,7 +497,6 @@
 
   function resetImageState() {
     fields.gambar.value = '';
-    fields.fileLabel.textContent = 'JPG, JPEG, PNG, WEBP (Maks. 4 MB)';
     fields.currentImage.classList.add('hidden');
     fields.currentImage.classList.remove('flex');
     fields.currentImagePreview.src = '';
@@ -385,6 +556,68 @@
     document.body.classList.remove('overflow-hidden');
   };
 
+  // Detail Modal
+  const detailModal = document.getElementById('modal-detail-artikel');
+
+  window.openDetailArtikelModal = function (row) {
+    if (!row || !detailModal) return;
+
+    const data = row.dataset;
+    const imageContainer = document.getElementById('detail-artikel-image-container');
+    const image = document.getElementById('detail-artikel-image');
+
+    // Populate data
+    document.getElementById('detail-artikel-judul').textContent = data.judul || '';
+    document.getElementById('detail-artikel-kategori').textContent = data.kategori || '';
+    document.getElementById('detail-artikel-tanggal').textContent = data.tanggal || 'Tanggal belum ditentukan';
+    document.getElementById('detail-artikel-ringkasan').textContent = data.ringkasan || '';
+    document.getElementById('detail-artikel-isi').textContent = data.isi || '';
+
+    // Status badge
+    const statusBadge = document.getElementById('detail-artikel-status');
+    statusBadge.textContent = data.status || 'Draft';
+    statusBadge.className = 'rounded-full px-3 py-1 text-[10px] font-bold ' +
+      (data.status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]');
+
+    // Komoditas
+    const komoditasWrapper = document.getElementById('detail-artikel-komoditas-wrapper');
+    const komoditas = document.getElementById('detail-artikel-komoditas');
+    if (data.komoditas) {
+      komoditas.textContent = data.komoditas;
+      komoditasWrapper.style.display = '';
+    } else {
+      komoditasWrapper.style.display = 'none';
+    }
+
+    // Image
+    if (data.gambar) {
+      image.src = data.gambar;
+      image.alt = data.judul || '';
+      imageContainer.style.display = '';
+    } else {
+      imageContainer.style.display = 'none';
+    }
+
+    // Show modal
+    detailModal.classList.remove('hidden');
+    detailModal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+    if (window.lucide) window.lucide.createIcons();
+  };
+
+  window.closeDetailArtikelModal = function () {
+    if (!detailModal) return;
+    detailModal.classList.add('hidden');
+    detailModal.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+  };
+
+  if (detailModal) {
+    detailModal.addEventListener('click', (event) => {
+      if (event.target === detailModal) window.closeDetailArtikelModal();
+    });
+  }
+
   function openDeleteArtikelModal(button) {
     if (!deleteModal || !deleteForm || !deleteTitle) return;
     deleteForm.action = button.dataset.deleteAction || '';
@@ -421,10 +654,6 @@
 
   fields.summaryCount && fields.ringkasan.addEventListener('input', updateCounters);
   fields.contentCount && fields.isi.addEventListener('input', updateCounters);
-  fields.gambar.addEventListener('change', function () {
-    const file = this.files?.[0];
-    fields.fileLabel.textContent = file ? `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)` : 'JPG, JPEG, PNG, WEBP (Maks. 4 MB)';
-  });
 
   modal.addEventListener('click', function (event) {
     if (event.target === modal) window.closeArtikelModal();
@@ -434,6 +663,7 @@
     if (event.key !== 'Escape') return;
     if (!modal.classList.contains('hidden')) window.closeArtikelModal();
     if (deleteModal && !deleteModal.classList.contains('hidden')) window.closeDeleteArtikelModal();
+    if (detailModal && !detailModal.classList.contains('hidden')) window.closeDetailArtikelModal();
   });
 
   form.addEventListener('submit', function () {
@@ -457,23 +687,23 @@
     fields.submit.classList.add('opacity-70', 'cursor-not-allowed');
   });
 
-  @if($errors->any())
-    const oldArtikelId = @js(old('id_artikel'));
+  if (document.getElementById('artikel-has-errors')) {
+    const oldArtikelId = document.getElementById('artikel-old-id').value;
     if (oldArtikelId) {
       const editButton = Array.from(document.querySelectorAll('[onclick*="openArtikelModal"]')).find(button => button.getAttribute('onclick')?.includes(`"id":${oldArtikelId}`));
       if (editButton) editButton.click();
     } else {
       window.openArtikelModal();
     }
-    fields.judul.value = @js(old('judul', ''));
-    setFieldValue(fields.kategori, @js(old('kategori', '')));
-    setFieldValue(fields.komoditas, @js(old('komoditas', '')));
-    fields.tanggal.value = @js(old('tanggal', ''));
-    fields.status.value = @js(old('status', 'Draft'));
-    fields.ringkasan.value = @js(old('ringkasan', ''));
-    fields.isi.value = @js(old('isi', ''));
+    fields.judul.value = document.getElementById('artikel-old-judul').value;
+    setFieldValue(fields.kategori, document.getElementById('artikel-old-kategori').value);
+    setFieldValue(fields.komoditas, document.getElementById('artikel-old-komoditas').value);
+    fields.tanggal.value = document.getElementById('artikel-old-tanggal').value;
+    fields.status.value = document.getElementById('artikel-old-status').value;
+    fields.ringkasan.value = document.getElementById('artikel-old-ringkasan').value;
+    fields.isi.value = document.getElementById('artikel-old-isi').value;
     updateCounters();
-  @endif
+  }
 })();
 </script>
 @endsection

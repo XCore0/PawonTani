@@ -52,16 +52,6 @@ class ArtikelController extends Controller
         return view('Admin.Content.Artikel', compact('artikelList', 'stats', 'kategoriOptions', 'komoditasOptions'));
     }
 
-    public function create()
-    {
-        return view('Admin.Content.ArtikelForm', [
-            'artikel' => new Artikel(),
-            'formAction' => route('admin.edukasi.artikel.store'),
-            'formMethod' => 'POST',
-            'pageTitle' => 'Tambah Artikel',
-        ]);
-    }
-
     public function store(Request $request)
     {
         $validated = $this->validateArticle($request);
@@ -80,23 +70,8 @@ class ArtikelController extends Controller
             throw $e;
         }
 
-        return redirect()->route('admin.edukasi.artikel.show', $artikel)
+        return redirect()->route('admin.edukasi.artikel')
             ->with('success', 'Artikel berhasil ditambahkan.');
-    }
-
-    public function show(Artikel $artikel)
-    {
-        return view('Admin.Content.ArtikelShow', compact('artikel'));
-    }
-
-    public function edit(Artikel $artikel)
-    {
-        return view('Admin.Content.ArtikelForm', [
-            'artikel' => $artikel,
-            'formAction' => route('admin.edukasi.artikel.update', $artikel),
-            'formMethod' => 'PUT',
-            'pageTitle' => 'Edit Artikel',
-        ]);
     }
 
     public function update(Request $request, Artikel $artikel)
@@ -123,7 +98,7 @@ class ArtikelController extends Controller
             $this->deleteImage($oldImage);
         }
 
-        return redirect()->route('admin.edukasi.artikel.show', $artikel)
+        return redirect()->route('admin.edukasi.artikel')
             ->with('success', 'Artikel berhasil diperbarui.');
     }
 

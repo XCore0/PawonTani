@@ -190,21 +190,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
     Route::post('/edukasi/komoditas', [TipsController::class, 'storeKomoditas'])->name('edukasi.komoditas.store');
 
     Route::get('/edukasi/artikel', [ArtikelController::class, 'index'])->name('edukasi.artikel');
-    Route::get('/edukasi/artikel/create', [ArtikelController::class, 'create'])->name('edukasi.artikel.create');
     Route::post('/edukasi/artikel', [ArtikelController::class, 'store'])->name('edukasi.artikel.store');
-    Route::get('/edukasi/artikel/{artikel}', [ArtikelController::class, 'show'])->name('edukasi.artikel.show');
-    Route::get('/edukasi/artikel/{artikel}/edit', [ArtikelController::class, 'edit'])->name('edukasi.artikel.edit');
     Route::put('/edukasi/artikel/{artikel}', [ArtikelController::class, 'update'])->name('edukasi.artikel.update');
     Route::delete('/edukasi/artikel/{artikel}', [ArtikelController::class, 'destroy'])->name('edukasi.artikel.destroy');
 
     // Panduan CRUD
     Route::get('/edukasi/panduan', [PanduanController::class, 'index'])->name('edukasi.panduan');
     Route::post('/edukasi/panduan', [PanduanController::class, 'store'])->name('edukasi.panduan.store');
-    Route::get('/edukasi/panduan/create', [PanduanController::class, 'create'])->name('edukasi.panduan.create');
-    Route::get('/edukasi/panduan/{panduan}', [PanduanController::class, 'show'])->name('edukasi.panduan.show');
-    Route::get('/edukasi/panduan/{panduan}/edit', [PanduanController::class, 'edit'])->name('edukasi.panduan.edit');
     Route::put('/edukasi/panduan/{panduan}', [PanduanController::class, 'update'])->name('edukasi.panduan.update');
-    Route::patch('/edukasi/panduan/{panduan}', [PanduanController::class, 'update']);
     Route::delete('/edukasi/panduan/{panduan}', [PanduanController::class, 'destroy'])->name('edukasi.panduan.destroy');
 
     Route::get('/notifikasi', fn () => view('Notifications'))->name('notifikasi');
