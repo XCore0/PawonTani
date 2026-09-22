@@ -87,7 +87,7 @@ class PengurusController extends Controller
      */
     public function store(Request $request)
     {
-        $namaRegex = '/^[\pL\s.\'-]+$/u';
+        $namaRegex = '/^[\pL\s.-]+$/u';
 
         // Lowercase username before validation for case-insensitive unique check
         $request->merge(['username' => strtolower($request->input('username', ''))]);
@@ -116,17 +116,19 @@ class PengurusController extends Controller
                 },
             ],
             'id_kelompok' => 'required|string|exists:kelompok_tani,id_kelompok',
-            'nik' => 'nullable|string|max:16|unique:pengguna,nik',
+            'nik' => ['required', 'digits:16', 'unique:pengguna,nik'],
             'username' => 'required|string|max:50|alpha_dash|unique:pengguna,username',
             'password' => 'required|string|min:6',
             'email' => 'nullable|email|max:255|unique:pengguna,email',
-            'no_telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
+            'no_telepon' => ['required', 'digits_between:11,15', 'unique:pengguna,no_telepon'],
+            'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama.required' => 'Nama lengkap pengurus wajib diisi.',
-            'nama.regex' => "Nama hanya boleh berisi huruf, spasi, titik (.), strip (-), dan tanda petik (').",
+            'nama.regex' => 'Nama hanya boleh berisi huruf, spasi, titik (.), dan strip (-).',
+            'nik.required' => 'NIK wajib diisi.',
+            'nik.digits' => 'NIK harus tepat 16 digit angka.',
             'jabatan.required' => 'Jabatan pengurus (Ketua, Sekretaris, dll) wajib dipilih.',
             'id_kelompok.required' => 'Kelompok tani asal / binaan wajib dipilih.',
             'id_kelompok.exists' => 'Kelompok tani yang dipilih tidak valid atau tidak ditemukan.',
@@ -137,6 +139,11 @@ class PengurusController extends Controller
             'password.required' => 'Password login wajib diisi.',
             'password.min' => 'Password minimal terdiri dari 6 karakter.',
             'email.email' => 'Format alamat email tidak valid.',
+            'no_telepon.regex' => 'Nomor WhatsApp / HP hanya boleh berisi angka.',
+            'no_telepon.required' => 'Nomor WhatsApp / HP wajib diisi.',
+            'no_telepon.digits_between' => 'Nomor WhatsApp / HP harus 11 sampai 15 digit angka.',
+            'no_telepon.unique' => 'Nomor WhatsApp / HP sudah digunakan oleh pengurus lain.',
+            'alamat.required' => 'Alamat wajib diisi.',
             'email.unique' => 'Alamat email ini sudah terdaftar.',
             'status.required' => 'Status wajib dipilih.',
             'status.in' => 'Status harus bernilai Aktif atau Tidak Aktif.',
@@ -191,7 +198,7 @@ class PengurusController extends Controller
     {
         $pengurus = Pengguna::where('role', 'Pengurus')->where('id_pengguna', $id_pengguna)->firstOrFail();
 
-        $namaRegex = '/^[\pL\s.\'-]+$/u';
+        $namaRegex = '/^[\pL\s.-]+$/u';
 
         // Lowercase username before validation for case-insensitive unique check
         $request->merge(['username' => strtolower($request->input('username', ''))]);
@@ -227,9 +234,8 @@ class PengurusController extends Controller
             ],
             'id_kelompok' => 'required|string|exists:kelompok_tani,id_kelompok',
             'nik' => [
-                'nullable',
-                'string',
-                'max:16',
+                'required',
+                'digits:16',
                 Rule::unique('pengguna', 'nik')->ignore($pengurus->id_pengguna, 'id_pengguna'),
             ],
             'username' => [
@@ -246,13 +252,19 @@ class PengurusController extends Controller
                 'max:255',
                 Rule::unique('pengguna', 'email')->ignore($pengurus->id_pengguna, 'id_pengguna'),
             ],
-            'no_telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
+            'no_telepon' => [
+                'required',
+                'digits_between:11,15',
+                Rule::unique('pengguna', 'no_telepon')->ignore($pengurus->id_pengguna, 'id_pengguna'),
+            ],
+            'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama.required' => 'Nama lengkap pengurus wajib diisi.',
-            'nama.regex' => "Nama hanya boleh berisi huruf, spasi, titik (.), strip (-), dan tanda petik (').",
+            'nama.regex' => 'Nama hanya boleh berisi huruf, spasi, titik (.), dan strip (-).',
+            'nik.required' => 'NIK wajib diisi.',
+            'nik.digits' => 'NIK harus tepat 16 digit angka.',
             'jabatan.required' => 'Jabatan pengurus wajib dipilih.',
             'id_kelompok.required' => 'Kelompok tani asal wajib dipilih.',
             'id_kelompok.exists' => 'Kelompok tani tidak valid.',
@@ -262,6 +274,11 @@ class PengurusController extends Controller
             'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, strip, dan underscore.',
             'password.min' => 'Password minimal terdiri dari 6 karakter.',
             'email.email' => 'Format email tidak valid.',
+            'no_telepon.regex' => 'Nomor WhatsApp / HP hanya boleh berisi angka.',
+            'no_telepon.required' => 'Nomor WhatsApp / HP wajib diisi.',
+            'no_telepon.digits_between' => 'Nomor WhatsApp / HP harus 11 sampai 15 digit angka.',
+            'no_telepon.unique' => 'Nomor WhatsApp / HP sudah digunakan oleh pengurus lain.',
+            'alamat.required' => 'Alamat wajib diisi.',
             'email.unique' => 'Email ini sudah digunakan oleh pengguna lain.',
             'status.required' => 'Status wajib dipilih.',
             'foto_profil.image' => 'File foto profil harus berupa gambar.',

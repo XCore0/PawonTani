@@ -8,8 +8,8 @@ class Artikel extends Model
 {
     protected $table = 'artikel';
     protected $primaryKey = 'id_artikel';
-    public $incrementing = true;
-    protected $keyType = 'int';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'judul',
@@ -27,5 +27,23 @@ class Artikel extends Model
         return [
             'tanggal' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Artikel $artikel): void {
+            if (empty($artikel->id_artikel)) {
+                $artikel->id_artikel = self::generateIdArtikel();
+            }
+        });
+    }
+
+    public static function generateIdArtikel(): string
+    {
+        do {
+            $id = 'ATL-' . random_int(1000, 9999);
+        } while (self::whereKey($id)->exists());
+
+        return $id;
     }
 }

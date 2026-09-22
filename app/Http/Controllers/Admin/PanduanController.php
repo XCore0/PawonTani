@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePanduanRequest;
 use App\Http\Requests\UpdatePanduanRequest;
+use App\Models\Komoditas;
 use App\Models\Panduan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,11 +34,12 @@ class PanduanController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $categories = Panduan::query()->whereNotNull('kategori')->where('kategori', '<>', '')
-            ->distinct()->orderBy('kategori')->pluck('kategori');
+        $categories = StorePanduanRequest::CATEGORIES;
 
-        $commodities = Panduan::query()->whereNotNull('komoditas')->where('komoditas', '<>', '')
-            ->distinct()->orderBy('komoditas')->pluck('komoditas');
+        $commodities = Komoditas::query()
+            ->orderBy('nama_komoditas')
+            ->get()
+            ->groupBy('kategori');
 
         $counts = [
             'total' => Panduan::count(),
@@ -54,6 +56,7 @@ class PanduanController extends Controller
     public function store(StorePanduanRequest $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $data = $request->validated();
+        $data['tanggal'] = now()->toDateString();
         $data['slug'] = $this->uniqueSlug($data['judul']);
         $data['created_by'] = auth()->id();
 
@@ -75,8 +78,9 @@ class PanduanController extends Controller
             ->with('success', 'Panduan berhasil ditambahkan.');
     }
 
-    public function update(UpdatePanduanRequest $request, Panduan $panduan): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function update(UpdatePanduanRequest $request, string $id_panduan): RedirectResponse|\Illuminate\Http\JsonResponse
     {
+        $panduan = Panduan::findOrFail($id_panduan);
         $data = $request->validated();
 
         if ($panduan->judul !== $data['judul']) {
@@ -102,8 +106,9 @@ class PanduanController extends Controller
             ->with('success', 'Panduan berhasil diperbarui.');
     }
 
-    public function destroy(Request $request, Panduan $panduan): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function destroy(Request $request, string $id_panduan): RedirectResponse|\Illuminate\Http\JsonResponse
     {
+        $panduan = Panduan::findOrFail($id_panduan);
         $this->deleteImage($panduan->gambar);
         $panduan->delete();
 
@@ -118,7 +123,7 @@ class PanduanController extends Controller
             ->with('success', 'Panduan berhasil dihapus.');
     }
 
-    private function uniqueSlug(string $title, ?int $ignoreId = null): string
+    private function uniqueSlug(string $title, ?string $ignoreId = null): string
     {
         $base = Str::slug($title) ?: 'panduan';
         $slug = $base;

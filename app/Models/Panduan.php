@@ -12,8 +12,8 @@ class Panduan extends Model
 
     protected $table = 'panduan';
     protected $primaryKey = 'id_panduan';
-    public $incrementing = true;
-    protected $keyType = 'int';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'judul',
@@ -35,6 +35,24 @@ class Panduan extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Panduan $panduan): void {
+            if (empty($panduan->id_panduan)) {
+                $panduan->id_panduan = self::generateIdPanduan();
+            }
+        });
+    }
+
+    public static function generateIdPanduan(): string
+    {
+        do {
+            $id = 'PDU-' . random_int(1000, 9999);
+        } while (self::whereKey($id)->exists());
+
+        return $id;
+    }
+
     public function author()
     {
         return $this->belongsTo(Pengguna::class, 'created_by', 'id_pengguna');
@@ -42,12 +60,12 @@ class Panduan extends Model
 
     public function scopePublik(Builder $query): Builder
     {
-        return $query->where('status', 'publik');
+        return $query->where('status', 'Publik');
     }
 
     public function scopeDraft(Builder $query): Builder
     {
-        return $query->where('status', 'draft');
+        return $query->where('status', 'Draft');
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder

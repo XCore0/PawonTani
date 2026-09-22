@@ -4,12 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artikel;
+use App\Models\Komoditas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ArtikelController extends Controller
 {
+    public const CATEGORIES = [
+        'Budidaya Tanaman',
+        'Hama & Penyakit',
+        'Irigasi & Air',
+        'Nutrisi & Pupuk',
+        'Perawatan Tanaman',
+        'Panen & Pasca Panen',
+    ];
+
     public function index(Request $request)
     {
         $operator = DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
@@ -46,8 +57,11 @@ class ArtikelController extends Controller
             ]);
         }
 
-        $kategoriOptions = Artikel::query()->whereNotNull('kategori')->where('kategori', '<>', '')->distinct()->orderBy('kategori')->pluck('kategori');
-        $komoditasOptions = Artikel::query()->whereNotNull('komoditas')->where('komoditas', '<>', '')->distinct()->orderBy('komoditas')->pluck('komoditas');
+        $kategoriOptions = self::CATEGORIES;
+        $komoditasOptions = Komoditas::query()
+            ->orderBy('nama_komoditas')
+            ->get()
+            ->groupBy('kategori');
 
         return view('Admin.Content.Artikel', compact('artikelList', 'stats', 'kategoriOptions', 'komoditasOptions'));
     }
@@ -55,6 +69,7 @@ class ArtikelController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateArticle($request);
+        $validated['tanggal'] = now()->toDateString();
         $gambar = null;
 
         if ($request->hasFile('gambar')) {
@@ -74,8 +89,9 @@ class ArtikelController extends Controller
             ->with('success', 'Artikel berhasil ditambahkan.');
     }
 
-    public function update(Request $request, Artikel $artikel)
+    public function update(Request $request, string $id_artikel)
     {
+        $artikel = Artikel::findOrFail($id_artikel);
         $validated = $this->validateArticle($request, true);
         $oldImage = $artikel->gambar;
         $newImage = null;
@@ -102,8 +118,9 @@ class ArtikelController extends Controller
             ->with('success', 'Artikel berhasil diperbarui.');
     }
 
-    public function destroy(Artikel $artikel)
+    public function destroy(string $id_artikel)
     {
+        $artikel = Artikel::findOrFail($id_artikel);
         $image = $artikel->gambar;
         $artikel->delete();
 
@@ -118,22 +135,32 @@ class ArtikelController extends Controller
     private function validateArticle(Request $request, bool $isUpdate = false): array
     {
         return $request->validate([
-            'judul' => ['required', 'string', 'max:255'],
-            'kategori' => ['required', 'string', 'max:100'],
-            'komoditas' => ['nullable', 'string', 'max:100'],
+            'judul' => ['required', 'string', 'max:255', $isUpdate ? Rule::unique('artikel', 'judul')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,judul'],
+            'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
+            'komoditas' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if ($value !== 'Semua Komoditas' && !Komoditas::where('nama_komoditas', $value)->exists()) {
+                        $fail('Komoditas sasaran harus dipilih dari daftar yang tersedia.');
+                    }
+                },
+            ],
             'ringkasan' => ['required', 'string', 'max:1000'],
-            'isi' => ['required', 'string'],
-            'gambar' => [$isUpdate ? 'nullable' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'isi' => ['required', 'string', $isUpdate ? Rule::unique('artikel', 'isi')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,isi'],
+            'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'tanggal' => ['nullable', 'date'],
             'status' => ['required', 'in:Publik,Draft'],
         ], [
             'judul.required' => 'Judul artikel wajib diisi.',
+            'judul.unique' => 'Judul artikel sudah digunakan.',
             'kategori.required' => 'Kategori artikel wajib diisi.',
             'ringkasan.required' => 'Ringkasan artikel wajib diisi.',
             'isi.required' => 'Isi artikel wajib diisi.',
+            'isi.unique' => 'Isi artikel sudah digunakan.',
             'gambar.image' => 'File gambar harus berupa gambar.',
-            'gambar.mimes' => 'Gambar harus berformat JPG, JPEG, PNG, atau WEBP.',
-            'gambar.max' => 'Ukuran gambar maksimal 4 MB.',
+            'gambar.mimes' => 'Gambar harus berformat JPG, JPEG, PNG, WEBP, atau SVG.',
+            'gambar.max' => 'Ukuran gambar maksimal 2 MB.',
             'status.in' => 'Status artikel tidak valid.',
         ]);
     }

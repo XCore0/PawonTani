@@ -217,7 +217,7 @@
   <div id="modal-artikel-container" class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
     <div class="flex items-center justify-between border-b border-[#F0F7E8] px-5 py-4 bg-[#F5F8F1]">
       <div class="flex items-center gap-2.5">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
+        <div id="artikel-modal-icon-box" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
           <i id="artikel-modal-icon" data-lucide="file-plus-2" class="h-4 w-4"></i>
         </div>
         <div>
@@ -246,36 +246,37 @@
           <label class="block font-semibold text-[#1A2D10] mb-1">Kategori <span class="text-red-500">*</span></label>
           <select name="kategori" id="artikel-kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
             <option value="">Pilih Kategori</option>
-            @foreach(($kategoriOptions ?? collect()) as $kategori)
+            @foreach($kategoriOptions as $kategori)
               <option value="{{ $kategori }}">{{ $kategori }}</option>
             @endforeach
-            <option value="__custom__">Kategori lainnya...</option>
           </select>
-          <input type="text" id="artikel-kategori-custom" placeholder="Ketik kategori baru" class="mt-2 hidden h-9 w-full rounded-lg border border-[#C5DFB0] px-3 text-xs outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
         </div>
         <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Komoditas</label>
-          <select name="komoditas" id="artikel-komoditas" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran <span class="text-red-500">*</span></label>
+            <button type="button" id="btn-tambah-komoditas-artikel" class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4D9830] hover:text-[#3d7a26] transition-colors cursor-pointer">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>+ Tambah Baru</span>
+            </button>
+          </div>
+          <select name="komoditas" id="artikel-komoditas" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
             <option value="">Pilih Komoditas</option>
-            @foreach(($komoditasOptions ?? collect()) as $komoditas)
-              <option value="{{ $komoditas }}">{{ $komoditas }}</option>
+            <option value="Semua Komoditas">Semua Komoditas (Umum)</option>
+            @php
+              $categoryIcons = [
+                'Tanaman Pangan' => '🌾',
+                'Hortikultura & Sayuran' => '🌶️',
+                'Buah-buahan' => '🍉',
+                'Perkebunan & Rempah' => '☕',
+              ];
+            @endphp
+            @foreach($komoditasOptions as $categoryName => $items)
+              <optgroup label="{{ ($categoryIcons[$categoryName] ?? '🌱') . ' ' . $categoryName }}">
+                @foreach($items as $komoditas)
+                  <option value="{{ $komoditas->nama_komoditas }}">{{ $komoditas->nama_komoditas }}</option>
+                @endforeach
+              </optgroup>
             @endforeach
-            <option value="__custom__">Komoditas lainnya...</option>
-          </select>
-          <input type="text" id="artikel-komoditas-custom" placeholder="Ketik komoditas baru" class="mt-2 hidden h-9 w-full rounded-lg border border-[#C5DFB0] px-3 text-xs outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Tanggal Publikasi</label>
-          <input type="date" name="tanggal" id="artikel-tanggal" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-        </div>
-        <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Status <span class="text-red-500">*</span></label>
-          <select name="status" id="artikel-status" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Draft">Draft</option>
-            <option value="Publik">Publik</option>
           </select>
         </div>
       </div>
@@ -301,18 +302,20 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block font-semibold text-[#1A2D10] mb-1">Upload File Gambar Ilustrasi</label>
-          <input type="file" name="gambar" id="artikel-gambar" accept=".jpg,.jpeg,.png,.webp,image/*"
+          <input type="file" name="gambar" id="artikel-gambar" accept=".jpg,.jpeg,.png,.webp,.svg,image/*"
             class="w-full rounded-lg border border-[#C5DFB0] p-1.5 text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#EBF6E0] file:text-[#4D9830] hover:file:bg-[#dff0cc] cursor-pointer">
-          <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP (Maks 2MB)</p>
+          <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP, SVG (Maks 2MB)</p>
           <div id="artikel-current-image" class="mt-2 hidden items-center gap-2">
             <img id="artikel-current-image-preview" src="" alt="Gambar artikel" class="h-12 w-16 rounded-lg object-cover border border-[#E4F0D6]">
             <span class="text-[10px] text-[#6B7F5B]">Gambar saat ini. Upload baru untuk mengganti.</span>
           </div>
         </div>
-        <div class="flex items-end">
-          <div class="w-full rounded-lg border border-[#E4F0D6] bg-[#F5F8F1] px-3 py-2 text-[11px] leading-5 text-[#6B7F5B]">
-            <span class="font-bold text-[#4A6030]">Catatan:</span> hanya artikel berstatus <b>Publik</b> yang tampil di halaman frontend.
-          </div>
+        <div>
+          <label class="block font-semibold text-[#1A2D10] mb-1">Status Publikasi <span class="text-red-500">*</span></label>
+          <select name="status" id="artikel-status" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="Draft">Draft</option>
+            <option value="Publik">Publik</option>
+          </select>
         </div>
       </div>
 
@@ -327,6 +330,22 @@
           <span>Simpan Artikel</span>
         </button>
       </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-tambah-komoditas-artikel" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
+  <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-[#C5DFB0] overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 bg-[#F5F8F1] border-b border-[#C5DFB0]">
+      <div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center"><i data-lucide="sprout" class="w-4 h-4"></i></div><div><h3 class="font-bold text-sm text-[#1A2D10]">Tambah Tanaman Baru</h3><p class="text-[11px] text-[#9AB880]">Daftarkan komoditas tanaman budidaya baru</p></div></div>
+      <button type="button" id="close-tambah-komoditas-artikel" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <form id="form-tambah-komoditas-artikel" class="p-5 space-y-4 text-xs">
+      @csrf
+      <div id="komoditas-artikel-error" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"></div>
+      <div><label class="block font-semibold text-[#1A2D10] mb-1">Nama Tanaman / Komoditas <span class="text-red-500">*</span></label><input type="text" name="nama_komoditas" required placeholder="Contoh: Buncis, Selada, Vanili, dll" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></div>
+      <div><label class="block font-semibold text-[#1A2D10] mb-1">Kelompok Tanaman <span class="text-red-500">*</span></label><select name="kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]"><option value="Tanaman Pangan">🌾 Tanaman Pangan</option><option value="Hortikultura & Sayuran" selected>🌶️ Hortikultura & Sayuran</option><option value="Buah-buahan">🍉 Buah-buahan</option><option value="Perkebunan & Rempah">☕ Perkebunan & Rempah</option></select></div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" id="cancel-tambah-komoditas-artikel" class="h-9 px-4 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer">Batal</button><button type="submit" id="submit-tambah-komoditas-artikel" class="h-9 px-4 rounded-lg bg-[#4D9830] hover:bg-[#3d7a26] text-white font-medium flex items-center gap-1.5 cursor-pointer"><i data-lucide="check" class="w-3.5 h-3.5"></i><span>Simpan Tanaman</span></button></div>
     </form>
   </div>
 </div>
@@ -373,52 +392,39 @@
 
 <!-- MODAL DETAIL ARTIKEL -->
 <div id="modal-detail-artikel" class="fixed inset-0 z-[85] hidden items-center justify-center bg-slate-900/50 p-3 backdrop-blur-xs sm:p-4">
-  <div class="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[22px] border border-[#E4F0D6] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+  <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
     <div class="flex shrink-0 items-center justify-between border-b border-[#E4F0D6] bg-[#F5F8F1] px-5 py-4 sm:px-6">
       <div class="flex items-center gap-2.5">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EBF6E0] text-[#4D9830]"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EBF6E0] text-[#4D9830]"><i data-lucide="lightbulb" class="h-4 w-4"></i></div>
         <div>
-          <h3 class="text-base font-bold text-[#1A2D10]">Detail Artikel</h3>
-          <p class="text-xs text-[#9AB880]">Informasi lengkap artikel</p>
+          <h3 class="text-base font-bold text-[#1A2D10]">Rincian Artikel</h3>
+          <p class="text-xs text-[#9AB880]">Informasi lengkap artikel pertanian</p>
         </div>
       </div>
       <button type="button" onclick="closeDetailArtikelModal()" class="rounded-lg p-1 text-slate-400 transition-colors hover:bg-white hover:text-slate-700" aria-label="Tutup"><i data-lucide="x" class="h-5 w-5"></i></button>
     </div>
 
-    <div class="min-h-0 overflow-y-auto p-5 sm:p-6">
-      <!-- Gambar -->
-      <div id="detail-artikel-image-container" class="mb-5 overflow-hidden rounded-2xl border border-[#E4F0D6] bg-[#F5F8F1]">
-        <img id="detail-artikel-image" src="" alt="" class="h-56 w-full object-cover sm:h-64">
+    <div class="overflow-y-auto p-5 space-y-4 text-xs">
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="detail-artikel-kategori" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]"></span>
+        <span id="detail-artikel-status" class="rounded-full px-2.5 py-0.5 text-[10px] font-bold"></span>
+        <span class="text-[11px] text-[#9AB880] flex items-center gap-1 font-mono"><i data-lucide="calendar" class="h-3.5 w-3.5"></i><span id="detail-artikel-tanggal"></span></span>
       </div>
-
-      <!-- Header info -->
-      <div class="mb-4 flex flex-wrap items-center gap-2">
-        <span id="detail-artikel-kategori" class="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold text-blue-700"></span>
-        <span id="detail-artikel-status" class="rounded-full px-3 py-1 text-[10px] font-bold"></span>
+      <h3 id="detail-artikel-judul" class="text-base sm:text-lg font-extrabold text-[#1A2D10] leading-snug"></h3>
+      <div class="flex flex-wrap gap-4 p-3 rounded-xl bg-[#F5F8F1] border border-[#E4F0D6] text-[11px]">
+        <div><span class="text-[#9AB880] block text-[10px]">Komoditas Sasaran:</span><strong id="detail-artikel-komoditas" class="text-[#1A2D10] font-semibold"></strong></div>
+        <div><span class="text-[#9AB880] block text-[10px]">Berkas Gambar:</span><strong id="detail-artikel-image-name" class="font-mono text-[#4A6030]"></strong></div>
       </div>
-
-      <h2 id="detail-artikel-judul" class="text-2xl font-extrabold tracking-tight text-[#1A2D10] sm:text-3xl"></h2>
-
-      <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#9AB880]">
-        <span id="detail-artikel-tanggal"></span>
-        <span id="detail-artikel-komoditas-wrapper">Komoditas: <strong id="detail-artikel-komoditas" class="text-[#4A6030]"></strong></span>
+      <div class="p-3.5 rounded-xl bg-[#FFF9E6] border border-[#FFE7A3]">
+        <div class="flex items-center gap-1.5 font-bold text-[#8A5A0A] text-xs mb-1"><i data-lucide="sparkles" class="h-3.5 w-3.5 text-[#D97706]"></i><span>Inti Artikel Praktis:</span></div>
+        <p id="detail-artikel-ringkasan" class="text-[#4A6030] text-xs leading-relaxed"></p>
       </div>
-
-      <!-- Ringkasan -->
-      <div class="mt-6 rounded-2xl bg-[#F5F8F1] p-4">
-        <p class="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Ringkasan</p>
-        <p id="detail-artikel-ringkasan" class="text-sm font-semibold leading-7 text-[#4A6030]"></p>
-      </div>
-
-      <!-- Isi -->
-      <div class="mt-5">
-        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#9AB880]">Isi Artikel</p>
-        <div id="detail-artikel-isi" class="whitespace-pre-line text-sm leading-8 text-slate-700"></div>
-      </div>
+      <div><h4 class="font-bold text-[#1A2D10] text-xs mb-2 flex items-center gap-1.5"><i data-lucide="list-checks" class="h-4 w-4 text-[#4D9830]"></i><span>Langkah-langkah & Isi Artikel:</span></h4><div id="detail-artikel-isi" class="whitespace-pre-line rounded-xl border border-[#E4F0D6] bg-white p-3.5 text-xs text-[#4A6030] leading-relaxed"></div></div>
     </div>
 
     <div class="flex items-center justify-end gap-2.5 border-t border-[#E4F0D6] bg-[#F5F8F1] px-5 py-3 sm:px-6">
       <button type="button" onclick="closeDetailArtikelModal()" class="rounded-xl border border-[#C5DFB0] bg-white px-4 py-2.5 text-xs font-bold text-[#4A6030] hover:bg-[#F5F8F1]">Tutup</button>
+      <button type="button" id="detail-artikel-btn-edit" class="inline-flex items-center gap-1.5 rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#3D8024] transition cursor-pointer"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Edit Artikel Ini</span></button>
     </div>
   </div>
 </div>
@@ -429,7 +435,6 @@
 <input type="hidden" id="artikel-old-judul" value="{{ old('judul', '') }}">
 <input type="hidden" id="artikel-old-kategori" value="{{ old('kategori', '') }}">
 <input type="hidden" id="artikel-old-komoditas" value="{{ old('komoditas', '') }}">
-<input type="hidden" id="artikel-old-tanggal" value="{{ old('tanggal', '') }}">
 <input type="hidden" id="artikel-old-status" value="{{ old('status', 'Draft') }}">
 <input type="hidden" id="artikel-old-ringkasan" value="{{ old('ringkasan', '') }}">
 <input type="hidden" id="artikel-old-isi" value="{{ old('isi', '') }}">
@@ -451,9 +456,6 @@
     judul: document.getElementById('artikel-judul'),
     kategori: document.getElementById('artikel-kategori'),
     komoditas: document.getElementById('artikel-komoditas'),
-    kategoriCustom: document.getElementById('artikel-kategori-custom'),
-    komoditasCustom: document.getElementById('artikel-komoditas-custom'),
-    tanggal: document.getElementById('artikel-tanggal'),
     status: document.getElementById('artikel-status'),
     ringkasan: document.getElementById('artikel-ringkasan'),
     isi: document.getElementById('artikel-isi'),
@@ -462,6 +464,8 @@
     currentImagePreview: document.getElementById('artikel-current-image-preview'),
     title: document.getElementById('artikel-modal-title'),
     subtitle: document.getElementById('artikel-modal-subtitle'),
+    iconBox: document.getElementById('artikel-modal-icon-box'),
+    icon: document.getElementById('artikel-modal-icon'),
     submit: document.getElementById('artikel-submit-button'),
     summaryCount: document.getElementById('artikel-ringkasan-count'),
     contentCount: document.getElementById('artikel-isi-count'),
@@ -481,13 +485,6 @@
       select.appendChild(option);
     }
     select.value = normalized;
-  }
-
-  function toggleCustomField(select, customInput) {
-    const custom = select.value === '__custom__';
-    customInput.classList.toggle('hidden', !custom);
-    if (!custom) customInput.value = '';
-    if (custom) customInput.focus();
   }
 
   function updateCounters() {
@@ -511,13 +508,17 @@
 
     fields.title.textContent = editing ? 'Edit Artikel' : 'Tambah Artikel';
     fields.subtitle.textContent = editing ? 'Perbarui informasi artikel yang tersimpan di database' : 'Simpan data artikel ke database';
+    fields.iconBox.classList.toggle('bg-[#FFF4B8]', editing);
+    fields.iconBox.classList.toggle('text-[#8A5A0A]', editing);
+    fields.iconBox.classList.toggle('bg-[#EBF6E0]', !editing);
+    fields.iconBox.classList.toggle('text-[#4D9830]', !editing);
+    fields.icon.setAttribute('data-lucide', editing ? 'edit-3' : 'file-plus-2');
     fields.submit.querySelector('span').textContent = editing ? 'Perbarui Artikel' : 'Simpan Artikel';
 
     if (editing) {
       fields.judul.value = artikel.judul ?? '';
       setFieldValue(fields.kategori, artikel.kategori);
       setFieldValue(fields.komoditas, artikel.komoditas);
-      fields.tanggal.value = artikel.tanggal ?? '';
       fields.status.value = artikel.status ?? 'Draft';
       fields.ringkasan.value = artikel.ringkasan ?? '';
       fields.isi.value = artikel.isi ?? '';
@@ -529,12 +530,9 @@
       }
     } else {
       fields.status.value = 'Draft';
-      fields.tanggal.value = defaultDate;
       resetImageState();
     }
 
-    toggleCustomField(fields.kategori, fields.kategoriCustom);
-    toggleCustomField(fields.komoditas, fields.komoditasCustom);
     updateCounters();
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -558,45 +556,27 @@
 
   // Detail Modal
   const detailModal = document.getElementById('modal-detail-artikel');
+  let detailArtikelRow = null;
 
   window.openDetailArtikelModal = function (row) {
     if (!row || !detailModal) return;
 
+    detailArtikelRow = row;
     const data = row.dataset;
-    const imageContainer = document.getElementById('detail-artikel-image-container');
-    const image = document.getElementById('detail-artikel-image');
-
     // Populate data
-    document.getElementById('detail-artikel-judul').textContent = data.judul || '';
-    document.getElementById('detail-artikel-kategori').textContent = data.kategori || '';
-    document.getElementById('detail-artikel-tanggal').textContent = data.tanggal || 'Tanggal belum ditentukan';
-    document.getElementById('detail-artikel-ringkasan').textContent = data.ringkasan || '';
-    document.getElementById('detail-artikel-isi').textContent = data.isi || '';
+    document.getElementById('detail-artikel-judul').textContent = data.rawTitle || '';
+    document.getElementById('detail-artikel-kategori').textContent = data.category || '';
+    document.getElementById('detail-artikel-tanggal').textContent = data.rawDate || 'Tanggal belum ditentukan';
+    document.getElementById('detail-artikel-ringkasan').textContent = data.rawExcerpt || '';
+    document.getElementById('detail-artikel-isi').textContent = data.rawContent || '';
+    document.getElementById('detail-artikel-komoditas').textContent = data.commodity || '-';
+    document.getElementById('detail-artikel-image-name').textContent = data.rawImage || '-';
 
     // Status badge
     const statusBadge = document.getElementById('detail-artikel-status');
     statusBadge.textContent = data.status || 'Draft';
     statusBadge.className = 'rounded-full px-3 py-1 text-[10px] font-bold ' +
       (data.status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]');
-
-    // Komoditas
-    const komoditasWrapper = document.getElementById('detail-artikel-komoditas-wrapper');
-    const komoditas = document.getElementById('detail-artikel-komoditas');
-    if (data.komoditas) {
-      komoditas.textContent = data.komoditas;
-      komoditasWrapper.style.display = '';
-    } else {
-      komoditasWrapper.style.display = 'none';
-    }
-
-    // Image
-    if (data.gambar) {
-      image.src = data.gambar;
-      image.alt = data.judul || '';
-      imageContainer.style.display = '';
-    } else {
-      imageContainer.style.display = 'none';
-    }
 
     // Show modal
     detailModal.classList.remove('hidden');
@@ -617,6 +597,19 @@
       if (event.target === detailModal) window.closeDetailArtikelModal();
     });
   }
+
+  document.getElementById('detail-artikel-btn-edit')?.addEventListener('click', () => {
+    const editButton = detailArtikelRow?.querySelector('.js-edit-artikel');
+    if (!editButton) return;
+
+    try {
+      const artikel = JSON.parse(editButton.dataset.artikel || '{}');
+      window.closeDetailArtikelModal();
+      window.openArtikelModal(artikel);
+    } catch (error) {
+      console.error('Data edit artikel dari detail tidak valid:', error);
+    }
+  });
 
   function openDeleteArtikelModal(button) {
     if (!deleteModal || !deleteForm || !deleteTitle) return;
@@ -649,8 +642,72 @@
     });
   }
 
-  fields.kategori.addEventListener('change', () => toggleCustomField(fields.kategori, fields.kategoriCustom));
-  fields.komoditas.addEventListener('change', () => toggleCustomField(fields.komoditas, fields.komoditasCustom));
+  const commodityModal = document.getElementById('modal-tambah-komoditas-artikel');
+  const commodityForm = document.getElementById('form-tambah-komoditas-artikel');
+  const commodityError = document.getElementById('komoditas-artikel-error');
+  const commoditySelect = document.getElementById('artikel-komoditas');
+
+  function closeCommodityModal() {
+    commodityModal?.classList.add('hidden');
+    commodityModal?.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  document.getElementById('btn-tambah-komoditas-artikel')?.addEventListener('click', () => {
+    commodityForm?.reset();
+    commodityError?.classList.add('hidden');
+    commodityModal?.classList.remove('hidden');
+    commodityModal?.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+    if (window.lucide) window.lucide.createIcons();
+  });
+  document.getElementById('close-tambah-komoditas-artikel')?.addEventListener('click', closeCommodityModal);
+  document.getElementById('cancel-tambah-komoditas-artikel')?.addEventListener('click', closeCommodityModal);
+  commodityModal?.addEventListener('click', (event) => {
+    if (event.target === commodityModal) closeCommodityModal();
+  });
+
+  commodityForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submitButton = document.getElementById('submit-tambah-komoditas-artikel');
+    commodityError?.classList.add('hidden');
+    submitButton.disabled = true;
+
+    try {
+      const response = await fetch('{{ route("admin.edukasi.komoditas.store") }}', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        body: new FormData(commodityForm),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || (result.errors ? Object.values(result.errors).flat().join(', ') : 'Gagal menyimpan komoditas.'));
+      }
+
+      const newName = result.data.nama_komoditas;
+      const category = result.data.kategori;
+      let optgroup = Array.from(commoditySelect.querySelectorAll('optgroup')).find((group) => group.dataset.kategori === category);
+      if (!optgroup) {
+        optgroup = document.createElement('optgroup');
+        optgroup.label = category;
+        optgroup.dataset.kategori = category;
+        commoditySelect.appendChild(optgroup);
+      }
+      const option = document.createElement('option');
+      option.value = newName;
+      option.textContent = newName;
+      optgroup.appendChild(option);
+      commoditySelect.value = newName;
+      commodityForm.reset();
+      closeCommodityModal();
+    } catch (error) {
+      commodityError.textContent = error.message || 'Terjadi kesalahan koneksi.';
+      commodityError.classList.remove('hidden');
+    } finally {
+      submitButton.disabled = false;
+      if (window.lucide) window.lucide.createIcons();
+    }
+  });
 
   fields.summaryCount && fields.ringkasan.addEventListener('input', updateCounters);
   fields.contentCount && fields.isi.addEventListener('input', updateCounters);
@@ -664,25 +721,10 @@
     if (!modal.classList.contains('hidden')) window.closeArtikelModal();
     if (deleteModal && !deleteModal.classList.contains('hidden')) window.closeDeleteArtikelModal();
     if (detailModal && !detailModal.classList.contains('hidden')) window.closeDetailArtikelModal();
+    if (commodityModal && !commodityModal.classList.contains('hidden')) closeCommodityModal();
   });
 
   form.addEventListener('submit', function () {
-    if (fields.kategori.value === '__custom__') {
-      const value = fields.kategoriCustom.value.trim();
-      if (value) {
-        const option = new Option(value, value, true, true);
-        fields.kategori.add(option);
-      }
-    }
-    if (fields.komoditas.value === '__custom__') {
-      const value = fields.komoditasCustom.value.trim();
-      if (value) {
-        const option = new Option(value, value, true, true);
-        fields.komoditas.add(option);
-      } else {
-        fields.komoditas.value = '';
-      }
-    }
     fields.submit.disabled = true;
     fields.submit.classList.add('opacity-70', 'cursor-not-allowed');
   });
@@ -698,7 +740,6 @@
     fields.judul.value = document.getElementById('artikel-old-judul').value;
     setFieldValue(fields.kategori, document.getElementById('artikel-old-kategori').value);
     setFieldValue(fields.komoditas, document.getElementById('artikel-old-komoditas').value);
-    fields.tanggal.value = document.getElementById('artikel-old-tanggal').value;
     fields.status.value = document.getElementById('artikel-old-status').value;
     fields.ringkasan.value = document.getElementById('artikel-old-ringkasan').value;
     fields.isi.value = document.getElementById('artikel-old-isi').value;
