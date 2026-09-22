@@ -1,18 +1,20 @@
 # PawonTani
 
-PawonTani adalah aplikasi informasi dan administrasi kelompok tani berbasis Laravel. Aplikasi ini menyediakan pengelolaan data kelompok tani dan pengurus, termasuk tambah, lihat, edit, hapus, pencarian, filter, dan status data.
+PawonTani adalah aplikasi informasi dan administrasi kelompok tani berbasis Laravel. Aplikasi ini menyediakan pengelolaan data kelompok tani, pengurus, anggota, cuaca pertanian, harga komoditas, dan edukasi pertanian untuk mendukung digitalisasi pertanian Indonesia.
 
 ## Teknologi
 
-- PHP 8.3 atau lebih baru
+- PHP 8.3+
 - Laravel 13
-- SQLite atau MySQL/MariaDB
-- Node.js dan npm
-- Vite dan Tailwind CSS
+- PostgreSQL (Supabase)
+- Node.js 20+ dan npm
+- Vite dan Tailwind CSS 4
+- Open-Meteo API (cuaca & geocoding)
+- emsifa/wilayah-id (data wilayah Indonesia)
 
 ## Persyaratan Sistem
 
-Pastikan perangkat sudah memiliki PHP 8.3+, Composer, Node.js 20.19+ atau 22.12+, npm, Git, dan database SQLite, MySQL, atau MariaDB. Pada Windows, Laragon dapat digunakan sebagai web server lokal.
+Pastikan perangkat sudah memiliki PHP 8.3+, Composer, Node.js 20.19+ atau 22.12+, npm, Git, dan database PostgreSQL, MySQL, MariaDB, atau SQLite. Pada Windows, Laragon dapat digunakan sebagai web server lokal.
 
 ## Instalasi
 
@@ -64,9 +66,20 @@ Pastikan `.env` berisi:
 DB_CONNECTION=sqlite
 ```
 
-### MySQL atau MariaDB
+### PostgreSQL (Supabase)
 
-Buat database baru, kemudian sesuaikan `.env`:
+> **Penting:** Jangan pernah commit file `.env` ke repository. File ini sudah ada di `.gitignore`.
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=<supabase_host>.supabase.co
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=<your_supabase_password>
+```
+
+### MySQL atau MariaDB
 
 ```env
 DB_CONNECTION=mysql
@@ -87,7 +100,7 @@ Jalankan migrasi:
 php artisan migrate
 ```
 
-Seeder kelompok tani dan pengurus dijalankan terpisah:
+Seeder kelompok tani dan pengurus:
 
 ```bash
 php artisan db:seed --class=KelompokTaniSeeder
@@ -135,15 +148,131 @@ npm run build
 5. Jalankan migrasi dan seeder.
 6. Buka `http://pawontani.test` jika auto virtual host Laragon aktif, atau gunakan `php artisan serve`.
 
-## Struktur Fitur
+## Struktur File
 
-- Beranda publik: `/`
-- Halaman login: `/login`
-- Dashboard admin: `/admin/dashboard`
-- Kelompok tani: `/admin/kelompok`
-- Pengurus: `/admin/pengurus`
+```
+PawonTani/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── Admin/          # Controller admin (PPL)
+│   │   │   ├── ArtikelController.php
+│   │   │   ├── KelompokTaniController.php
+│   │   │   ├── PanduanController.php
+│   │   │   ├── PengurusController.php
+│   │   │   └── TipsController.php
+│   │   ├── Pengurus/       # Controller pengurus
+│   │   │   └── AnggotaController.php
+│   │   └── AuthController.php
+│   ├── Models/
+│   │   ├── KelompokTani.php
+│   │   ├── Pengguna.php
+│   │   └── User.php
+│   ├── Services/           # Service layer
+│   │   ├── CommodityService.php
+│   │   └── HarvestPredictionService.php
+│   └── Data/
+│       └── regions.php     # Data wilayah Indonesia
+├── bootstrap/
+├── config/                 # Konfigurasi Laravel
+├── database/
+│   ├── migrations/         # Migrasi database
+│   ├── seeders/            # Data awal
+│   └── factories/
+├── public/
+│   ├── build/              # Asset production (Vite)
+│   ├── css/
+│   └── images/
+├── resources/
+│   ├── views/
+│   │   ├── Admin/          # View admin (PPL)
+│   │   │   ├── Content/
+│   │   │   └── Layout/
+│   │   ├── Pengurus/       # View pengurus
+│   │   │   ├── Content/
+│   │   │   └── Layout/
+│   │   ├── Auth/
+│   │   │   └── Login.blade.php
+│   │   └── home.blade.php
+│   ├── css/
+│   ── js/
+├── routes/
+│   └── web.php             # Semua route aplikasi
+├── storage/
+── tests/
+├── .env.example            # Template environment (aman di-commit)
+── .gitignore              # .env sudah di-ignore
+├── composer.json
+├── package.json
+├── vite.config.js
+└── README.md
+```
 
-Navigasi antarhalaman admin menggunakan pemuatan content secara dinamis agar sidebar dan header tidak perlu dimuat ulang setiap berpindah menu.
+## Struktur Route
+
+### Publik
+| URL | Deskripsi |
+|-----|-----------|
+| `/` | Beranda publik |
+| `/login` | Halaman login |
+
+### Pengurus (Kelompok Tani)
+| URL | Deskripsi |
+|-----|-----------|
+| `/dashboard` | Dashboard pengurus |
+| `/anggota` | Kelola anggota kelompok tani |
+| `/lahan` | Kelola lahan pertanian |
+| `/monitoring` | Monitoring pertanian |
+| `/panen` | Data panen |
+| `/penjualan` | Transaksi penjualan |
+| `/laporan` | Laporan aktivitas |
+| `/informasi` | Cuaca, harga komoditas & prediksi |
+| `/edukasi` | Materi edukasi pertanian |
+| `/notifikasi` | Notifikasi |
+| `/profil` | Profil pengguna |
+
+### Admin (PPL)
+| URL | Deskripsi |
+|-----|-----------|
+| `/admin/dashboard` | Dashboard admin |
+| `/admin/pengurus` | Kelola pengurus |
+| `/admin/kelompok` | Kelola kelompok tani |
+| `/admin/verifikasi-lapangan` | Verifikasi lapangan |
+| `/admin/aktivitas` | Aktivitas pertanian |
+| `/admin/edukasi/tips` | Kelola tips pertanian |
+| `/admin/edukasi/artikel` | Kelola artikel |
+| `/admin/edukasi/panduan` | Kelola panduan |
+| `/admin/notifikasi` | Notifikasi admin |
+| `/admin/profil` | Profil admin |
+
+### API
+| URL | Deskripsi |
+|-----|-----------|
+| `/api/lokasi/kabupaten` | Daftar kabupaten per provinsi |
+| `/api/lokasi/kecamatan` | Daftar kecamatan per kabupaten |
+| `/api/lokasi/cuaca` | Data cuaca Open-Meteo |
+| `/api/lokasi/simpan` | Simpan lokasi pengguna |
+| `/ajax/check-username` | Cek ketersediaan username |
+
+## Fitur Utama
+
+### Cuaca Pertanian
+- Prediksi cuaca 7 hari dari Open-Meteo API
+- Pemilihan lokasi bertahap: Provinsi → Kabupaten → Kecamatan
+- Auto-geocode koordinat dari nama lokasi
+- Rekomendasi pertanian berdasarkan kondisi cuaca
+- Tampilan responsive (mobile scroll, desktop grid)
+
+### Pengelolaan Data
+- CRUD anggota kelompok tani
+- CRUD pengurus dan kelompok tani (admin)
+- Data wilayah Indonesia (34 provinsi, 514 kab/kota, 7,215 kecamatan)
+
+### Edukasi
+- Tips pertanian
+- Artikel pertanian
+- Panduan pertanian
+
+Navigasi antarhalaman menggunakan pemuatan content secara dinamis agar sidebar dan header tidak perlu dimuat ulang setiap berpindah menu.
 
 ## Pengujian
 
@@ -161,13 +290,18 @@ composer test
 
 ## Keamanan
 
-Jangan commit atau upload file berikut ke repository:
+File `.env` **sudah ada di `.gitignore`** dan tidak akan ter-commit ke repository. File ini berisi informasi rahasia seperti:
 
-- `.env`
-- credential, token, dan secret
-- private key dan certificate
-- file upload pengguna
-- log aplikasi
+- Kredensial database (host, username, password)
+- Application key (`APP_KEY`)
+- Token dan secret layanan eksternal
+
+Jangan pernah:
+- Commit atau upload `.env` ke repository
+- Share credential, token, dan secret
+- Commit private key dan certificate
+- Commit file upload pengguna
+- Commit log aplikasi
 
 Gunakan `.env.example` sebagai template konfigurasi dan isi nilai rahasia hanya pada environment lokal atau server deployment.
 
