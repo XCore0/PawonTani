@@ -11,6 +11,8 @@ class Tip extends Model
 
     protected $table = 'tips';
     protected $primaryKey = 'id_tips';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'judul',
@@ -27,6 +29,24 @@ class Tip extends Model
     protected $casts = [
         'tanggal' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Tip $tip): void {
+            if (empty($tip->id_tips)) {
+                $tip->id_tips = self::generateIdTips();
+            }
+        });
+    }
+
+    public static function generateIdTips(): string
+    {
+        do {
+            $id = 'TPS-' . random_int(1000, 9999);
+        } while (self::whereKey($id)->exists());
+
+        return $id;
+    }
 
     /**
      * Accessor for title compatibility

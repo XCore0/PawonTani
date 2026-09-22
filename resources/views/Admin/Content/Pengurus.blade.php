@@ -405,7 +405,7 @@
         <label for="form-nama" class="block font-semibold text-[#1A2D10] mb-1">
           Nama Lengkap Pengurus <span class="text-red-500">*</span>
         </label>
-        <input type="text" name="nama" id="form-nama" required placeholder="Contoh: Bpk. Sutrisno, S.P." value="{{ old('nama') }}"
+        <input type="text" name="nama" id="form-nama" required pattern="[\p{L} .-]+" title="Nama hanya boleh berisi huruf, spasi, titik, dan strip." placeholder="Contoh: Bpk. Sutrisno, S.P." value="{{ old('nama') }}"
           class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
       </div>
 
@@ -451,14 +451,14 @@
           <label for="form-nik" class="block font-semibold text-[#1A2D10] mb-1">
             NIK (16 Digit)
           </label>
-          <input type="text" name="nik" id="form-nik" maxlength="16" placeholder="3302xxxxxxxxxxxx" value="{{ old('nik') }}"
+          <input type="text" name="nik" id="form-nik" required inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" title="NIK harus tepat 16 digit angka." placeholder="3302xxxxxxxxxxxx" value="{{ old('nik') }}"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
         <div>
           <label for="form-telepon" class="block font-semibold text-[#1A2D10] mb-1">
             No. WhatsApp / HP
           </label>
-          <input type="tel" name="no_telepon" id="form-telepon" placeholder="08xxxxxxxxxx" value="{{ old('no_telepon') }}"
+          <input type="tel" name="no_telepon" id="form-telepon" required inputmode="numeric" pattern="[0-9]{11,15}" minlength="11" maxlength="15" title="Nomor WhatsApp / HP harus 11 sampai 15 digit angka." placeholder="08xxxxxxxxxx" value="{{ old('no_telepon') }}"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
       </div>
@@ -488,7 +488,7 @@
           <label for="form-email" class="block font-semibold text-[#1A2D10] mb-1">
             Alamat Email
           </label>
-          <input type="email" name="email" id="form-email" placeholder="pengurus@pawontani.id" value="{{ old('email') }}"
+          <input type="email" name="email" id="form-email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email harus menggunakan format dengan @, contoh nama@domain.com." placeholder="pengurus@pawontani.id" value="{{ old('email') }}"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
         <div>
@@ -506,7 +506,7 @@
       <!-- Alamat Lengkap -->
       <div>
         <label for="form-alamat" class="block font-semibold text-[#1A2D10] mb-1">Alamat Tempat Tinggal</label>
-        <textarea name="alamat" id="form-alamat" rows="2" placeholder="Dusun, RT/RW, Desa, Kecamatan..."
+        <textarea name="alamat" id="form-alamat" rows="2" required placeholder="Dusun, RT/RW, Desa, Kecamatan..."
           class="w-full p-3 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all resize-none">{{ old('alamat') }}</textarea>
       </div>
 
@@ -640,7 +640,7 @@
         <label for="edit-nama" class="block font-semibold text-[#1A2D10] mb-1">
           Nama Lengkap Pengurus <span class="text-red-500">*</span>
         </label>
-        <input type="text" name="nama" id="edit-nama" required placeholder="Contoh: Bpk. Sutrisno, S.P."
+        <input type="text" name="nama" id="edit-nama" required pattern="[\p{L} .-]+" title="Nama hanya boleh berisi huruf, spasi, titik, dan strip." placeholder="Contoh: Bpk. Sutrisno, S.P."
           class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
       </div>
 
@@ -684,14 +684,14 @@
           <label for="edit-nik" class="block font-semibold text-[#1A2D10] mb-1">
             NIK (16 Digit)
           </label>
-          <input type="text" name="nik" id="edit-nik" maxlength="16" placeholder="3302xxxxxxxxxxxx"
+          <input type="text" name="nik" id="edit-nik" required inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" title="NIK harus tepat 16 digit angka." placeholder="3302xxxxxxxxxxxx"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all font-mono">
         </div>
         <div>
           <label for="edit-telepon" class="block font-semibold text-[#1A2D10] mb-1">
             No. WhatsApp / HP
           </label>
-          <input type="tel" name="no_telepon" id="edit-telepon" placeholder="08xxxxxxxxxx"
+          <input type="tel" name="no_telepon" id="edit-telepon" required inputmode="numeric" pattern="[0-9]{11,15}" minlength="11" maxlength="15" title="Nomor WhatsApp / HP harus 11 sampai 15 digit angka."
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
       </div>
@@ -721,7 +721,7 @@
           <label for="edit-email" class="block font-semibold text-[#1A2D10] mb-1">
             Alamat Email
           </label>
-          <input type="email" name="email" id="edit-email" placeholder="pengurus@pawontani.id"
+          <input type="email" name="email" id="edit-email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email harus menggunakan format dengan @, contoh nama@domain.com." placeholder="pengurus@pawontani.id"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
         <div>
@@ -739,7 +739,7 @@
       <!-- Alamat Lengkap -->
       <div>
         <label for="edit-alamat" class="block font-semibold text-[#1A2D10] mb-1">Alamat Tempat Tinggal</label>
-        <textarea name="alamat" id="edit-alamat" rows="2" placeholder="Dusun, RT/RW, Desa, Kecamatan..."
+        <textarea name="alamat" id="edit-alamat" rows="2" required placeholder="Dusun, RT/RW, Desa, Kecamatan..."
           class="w-full p-3 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all resize-none"></textarea>
       </div>
 

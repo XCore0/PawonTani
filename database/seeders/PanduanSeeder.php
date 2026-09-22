@@ -13,22 +13,22 @@ class PanduanSeeder extends Seeder
             [
                 'judul' => 'Panduan Dasar Persiapan Lahan',
                 'slug' => 'panduan-dasar-persiapan-lahan',
-                'kategori' => 'Budidaya',
+                'kategori' => 'Budidaya Tanaman',
                 'komoditas' => 'Jagung',
                 'ringkasan' => 'Langkah dasar menyiapkan lahan agar siap digunakan untuk budidaya jagung.',
                 'isi' => "1. Bersihkan gulma dan sisa tanaman.\n2. Gemburkan tanah sesuai kondisi lahan.\n3. Buat saluran drainase bila diperlukan.\n4. Pastikan lahan siap sebelum penanaman.",
                 'tanggal' => '2026-09-20',
-                'status' => 'publik',
+                'status' => 'Publik',
             ],
             [
                 'judul' => 'Panduan Pemupukan Berimbang',
                 'slug' => 'panduan-pemupukan-berimbang',
-                'kategori' => 'Pemupukan',
+                'kategori' => 'Nutrisi & Pupuk',
                 'komoditas' => 'Padi',
                 'ringkasan' => 'Draft panduan untuk membantu menentukan tahapan pemupukan tanaman padi secara lebih teratur.',
                 'isi' => "1. Identifikasi kebutuhan tanaman.\n2. Sesuaikan jenis pupuk dengan kondisi tanah.\n3. Tentukan waktu dan dosis pemupukan.\n4. Catat hasil pengamatan setelah pemupukan.",
                 'tanggal' => '2026-09-20',
-                'status' => 'draft',
+                'status' => 'Draft',
             ],
         ];
 

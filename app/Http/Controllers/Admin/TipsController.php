@@ -13,6 +13,14 @@ use Illuminate\Validation\Rule;
 
 class TipsController extends Controller
 {
+    public const CATEGORIES = [
+        'Budidaya Tanaman',
+        'Hama & Penyakit',
+        'Irigasi & Air',
+        'Nutrisi & Pupuk',
+        'Perawatan Tanaman',
+        'Panen & Pasca Panen',
+    ];
     /**
      * Daftar komoditas tanaman budidaya yang sah.
      */
@@ -130,29 +138,32 @@ class TipsController extends Controller
     public function store(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'judul' => 'required|string|max:255',
-            'kategori' => 'required|string|max:100',
+            'judul' => ['required', 'string', 'max:255', 'unique:tips,judul'],
+            'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
             'komoditas' => [
                 'required',
                 'string',
                 function ($attribute, $value, $fail) {
-                    if ($value !== 'Semua Komoditas' && !in_array($value, self::$allowedCommodities) && !Komoditas::where('nama_komoditas', $value)->exists()) {
+                    if ($value !== 'Semua Komoditas' && !Komoditas::where('nama_komoditas', $value)->exists()) {
                         $fail('Komoditas sasaran harus berupa tanaman budidaya yang valid.');
                     }
                 },
             ],
             'target' => 'nullable|string|max:150',
             'ringkasan' => 'required|string',
-            'isi' => 'nullable|string',
+            'isi' => 'required|string|unique:tips,isi',
             'gambar_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'gambar' => 'nullable|string|max:255',
             'status' => 'required|in:Publik,Draft',
         ], [
             'judul.required' => 'Judul tips wajib diisi.',
+            'judul.unique' => 'Judul tips sudah digunakan.',
             'kategori.required' => 'Kategori tips wajib dipilih.',
             'komoditas.required' => 'Komoditas sasaran wajib dipilih.',
             'komoditas.in' => 'Komoditas sasaran harus berupa tanaman budidaya yang valid.',
             'ringkasan.required' => 'Ringkasan / inti tips wajib diisi.',
+            'isi.required' => 'Isi tips wajib diisi.',
+            'isi.unique' => 'Isi tips sudah digunakan.',
             'status.required' => 'Status tips wajib dipilih.',
             'status.in' => 'Status harus bernilai Publik atau Draft.',
             'gambar_file.image' => 'File harus berupa gambar.',
@@ -204,29 +215,32 @@ class TipsController extends Controller
         $tip = Tip::findOrFail($id_tips);
 
         $validated = Validator::make($request->all(), [
-            'judul' => 'required|string|max:255',
-            'kategori' => 'required|string|max:100',
+            'judul' => ['required', 'string', 'max:255', Rule::unique('tips', 'judul')->ignore($tip->id_tips, 'id_tips')],
+            'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
             'komoditas' => [
                 'required',
                 'string',
                 function ($attribute, $value, $fail) {
-                    if ($value !== 'Semua Komoditas' && !in_array($value, self::$allowedCommodities) && !Komoditas::where('nama_komoditas', $value)->exists()) {
+                    if ($value !== 'Semua Komoditas' && !Komoditas::where('nama_komoditas', $value)->exists()) {
                         $fail('Komoditas sasaran harus berupa tanaman budidaya yang valid.');
                     }
                 },
             ],
             'target' => 'nullable|string|max:150',
             'ringkasan' => 'required|string',
-            'isi' => 'nullable|string',
+            'isi' => ['required', 'string', Rule::unique('tips', 'isi')->ignore($tip->id_tips, 'id_tips')],
             'gambar_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'gambar' => 'nullable|string|max:255',
             'status' => 'required|in:Publik,Draft',
         ], [
             'judul.required' => 'Judul tips wajib diisi.',
+            'judul.unique' => 'Judul tips sudah digunakan.',
             'kategori.required' => 'Kategori tips wajib dipilih.',
             'komoditas.required' => 'Komoditas sasaran wajib dipilih.',
             'komoditas.in' => 'Komoditas sasaran harus berupa tanaman budidaya yang valid.',
             'ringkasan.required' => 'Ringkasan / inti tips wajib diisi.',
+            'isi.required' => 'Isi tips wajib diisi.',
+            'isi.unique' => 'Isi tips sudah digunakan.',
             'status.required' => 'Status tips wajib dipilih.',
             'status.in' => 'Status harus bernilai Publik atau Draft.',
             'gambar_file.image' => 'File harus berupa gambar.',

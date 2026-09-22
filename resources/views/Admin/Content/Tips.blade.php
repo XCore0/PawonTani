@@ -110,11 +110,12 @@
         <select id="tips-filter-category"
           class="h-9 rounded-lg border border-[#C5DFB0] bg-white px-3 text-xs text-slate-700 outline-none focus:border-[#4D9830] transition cursor-pointer">
           <option value="">Semua Kategori</option>
+          <option value="Budidaya Tanaman">Budidaya Tanaman</option>
           <option value="Hama & Penyakit">Hama & Penyakit</option>
           <option value="Irigasi & Air">Irigasi & Air</option>
           <option value="Nutrisi & Pupuk">Nutrisi & Pupuk</option>
           <option value="Perawatan Tanaman">Perawatan Tanaman</option>
-          <option value="Pasca Panen">Pasca Panen</option>
+          <option value="Panen & Pasca Panen">Panen & Pasca Panen</option>
         </select>
 
         <!-- Filter Status -->
@@ -352,11 +353,12 @@
         <div>
           <label class="block font-semibold text-[#1A2D10] mb-1">Kategori Tips <span class="text-red-500">*</span></label>
           <select name="kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="Budidaya Tanaman">Budidaya Tanaman</option>
             <option value="Hama & Penyakit">Hama & Penyakit</option>
             <option value="Irigasi & Air">Irigasi & Air</option>
             <option value="Nutrisi & Pupuk">Nutrisi & Pupuk</option>
             <option value="Perawatan Tanaman">Perawatan Tanaman</option>
-            <option value="Pasca Panen">Pasca Panen</option>
+            <option value="Panen & Pasca Panen">Panen & Pasca Panen</option>
           </select>
         </div>
 
@@ -401,7 +403,7 @@
 
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Langkah-langkah / Rincian Tips</label>
-        <textarea name="isi" rows="4" placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
+        <textarea name="isi" rows="4" required placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
@@ -557,11 +559,12 @@
         <div>
           <label class="block font-semibold text-[#1A2D10] mb-1">Kategori Tips <span class="text-red-500">*</span></label>
           <select id="edit-category" name="kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="Budidaya Tanaman">Budidaya Tanaman</option>
             <option value="Hama & Penyakit">Hama & Penyakit</option>
             <option value="Irigasi & Air">Irigasi & Air</option>
             <option value="Nutrisi & Pupuk">Nutrisi & Pupuk</option>
             <option value="Perawatan Tanaman">Perawatan Tanaman</option>
-            <option value="Pasca Panen">Pasca Panen</option>
+            <option value="Panen & Pasca Panen">Panen & Pasca Panen</option>
           </select>
         </div>
 
@@ -598,7 +601,7 @@
 
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Langkah-langkah / Rincian Tips</label>
-        <textarea id="edit-content" name="isi" rows="4"
+        <textarea id="edit-content" name="isi" rows="4" required
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
