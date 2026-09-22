@@ -5,6 +5,7 @@
 !.env.example
 .env.backup
 .env.production
+/.qoder
 .phpactor.json
 .phpunit.result.cache
 /.fleet

@@ -36,6 +36,15 @@
       <select id="select-kecamatan" class="h-9 rounded-lg border border-[#D1DFC4] bg-white px-3 text-sm text-[#1A2D10] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/30 focus:border-[#4D9830] {{ !$pengurus->kabupaten_id ? 'hidden' : '' }} w-full sm:w-auto">
         <option value="">Pilih Kecamatan</option>
       </select>
+
+      <!-- Loading Spinner -->
+      <div id="lokasi-loading" class="hidden items-center gap-1.5 text-xs text-[#9AB880]">
+        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span>Memuat...</span>
+      </div>
   
       <button type="button" id="btn-simpan-lokasi" class="ml-auto h-9 px-4 rounded-lg bg-[#4D9830] text-white text-sm font-medium hover:bg-[#3D8024] transition cursor-pointer disabled:opacity-50 {{ !$pengurus->kecamatan_id ? 'hidden' : '' }} w-full sm:w-auto" {{ !$pengurus->kecamatan_id ? 'disabled' : '' }}>
         Simpan Lokasi
@@ -234,6 +243,10 @@
   const selectKab = document.getElementById('select-kabupaten');
   const selectKec = document.getElementById('select-kecamatan');
   const btnSimpan = document.getElementById('btn-simpan-lokasi');
+  const loadingSpinner = document.getElementById('lokasi-loading');
+
+  function showLoading() { loadingSpinner.classList.remove('hidden'); loadingSpinner.classList.add('flex'); }
+  function hideLoading() { loadingSpinner.classList.add('hidden'); loadingSpinner.classList.remove('flex'); }
 
   // Get saved values from server (for pre-selecting dropdowns on page load)
   const lokasiData = document.getElementById('lokasi-data');
@@ -259,6 +272,7 @@
       return;
     }
 
+    showLoading();
     try {
       const res = await fetch('/api/lokasi/kabupaten?provinsi_id=' + provId);
       const data = await res.json();
@@ -273,6 +287,7 @@
       selectKab.innerHTML = '<option value="">Gagal memuat</option>';
       selectKab.classList.remove('hidden');
     }
+    hideLoading();
   }
 
   // Load kecamatan when kabupaten changes
@@ -289,6 +304,7 @@
       return;
     }
 
+    showLoading();
     try {
       const res = await fetch('/api/lokasi/kecamatan?kabupaten_id=' + kabId);
       const data = await res.json();
@@ -303,6 +319,7 @@
       selectKec.innerHTML = '<option value="">Gagal memuat</option>';
       selectKec.classList.remove('hidden');
     }
+    hideLoading();
   }
 
   // Check if save button should be enabled and shown

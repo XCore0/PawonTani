@@ -114,7 +114,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
             }
         } elseif ($pengurus && $pengurus->kecamatan_id && !$pengurus->latitude) {
             // Auto-geocode using kabupaten name from regions data
-            $regionsData = require app_path('Data/regions.php');
+            $regionsData = cache()->remember('regions_data', 86400, fn () => require app_path('Data/regions.php'));
             $kabupatenNama = null;
             $lokasiNama = $pengurus->lokasi_nama ?? '';
             
@@ -182,12 +182,15 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
             }
         }
 
-        // Get all provinces for dropdown
-        $regions = require app_path('Data/regions.php');
-        $provinces = [];
-        foreach ($regions as $id => $data) {
-            $provinces[$id] = $data['nama'];
-        }
+        // Get all provinces for dropdown (cached)
+        $provinces = cache()->remember('provinces_list', 86400, function () {
+            $regions = require app_path('Data/regions.php');
+            $provinces = [];
+            foreach ($regions as $id => $data) {
+                $provinces[$id] = $data['nama'];
+            }
+            return $provinces;
+        });
 
         return view('Pengurus.Content.InformasiPrediksi', compact(
             'kelompok',
@@ -197,8 +200,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
             'commodities',
             'ricePrediction',
             'harvestPredictions',
-            'provinces',
-            'regions'
+            'provinces'
         ));
     })->name('informasi');
 
@@ -282,11 +284,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ajax/check-username', [PengurusController::class, 'checkUsername'])
         ->name('ajax.check-username');
 
-    // Location API for Pengurus
+    // Location API for Pengurus (cached for speed)
     Route::get('/api/lokasi/kabupaten', function () {
         $provId = request('provinsi_id');
         if (!$provId) return response()->json([]);
-        $regions = require app_path('Data/regions.php');
+
+        $regions = cache()->remember('regions_data', 86400, fn () => require app_path('Data/regions.php'));
+        $provId = (int) $provId;
         $kotkab = $regions[$provId]['kotkab'] ?? [];
         return response()->json($kotkab);
     })->name('api.lokasi.kabupaten');
@@ -294,13 +298,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/lokasi/kecamatan', function () {
         $kabId = request('kabupaten_id');
         if (!$kabId) return response()->json([]);
-        $regions = require app_path('Data/regions.php');
-        foreach ($regions as $prov) {
-            if (isset($prov['kotkab'][$kabId])) {
-                return response()->json($prov['kotkab'][$kabId]['kecamatan'] ?? []);
+
+        $regions = cache()->remember('regions_data', 86400, fn () => require app_path('Data/regions.php'));
+        $kabId = (int) $kabId;
+
+        // Build fast lookup: kabupaten_id => kecamatan
+        $kabMap = cache()->remember('kabupaten_map', 86400, function () use ($regions) {
+            $map = [];
+            foreach ($regions as $prov) {
+                foreach ($prov['kotkab'] as $kabId => $kab) {
+                    $map[$kabId] = $kab['kecamatan'] ?? [];
+                }
             }
-        }
-        return response()->json([]);
+            return $map;
+        });
+
+        return response()->json($kabMap[$kabId] ?? []);
     })->name('api.lokasi.kecamatan');
 
     Route::get('/api/lokasi/cuaca', function () {
@@ -341,12 +354,13 @@ Route::middleware(['auth'])->group(function () {
         $lon = null;
         if (!empty($data['lokasi_nama']) || !empty($data['kabupaten_id'])) {
             // Get kabupaten name from regions data for better geocoding
-            $regionsData = require app_path('Data/regions.php');
+            $regionsData = cache()->remember('regions_data', 86400, fn () => require app_path('Data/regions.php'));
             $kabupatenNama = null;
-            if (!empty($data['kabupaten_id'])) {
+            $kabId = (int) ($data['kabupaten_id'] ?? 0);
+            if ($kabId > 0) {
                 foreach ($regionsData as $prov) {
-                    if (isset($prov['kotkab'][$data['kabupaten_id']])) {
-                        $kabupatenNama = $prov['kotkab'][$data['kabupaten_id']]['nama'] ?? null;
+                    if (isset($prov['kotkab'][$kabId])) {
+                        $kabupatenNama = $prov['kotkab'][$kabId]['nama'] ?? null;
                         break;
                     }
                 }
