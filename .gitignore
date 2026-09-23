@@ -35,3 +35,4 @@ secrets.json
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/supabase
