@@ -7,40 +7,37 @@ use Illuminate\Database\Seeder;
 
 class KelompokTaniSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $data = [
             [
                 'nama_kelompok' => 'Kelompok Tani Maju Bersama',
-                'alamat' => 'Desa Sukamaju, Kec. Ciawi, Bogor',
+                'alamat' => 'Desa Sumbersari, Kec. Sumbersari, Jember',
                 'status' => 'Aktif',
             ],
             [
                 'nama_kelompok' => 'Kelompok Tani Subur Makmur',
-                'alamat' => 'Desa Margaluyu, Kec. Manonjaya, Tasikmalaya',
+                'alamat' => 'Desa Patrang, Kec. Patrang, Jember',
                 'status' => 'Aktif',
             ],
             [
                 'nama_kelompok' => 'Kelompok Tani Sri Rejeki',
-                'alamat' => 'Desa Karanganyar, Kec. Cikoneng, Ciamis',
+                'alamat' => 'Desa Mangli, Kec. Kaliwates, Jember',
                 'status' => 'Aktif',
             ],
             [
                 'nama_kelompok' => 'Kelompok Tani Tani Mandiri',
-                'alamat' => 'Desa Sukaratu, Kec. Sukaresik, Tasikmalaya',
+                'alamat' => 'Desa Ajung, Kec. Ajung, Jember',
                 'status' => 'Aktif',
             ],
             [
                 'nama_kelompok' => 'Kelompok Tani Karya Bersama',
-                'alamat' => 'Desa Cisayong, Kec. Cisayong, Tasikmalaya',
+                'alamat' => 'Desa Sukorambi, Kec. Sukorambi, Jember',
                 'status' => 'Aktif',
             ],
             [
                 'nama_kelompok' => 'Kelompok Tani Mekar Wangi',
-                'alamat' => 'Desa Singaparna, Kec. Singaparna, Tasikmalaya',
+                'alamat' => 'Desa Kalisat, Kec. Kalisat, Jember',
                 'status' => 'Tidak Aktif',
             ],
         ];

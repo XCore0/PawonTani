@@ -2,11 +2,18 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
-     * Enable RLS only for PostgreSQL/Supabase deployments.
+     * Jalankan migration ini di luar transaction agar ALTER TABLE tidak
+     * membatalkan seluruh batch jika ada tabel yang belum ada.
+     */
+    public $withinTransaction = false;
+
+    /**
+     * Enable RLS hanya untuk PostgreSQL/Supabase, dan hanya pada tabel yang sudah ada.
      */
     public function up(): void
     {
@@ -26,12 +33,14 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
-            DB::statement("ALTER TABLE {$table} ENABLE ROW LEVEL SECURITY");
+            if (Schema::hasTable($table)) {
+                DB::statement("ALTER TABLE {$table} ENABLE ROW LEVEL SECURITY");
+            }
         }
     }
 
     /**
-     * Disable RLS when rolling back this migration.
+     * Disable RLS saat rollback, hanya pada tabel yang ada.
      */
     public function down(): void
     {
@@ -51,7 +60,9 @@ return new class extends Migration
         ];
 
         foreach ($tables as $table) {
-            DB::statement("ALTER TABLE {$table} DISABLE ROW LEVEL SECURITY");
+            if (Schema::hasTable($table)) {
+                DB::statement("ALTER TABLE {$table} DISABLE ROW LEVEL SECURITY");
+            }
         }
     }
 };

@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Hash;
 
 class PenggunaSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $poktans = KelompokTani::all();
@@ -22,71 +19,71 @@ class PenggunaSeeder extends Seeder
         $pengurusList = [
             // ===== ADMIN / PPL =====
             [
-                'nama' => 'Ahmad Fauzi, S.P.',
-                'nik' => '3201010101900001',
-                'username' => 'admin',
-                'password' => Hash::make('admin123'),
-                'email' => 'admin@pawontani.id',
-                'no_telepon' => '081111111111',
-                'alamat' => 'Kantor Dinas Pertanian, Kabupaten Bogor',
-                'role' => 'PPL',
-                'jabatan' => 'PPL',
+                'nama'        => 'Ahmad Fauzi, S.P.',
+                'nik'         => '3509010101900001',
+                'username'    => 'admin',
+                'password'    => Hash::make('admin123'),
+                'email'       => 'admin@pawontani.id',
+                'no_telepon'  => '081111111111',
+                'alamat'      => 'Jl. Mastrip No. 1, Kec. Sumbersari, Jember',
+                'role'        => 'PPL',
+                'jabatan'     => 'PPL',
                 'id_kelompok' => null,
-                'status' => 'Aktif',
+                'status'      => 'Aktif',
             ],
 
             // ===== PENGURUS =====
             [
-                'nama' => 'Bpk. Sutrisno, S.P.',
-                'nik' => '3302181205750001',
-                'username' => 'sutrisno',
-                'password' => Hash::make('password123'),
-                'email' => 'sutrisno@pawontani.id',
-                'no_telepon' => '081234567890',
-                'alamat' => 'Dusun Karangsari RT 02/RW 04, Desa Sukamaju',
-                'role' => 'Pengurus',
-                'jabatan' => 'Ketua',
+                'nama'        => 'Bpk. Sutrisno, S.P.',
+                'nik'         => '3509021205750001',
+                'username'    => 'sutrisno',
+                'password'    => Hash::make('password123'),
+                'email'       => 'sutrisno@pawontani.id',
+                'no_telepon'  => '081234567890',
+                'alamat'      => 'Dusun Krajan RT 02/RW 04, Desa Sumbersari, Kec. Sumbersari, Jember',
+                'role'        => 'Pengurus',
+                'jabatan'     => 'Ketua',
                 'id_kelompok' => $poktan1?->id_kelompok,
-                'status' => 'Aktif',
+                'status'      => 'Aktif',
             ],
             [
-                'nama' => 'Ibu Sri Wahyuni, S.E.',
-                'nik' => '3302185508820003',
-                'username' => 'sriwahyuni',
-                'password' => Hash::make('password123'),
-                'email' => 'sriwahyuni@pawontani.id',
-                'no_telepon' => '082198765432',
-                'alamat' => 'Dusun Sukamaju RT 01/RW 02, Desa Sukamaju',
-                'role' => 'Pengurus',
-                'jabatan' => 'Sekretaris',
+                'nama'        => 'Ibu Sri Wahyuni, S.E.',
+                'nik'         => '3509025508820003',
+                'username'    => 'sriwahyuni',
+                'password'    => Hash::make('password123'),
+                'email'       => 'sriwahyuni@pawontani.id',
+                'no_telepon'  => '082198765432',
+                'alamat'      => 'Dusun Kebonsari RT 01/RW 02, Desa Sumbersari, Kec. Sumbersari, Jember',
+                'role'        => 'Pengurus',
+                'jabatan'     => 'Sekretaris',
                 'id_kelompok' => $poktan1?->id_kelompok,
-                'status' => 'Aktif',
+                'status'      => 'Aktif',
             ],
             [
-                'nama' => 'Bpk. Bambang Hartono',
-                'nik' => '3302182003780002',
-                'username' => 'bambang',
-                'password' => Hash::make('password123'),
-                'email' => 'bambang@pawontani.id',
-                'no_telepon' => '085712345678',
-                'alamat' => 'Dusun Karanganyar RT 03/RW 01, Desa Margaluyu',
-                'role' => 'Pengurus',
-                'jabatan' => 'Ketua',
+                'nama'        => 'Bpk. Bambang Hartono',
+                'nik'         => '3509022003780002',
+                'username'    => 'bambang',
+                'password'    => Hash::make('password123'),
+                'email'       => 'bambang@pawontani.id',
+                'no_telepon'  => '085712345678',
+                'alamat'      => 'Jl. PB Sudirman No. 45, Kec. Patrang, Jember',
+                'role'        => 'Pengurus',
+                'jabatan'     => 'Ketua',
                 'id_kelompok' => $poktan2?->id_kelompok,
-                'status' => 'Aktif',
+                'status'      => 'Aktif',
             ],
             [
-                'nama' => 'Bpk. Slamet Riyadi',
-                'nik' => '3302181507700004',
-                'username' => 'slamet',
-                'password' => Hash::make('password123'),
-                'email' => 'slamet@pawontani.id',
-                'no_telepon' => '087812345678',
-                'alamat' => 'Dusun Sumberrejo RT 04/RW 03, Desa Karanganyar',
-                'role' => 'Pengurus',
-                'jabatan' => 'Bendahara',
+                'nama'        => 'Bpk. Slamet Riyadi',
+                'nik'         => '3509021507700004',
+                'username'    => 'slamet',
+                'password'    => Hash::make('password123'),
+                'email'       => 'slamet@pawontani.id',
+                'no_telepon'  => '087812345678',
+                'alamat'      => 'Dusun Curah Malang RT 03/RW 01, Desa Mangli, Kec. Kaliwates, Jember',
+                'role'        => 'Pengurus',
+                'jabatan'     => 'Bendahara',
                 'id_kelompok' => $poktan3?->id_kelompok,
-                'status' => 'Aktif',
+                'status'      => 'Aktif',
             ],
         ];
 
@@ -94,7 +91,8 @@ class PenggunaSeeder extends Seeder
             Pengguna::updateOrCreate(
                 ['username' => $p['username']],
                 array_merge($p, [
-                    'id_pengguna' => Pengguna::where('username', $p['username'])->value('id_pengguna') ?? Pengguna::generateIdPengguna(),
+                    'id_pengguna' => Pengguna::where('username', $p['username'])->value('id_pengguna')
+                        ?? Pengguna::generateIdPengguna(),
                 ])
             );
         }
