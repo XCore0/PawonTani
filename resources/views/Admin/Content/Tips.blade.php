@@ -37,19 +37,7 @@
     </div>
   @endif
 
-  @if($errors->any())
-    <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm space-y-1">
-      <div class="flex items-center gap-2 font-bold text-red-900">
-        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
-        <span>Terjadi kesalahan saat memproses data:</span>
-      </div>
-      <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-xs">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
+
 
   <!-- ==================== 1. TOP HEADER & ACTION BUTTON ==================== -->
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -65,7 +53,7 @@
     </div>
 
     <!-- Tambah Tips Button (matching screenshot: green rounded-xl) -->
-    <button type="button" onclick="openModalTambahTips()"
+    <button type="button" onclick="openTipsModal()"
       class="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#3D8024] cursor-pointer active:scale-95">
       <i data-lucide="plus" class="h-4 w-4 stroke-[2.5]"></i>
       <span>Tambah Tips</span>
@@ -143,7 +131,7 @@
             <th class="w-36 px-3 py-3">Kategori</th>
             <th class="w-36 px-3 py-3">Komoditas</th>
             <th class="w-28 px-3 py-3">Gambar</th>
-            <th class="w-24 px-3 py-3">Tanggal</th>
+            <th class="w-36 px-3 py-3">Tanggal</th>
             <th class="w-20 px-3 py-3 text-center">Status</th>
             <th class="w-48 px-3 py-3 text-center">Aksi</th>
           </tr>
@@ -159,7 +147,7 @@
               $ringkasan = $tip->ringkasan ?? $tip->excerpt ?? 'Tips dan trik praktis untuk membantu produktivitas pertanian secara efisien.';
               $isi = $tip->isi ?? $tip->content ?? '';
               $gambar = $tip->gambar ?? $tip->image ?? 'tips-pertanian.jpg';
-              $tanggal = $tip->date ?? (isset($tip->created_at) ? $tip->created_at->format('Y-m-d') : date('Y-m-d'));
+              $tanggal = $tip->tanggal ?? null;
               $status = $tip->status ?? 'Publik';
 
               $catStyle = $categoryColorMap[$kategori] ?? ['bg' => 'bg-[#EBF6E0]', 'text' => 'text-[#4D9830]', 'border' => 'border-[#C5DFB0]', 'icon' => 'lightbulb'];
@@ -190,7 +178,8 @@
                 data-raw-content="{{ $isi }}"
                 data-raw-image="{{ $gambar }}"
                 data-image-url="{{ $imageUrl }}"
-                data-raw-date="{{ $tanggal }}">
+                data-raw-date="{{ $tanggal ? \Carbon\Carbon::parse($tanggal)->format('d M Y') : 'Draft' }}"
+                data-raw-created-at="{{ $tip->created_at ? $tip->created_at->format('d M Y') : '-' }}">
               
               <!-- No -->
               <td class="px-3 py-3.5 text-center text-[#9AB880] font-medium row-number">
@@ -248,8 +237,15 @@
               </td>
 
               <!-- Tanggal -->
-              <td class="whitespace-nowrap px-3 py-3.5 text-[#9AB880] font-mono text-[11px]">
-                {{ $tanggal }}
+              <td class="px-3 py-3.5">
+                @if($tanggal)
+                  <span class="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-slate-700">
+                    <i data-lucide="calendar" class="h-3 w-3 text-[#4D9830]"></i>
+                    <span>{{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }}</span>
+                  </span>
+                @else
+                  <span class="font-mono text-[11px] text-[#9AB880]">-</span>
+                @endif
               </td>
 
               <!-- Status -->
@@ -273,7 +269,7 @@
 
                   <!-- Edit Button -->
                   <button type="button"
-                    onclick="openModalEditTips(this.closest('tr'))"
+                    onclick="openTipsModal(this.closest('tr'))"
                     class="inline-flex items-center gap-1 rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEFA0] transition cursor-pointer"
                     title="Ubah Data Tips">
                     <i data-lucide="edit-3" class="h-3 w-3"></i>
@@ -321,39 +317,56 @@
   </div>
 </div>
 
-<!-- ==================== 4. MODAL TAMBAH TIPS (DATABASE STORE FORM) ==================== -->
-<div id="modal-tambah-tips" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
-  <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
+<!-- ==================== 4. MODAL TAMBAH / EDIT TIPS (DATABASE FORM) ==================== -->
+<div id="modal-tips" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
+  <div id="modal-tips-container" class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-[#F0F7E8] px-5 py-4 bg-[#F5F8F1]">
       <div class="flex items-center gap-2.5">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
-          <i data-lucide="lightbulb" class="h-4 w-4"></i>
+        <div id="tips-modal-icon-box" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
+          <i id="tips-modal-icon" data-lucide="lightbulb" class="h-4 w-4"></i>
         </div>
         <div>
-          <h2 class="text-sm font-bold text-[#1A2D10]">Tambah Tips Pertanian Baru</h2>
-          <p class="text-[11px] text-[#9AB880]">Buat tips praktis dan trik budidaya untuk petani</p>
+          <h2 id="tips-modal-title" class="text-sm font-bold text-[#1A2D10]">Tambah Tips Pertanian Baru</h2>
+          <p id="tips-modal-subtitle" class="text-[11px] text-[#9AB880]">Buat tips praktis dan trik budidaya untuk petani</p>
         </div>
       </div>
-      <button type="button" onclick="closeModal('modal-tambah-tips')" class="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
+      <button type="button" onclick="closeTipsModal()" class="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
         <i data-lucide="x" class="h-5 w-5"></i>
       </button>
     </div>
 
     <!-- Form Body -->
-    <form id="form-tambah-tips" action="{{ route('admin.edukasi.tips.store') }}" method="POST" enctype="multipart/form-data" class="overflow-y-auto p-5 space-y-4 text-xs">
+    <form id="form-tips-modal" action="{{ route('admin.edukasi.tips.store') }}" method="POST" enctype="multipart/form-data" class="overflow-y-auto p-5 space-y-4 text-xs">
       @csrf
+      <input type="hidden" name="_method" id="tips-form-method" value="POST">
+      <input type="hidden" name="id_tips" id="tips-form-id" value="">
+      <input type="hidden" name="target" id="tips-target" value="Semua Kelompok">
+
+      @if($errors->any())
+        <div id="tips-modal-errors" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal menyimpan data tips. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
 
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Judul Tips <span class="text-red-500">*</span></label>
-        <input type="text" name="judul" required placeholder="Contoh: 5 Tips Mengatasi Hama Wereng Alami"
+        <input type="text" name="judul" id="tips-judul" required minlength="5" maxlength="255" placeholder="Contoh: 5 Tips Mengatasi Hama Wereng Alami"
           class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block font-semibold text-[#1A2D10] mb-1">Kategori Tips <span class="text-red-500">*</span></label>
-          <select name="kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+          <select name="kategori" id="tips-kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
             <option value="Budidaya Tanaman">Budidaya Tanaman</option>
             <option value="Hama & Penyakit">Hama & Penyakit</option>
             <option value="Irigasi & Air">Irigasi & Air</option>
@@ -365,13 +378,13 @@
 
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran <span class="text-red-500">*</span></label>
+            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran</label>
             <button type="button" onclick="openModalTambahKomoditas()" class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4D9830] hover:text-[#3d7a26] transition-colors cursor-pointer">
               <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
               <span>+ Tambah Baru</span>
             </button>
           </div>
-          <select id="tambah-commodity" name="komoditas_id" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+          <select id="tips-commodity" name="komoditas_id" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
             <option value="">Semua Komoditas (Umum)</option>
             @php
               $categoryIcons = [
@@ -394,31 +407,39 @@
         </div>
       </div>
 
-      <input type="hidden" name="target" value="Semua Kelompok">
-
       <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Ringkasan / Inti Tips (1 Kalimat Actionable) <span class="text-red-500">*</span></label>
-        <textarea name="ringkasan" rows="2" required placeholder="Tuliskan rangkuman tips yang langsung bisa dipraktikkan petani..."
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="block font-semibold text-[#1A2D10]">Ringkasan / Inti Tips (1 Kalimat Actionable) <span class="text-red-500">*</span></label>
+          <span id="tips-ringkasan-count" class="text-[10px] text-[#9AB880]">0/1000</span>
+        </div>
+        <textarea name="ringkasan" id="tips-ringkasan" rows="2" required minlength="10" maxlength="1000" placeholder="Tuliskan rangkuman tips yang langsung bisa dipraktikkan petani..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
       <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Langkah-langkah / Rincian Tips</label>
-        <textarea name="isi" rows="4" required placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="block font-semibold text-[#1A2D10]">Langkah-langkah / Rincian Tips <span class="text-red-500">*</span></label>
+          <span id="tips-isi-count" class="text-[10px] text-[#9AB880]">0 karakter</span>
+        </div>
+        <textarea name="isi" id="tips-isi" rows="4" required minlength="20" placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block font-semibold text-[#1A2D10] mb-1">Upload File Gambar Ilustrasi</label>
-          <input type="file" name="gambar_file" accept=".jpg,.jpeg,.png,.webp,.svg,image/*"
+          <input type="file" name="gambar_file" id="tips-gambar" accept=".jpg,.jpeg,.png,.webp,.svg,image/*"
             class="w-full rounded-lg border border-[#C5DFB0] p-1.5 text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#EBF6E0] file:text-[#4D9830] hover:file:bg-[#dff0cc] cursor-pointer">
-          <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP, SVG (Maks 2MB)</p>
+          <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP, SVG (Maks 2MB). Biarkan kosong jika tidak ingin mengubah.</p>
+          <div id="tips-current-image" class="mt-2 hidden items-center gap-2">
+            <img id="tips-current-image-preview" src="" alt="Gambar tips" class="h-12 w-16 rounded-lg object-cover border border-[#E4F0D6]">
+            <span class="text-[10px] text-[#6B7F5B]">Gambar saat ini. Upload baru untuk mengganti.</span>
+          </div>
         </div>
 
         <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Status Publikasi</label>
-          <select name="status" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+          <label class="block font-semibold text-[#1A2D10] mb-1">Status Publikasi <span class="text-red-500">*</span></label>
+          <select name="status" id="tips-status" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
             <option value="Publik">Publik</option>
             <option value="Draft">Draft</option>
           </select>
@@ -427,11 +448,11 @@
 
       <!-- Footer Buttons -->
       <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F7E8]">
-        <button type="button" onclick="closeModal('modal-tambah-tips')"
+        <button type="button" onclick="closeTipsModal()"
           class="rounded-xl border border-[#C5DFB0] px-4 py-2 text-xs font-semibold text-[#4A6030] hover:bg-[#F5F8F1] transition cursor-pointer">
           Batal
         </button>
-        <button type="submit"
+        <button id="tips-submit-button" type="submit"
           class="inline-flex items-center gap-1.5 rounded-xl bg-[#4D9830] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#3D8024] transition cursor-pointer">
           <i data-lucide="check" class="h-3.5 w-3.5"></i>
           <span>Simpan Tips</span>
@@ -461,15 +482,16 @@
     <div class="overflow-y-auto p-5 space-y-4 text-xs">
       <!-- Badges row -->
       <div class="flex flex-wrap items-center gap-2">
-        <span id="detail-category-badge" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]">
+        <span id="detail-category-badge" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]">
           Hama & Penyakit
         </span>
-        <span id="detail-status-badge" class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-[#DFF7E7] text-[#287442]">
+        <span id="detail-status-badge" class="rounded-full px-2.5 py-1 text-[10px] font-bold bg-[#DFF7E7] text-[#287442]">
           Publik
         </span>
-        <span class="text-[11px] text-[#9AB880] flex items-center gap-1 font-mono">
-          <i data-lucide="calendar" class="h-3.5 w-3.5"></i>
-          <span id="detail-date">2024-11-12</span>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#F5F8F1] border border-[#E4F0D6] px-2.5 py-1 text-[10px] text-[#4A6030]">
+          <i data-lucide="calendar" class="h-3 w-3 text-[#4D9830]"></i>
+          <span class="font-medium text-[#6B7F5B]">Tanggal:</span>
+          <span id="detail-date" class="font-mono font-semibold text-[#1A2D10]">-</span>
         </span>
       </div>
 
@@ -524,122 +546,7 @@
   </div>
 </div>
 
-<!-- ==================== 6. MODAL EDIT TIPS (DATABASE UPDATE FORM) ==================== -->
-<div id="modal-edit-tips" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
-  <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-[#F0F7E8] px-5 py-4 bg-[#F5F8F1]">
-      <div class="flex items-center gap-2.5">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF4B8] text-[#8A5A0A]">
-          <i data-lucide="edit-3" class="h-4 w-4"></i>
-        </div>
-        <div>
-          <h2 class="text-sm font-bold text-[#1A2D10]">Edit Tips Pertanian</h2>
-          <p class="text-[11px] text-[#9AB880]">Perbarui informasi dan materi tips pertanian</p>
-        </div>
-      </div>
-      <button type="button" onclick="closeModal('modal-edit-tips')" class="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
-        <i data-lucide="x" class="h-5 w-5"></i>
-      </button>
-    </div>
-
-    <!-- Form Body -->
-    <form id="form-edit-tips" method="POST" enctype="multipart/form-data" class="overflow-y-auto p-5 space-y-4 text-xs">
-      @csrf
-      @method('PUT')
-
-      <input type="hidden" id="edit-row-id" name="id_tips">
-
-      <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Judul Tips <span class="text-red-500">*</span></label>
-        <input type="text" id="edit-title" name="judul" required
-          class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Kategori Tips <span class="text-red-500">*</span></label>
-          <select id="edit-category" name="kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Budidaya Tanaman">Budidaya Tanaman</option>
-            <option value="Hama & Penyakit">Hama & Penyakit</option>
-            <option value="Irigasi & Air">Irigasi & Air</option>
-            <option value="Nutrisi & Pupuk">Nutrisi & Pupuk</option>
-            <option value="Perawatan Tanaman">Perawatan Tanaman</option>
-            <option value="Panen & Pasca Panen">Panen & Pasca Panen</option>
-          </select>
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran <span class="text-red-500">*</span></label>
-            <button type="button" onclick="openModalTambahKomoditas()" class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4D9830] hover:text-[#3d7a26] transition-colors cursor-pointer">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-              <span>+ Tambah Baru</span>
-            </button>
-          </div>
-          <select id="edit-commodity" name="komoditas_id" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="">Semua Komoditas (Umum)</option>
-            @if(isset($commodities) && $commodities->isNotEmpty())
-              @foreach($commodities as $catName => $items)
-                <optgroup label="{{ ($categoryIcons[$catName] ?? '🌱') . ' ' . $catName }}" data-kategori="{{ $catName }}">
-                  @foreach($items as $item)
-                    <option value="{{ $item->id_komoditas }}">{{ $item->nama_komoditas }}</option>
-                  @endforeach
-                </optgroup>
-              @endforeach
-            @endif
-          </select>
-        </div>
-      </div>
-
-      <input type="hidden" id="edit-target" name="target" value="Semua Kelompok">
-
-      <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Ringkasan / Inti Tips <span class="text-red-500">*</span></label>
-        <textarea id="edit-excerpt" name="ringkasan" rows="2" required
-          class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
-      </div>
-
-      <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Langkah-langkah / Rincian Tips</label>
-        <textarea id="edit-content" name="isi" rows="4" required
-          class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Upload File Gambar Baru</label>
-          <input type="file" name="gambar_file" accept=".jpg,.jpeg,.png,.webp,.svg,image/*"
-            class="w-full rounded-lg border border-[#C5DFB0] p-1.5 text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#FFF4B8] file:text-[#8A5A0A] hover:file:bg-[#ffeaa0] cursor-pointer">
-          <p class="mt-0.5 text-[10px] text-[#9AB880]">Format: JPG, JPEG, PNG, WEBP, SVG (Maks 2MB). Biarkan kosong jika tidak ingin mengubah.</p>
-        </div>
-
-        <div>
-          <label class="block font-semibold text-[#1A2D10] mb-1">Status Publikasi</label>
-          <select id="edit-status" name="status" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Publik">Publik</option>
-            <option value="Draft">Draft</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Footer Buttons -->
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#F0F7E8]">
-        <button type="button" onclick="closeModal('modal-edit-tips')"
-          class="rounded-xl border border-[#C5DFB0] px-4 py-2 text-xs font-semibold text-[#4A6030] hover:bg-[#F5F8F1] transition cursor-pointer">
-          Batal
-        </button>
-        <button type="submit"
-          class="inline-flex items-center gap-1.5 rounded-xl bg-[#4D9830] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#3D8024] transition cursor-pointer">
-          <i data-lucide="check" class="h-3.5 w-3.5"></i>
-          <span>Simpan Perubahan</span>
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ==================== 7. MODAL HAPUS TIPS (DATABASE DELETE FORM) ==================== -->
+<!-- ==================== 6. MODAL HAPUS TIPS (DATABASE DELETE FORM) ==================== -->
 <div id="modal-hapus-tips" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
   <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-red-100 overflow-hidden">
     <form id="form-hapus-tips" method="POST">
@@ -670,7 +577,7 @@
   </div>
 </div>
 
-<!-- ==================== 8. MODAL TAMBAH KOMODITAS BARU (ADMIN PPL) ==================== -->
+<!-- ==================== 7. MODAL TAMBAH KOMODITAS BARU (ADMIN PPL) ==================== -->
 <div id="modal-tambah-komoditas" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
   <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-[#C5DFB0] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between px-5 py-4 bg-[#F5F8F1] border-b border-[#C5DFB0]">
@@ -695,8 +602,13 @@
 
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Nama Tanaman / Komoditas <span class="text-red-500">*</span></label>
-        <input type="text" id="input-nama-komoditas" name="nama_komoditas" required placeholder="Contoh: Buncis, Selada, Vanili, dll"
+        <input type="text" id="input-nama-komoditas" name="nama_komoditas" required
+          pattern="[a-zA-ZÀ-öø-ÿ\-\/]+(\s[a-zA-ZÀ-öø-ÿ\-\/]+)*"
+          title="Nama komoditas hanya boleh berisi huruf, tanda hubung (-), dan garis miring (/)."
+          placeholder="Contoh: Padi Sawah, Cabai/Lombok, Kacang-kacangan"
+          oninput="this.value = this.value.replace(/[^a-zA-ZÀ-öø-ÿ\s\-\/]/g, '')"
           class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
+        <p class="mt-1 text-[10px] text-[#9AB880]">Hanya huruf, tanda hubung <span class="font-mono font-bold">-</span>, dan garis miring <span class="font-mono font-bold">/</span> yang diperbolehkan.</p>
       </div>
 
       <div>
@@ -724,7 +636,19 @@
   </div>
 </div>
 
-<!-- ==================== 9. CLIENT-SIDE JAVASCRIPT ==================== -->
+<input type="hidden" id="tips-store-url" value="{{ route('admin.edukasi.tips.store') }}">
+@if($errors->any())
+<input type="hidden" id="tips-old-id" value="{{ old('id_tips') }}">
+<input type="hidden" id="tips-old-judul" value="{{ old('judul', '') }}">
+<input type="hidden" id="tips-old-kategori" value="{{ old('kategori', '') }}">
+<input type="hidden" id="tips-old-komoditas" value="{{ old('komoditas_id', '') }}">
+<input type="hidden" id="tips-old-status" value="{{ old('status', 'Publik') }}">
+<input type="hidden" id="tips-old-ringkasan" value="{{ old('ringkasan', '') }}">
+<input type="hidden" id="tips-old-isi" value="{{ old('isi', '') }}">
+<input type="hidden" id="tips-has-errors" value="1">
+@endif
+
+<!-- ==================== 8. CLIENT-SIDE JAVASCRIPT ==================== -->
 <script>
   (() => {
     const searchInput = document.getElementById('tips-search');
@@ -742,11 +666,11 @@
 
     // Instant client-side search & filtering
     function applyFilters() {
-      const query = (searchInput.value || '').toLowerCase().trim();
-      const selectedCategory = categoryFilter.value;
-      const selectedStatus = statusFilter.value;
+      const query = (searchInput?.value || '').toLowerCase().trim();
+      const selectedCategory = categoryFilter?.value || '';
+      const selectedStatus = statusFilter?.value || '';
 
-      const rows = tbody.querySelectorAll('.tips-row');
+      const rows = tbody ? tbody.querySelectorAll('.tips-row') : [];
       let visibleCount = 0;
 
       rows.forEach(row => {
@@ -785,26 +709,169 @@
     if (categoryFilter) categoryFilter.addEventListener('change', applyFilters);
     if (statusFilter) statusFilter.addEventListener('change', applyFilters);
 
-    // Modal controls
+    // Modal elements
+    const modal = document.getElementById('modal-tips');
+    const form = document.getElementById('form-tips-modal');
+    const storeAction = document.getElementById('tips-store-url')?.value || '{{ route("admin.edukasi.tips.store") }}';
+
+    const fields = {
+      id: document.getElementById('tips-form-id'),
+      method: document.getElementById('tips-form-method'),
+      judul: document.getElementById('tips-judul'),
+      kategori: document.getElementById('tips-kategori'),
+      komoditas: document.getElementById('tips-commodity'),
+      target: document.getElementById('tips-target'),
+      ringkasan: document.getElementById('tips-ringkasan'),
+      isi: document.getElementById('tips-isi'),
+      gambar: document.getElementById('tips-gambar'),
+      status: document.getElementById('tips-status'),
+      currentImage: document.getElementById('tips-current-image'),
+      currentImagePreview: document.getElementById('tips-current-image-preview'),
+      title: document.getElementById('tips-modal-title'),
+      subtitle: document.getElementById('tips-modal-subtitle'),
+      iconBox: document.getElementById('tips-modal-icon-box'),
+      icon: document.getElementById('tips-modal-icon'),
+      submit: document.getElementById('tips-submit-button'),
+      summaryCount: document.getElementById('tips-ringkasan-count'),
+      contentCount: document.getElementById('tips-isi-count'),
+    };
+
+    function updateCounters() {
+      if (fields.summaryCount && fields.ringkasan) {
+        fields.summaryCount.textContent = `${fields.ringkasan.value.length}/1000`;
+      }
+      if (fields.contentCount && fields.isi) {
+        fields.contentCount.textContent = `${fields.isi.value.length} karakter`;
+      }
+    }
+
+    function resetImageState() {
+      if (fields.gambar) fields.gambar.value = '';
+      if (fields.currentImage) {
+        fields.currentImage.classList.add('hidden');
+        fields.currentImage.classList.remove('flex');
+      }
+      if (fields.currentImagePreview) fields.currentImagePreview.src = '';
+    }
+
+    // Unified Modal Open (Tambah / Edit)
+    window.openTipsModal = function(item = null, isAutoRestore = false) {
+      if (!modal || !form) return;
+
+      const modalErrors = document.getElementById('tips-modal-errors');
+      if (modalErrors && !isAutoRestore) {
+        modalErrors.classList.add('hidden');
+      }
+
+      let data = item;
+      if (item && item.dataset) {
+        data = {
+          id: item.dataset.id,
+          action: '{{ url("admin/edukasi/tips") }}/' + item.dataset.id,
+          judul: item.dataset.rawTitle || '',
+          kategori: item.dataset.category || 'Budidaya Tanaman',
+          komoditas_id: item.dataset.komoditasId || '',
+          ringkasan: item.dataset.rawExcerpt || '',
+          isi: item.dataset.rawContent || '',
+          status: item.dataset.status || 'Publik',
+          gambar: item.dataset.imageUrl || '',
+        };
+      }
+
+      const editing = Boolean(data && data.id);
+      form.reset();
+      fields.id.value = editing ? data.id : '';
+      fields.method.value = editing ? 'PUT' : 'POST';
+      form.action = editing ? (data.action || ('{{ url("admin/edukasi/tips") }}/' + data.id)) : storeAction;
+
+      fields.title.textContent = editing ? 'Edit Tips Pertanian' : 'Tambah Tips Pertanian Baru';
+      fields.subtitle.textContent = editing ? 'Perbarui informasi dan materi tips pertanian' : 'Buat tips praktis dan trik budidaya untuk petani';
+
+      fields.iconBox.classList.toggle('bg-[#FFF4B8]', editing);
+      fields.iconBox.classList.toggle('text-[#8A5A0A]', editing);
+      fields.iconBox.classList.toggle('bg-[#EBF6E0]', !editing);
+      fields.iconBox.classList.toggle('text-[#4D9830]', !editing);
+      fields.icon.setAttribute('data-lucide', editing ? 'edit-3' : 'lightbulb');
+
+      fields.submit.querySelector('span').textContent = editing ? 'Simpan Perubahan' : 'Simpan Tips';
+
+      if (editing) {
+        fields.judul.value = data.judul ?? '';
+        fields.kategori.value = data.kategori ?? 'Budidaya Tanaman';
+        fields.komoditas.value = data.komoditas_id ?? '';
+        fields.status.value = data.status ?? 'Publik';
+        fields.ringkasan.value = data.ringkasan ?? '';
+        fields.isi.value = data.isi ?? '';
+        resetImageState();
+        if (data.gambar) {
+          fields.currentImage.classList.remove('hidden');
+          fields.currentImage.classList.add('flex');
+          fields.currentImagePreview.src = data.gambar;
+        }
+      } else {
+        fields.status.value = 'Publik';
+        fields.kategori.value = 'Budidaya Tanaman';
+        fields.komoditas.value = '';
+        resetImageState();
+      }
+
+      updateCounters();
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.classList.add('overflow-hidden');
+      requestAnimationFrame(() => fields.judul.focus());
+      refreshIcons();
+    };
+
+    window.closeTipsModal = function() {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.classList.remove('overflow-hidden');
+    };
+
+    // Backward compatibility aliases
+    window.openModalTambahTips = function() {
+      window.openTipsModal(null);
+    };
+    window.openModalEditTips = function(row) {
+      window.openTipsModal(row);
+    };
+
+    // Modal Generic Controls (for Detail, Hapus, Komoditas)
     window.openModal = function(id) {
+      if (id === 'modal-tambah-tips' || id === 'modal-edit-tips' || id === 'modal-tips') {
+        window.openTipsModal(null);
+        return;
+      }
       const m = document.getElementById(id);
       if (m) {
         m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
         refreshIcons();
       }
     };
 
     window.closeModal = function(id) {
+      if (id === 'modal-tambah-tips' || id === 'modal-edit-tips' || id === 'modal-tips') {
+        window.closeTipsModal();
+        return;
+      }
       const m = document.getElementById(id);
-      if (m) m.classList.add('hidden');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+      }
     };
 
     // Close on backdrop click
-    ['modal-tambah-tips', 'modal-detail-tips', 'modal-edit-tips', 'modal-hapus-tips', 'modal-tambah-komoditas'].forEach(id => {
-      const modal = document.getElementById(id);
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeModal(id);
+    ['modal-tips', 'modal-detail-tips', 'modal-hapus-tips', 'modal-tambah-komoditas'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', (e) => {
+          if (e.target === el) closeModal(id);
         });
       }
     });
@@ -812,17 +879,19 @@
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        ['modal-tambah-tips', 'modal-detail-tips', 'modal-edit-tips', 'modal-hapus-tips', 'modal-tambah-komoditas'].forEach(id => closeModal(id));
+        ['modal-tips', 'modal-detail-tips', 'modal-hapus-tips', 'modal-tambah-komoditas'].forEach(id => closeModal(id));
       }
     });
 
-    // Open Detail Modal
+    // Detail Modal logic
+    let currentDetailRow = null;
     window.openModalDetailTips = function(row) {
       if (!row) return;
+      currentDetailRow = row;
       document.getElementById('detail-title').textContent = row.dataset.rawTitle || '';
       document.getElementById('detail-category-badge').textContent = row.dataset.category || '';
       document.getElementById('detail-status-badge').textContent = row.dataset.status || '';
-      document.getElementById('detail-date').textContent = row.dataset.rawDate || '';
+      document.getElementById('detail-date').textContent = row.dataset.rawDate || 'Draft';
       document.getElementById('detail-commodity').textContent = row.dataset.commodity || '';
       document.getElementById('detail-image').textContent = row.dataset.rawImage || '';
       document.getElementById('detail-excerpt').textContent = row.dataset.rawExcerpt || '';
@@ -832,65 +901,29 @@
       if (editBtn) {
         editBtn.onclick = () => {
           closeModal('modal-detail-tips');
-          openModalEditTips(row);
+          window.openTipsModal(currentDetailRow);
         };
       }
 
       openModal('modal-detail-tips');
     };
 
-    // Open Tambah Modal
-    window.openModalTambahTips = function() {
-      const form = document.getElementById('form-tambah-tips');
-      if (form) {
-        form.reset();
-        const targetInput = form.querySelector('[name="target"]');
-        if (targetInput) targetInput.value = 'Semua Kelompok';
-      }
-      openModal('modal-tambah-tips');
-    };
-
-    // Open Edit Modal & setup PUT action
-    window.openModalEditTips = function(row) {
-      if (!row) return;
-      const rowId = row.dataset.id;
-      const form = document.getElementById('form-edit-tips');
-      if (form) {
-        form.action = '{{ url("admin/edukasi/tips") }}/' + rowId;
-      }
-
-      document.getElementById('edit-row-id').value = rowId;
-      document.getElementById('edit-title').value = row.dataset.rawTitle || '';
-      document.getElementById('edit-category').value = row.dataset.category || 'Perawatan Tanaman';
-      const editCommEl = document.getElementById('edit-commodity');
-      if (editCommEl) {
-        editCommEl.value = row.dataset.komoditasId || '';
-      }
-      document.getElementById('edit-target').value = 'Semua Kelompok';
-      document.getElementById('edit-excerpt').value = row.dataset.rawExcerpt || '';
-      document.getElementById('edit-content').value = row.dataset.rawContent || '';
-      document.getElementById('edit-status').value = row.dataset.status || 'Publik';
-
-      openModal('modal-edit-tips');
-    };
-
-    // Open Hapus Modal & setup DELETE action
+    // Hapus Modal logic
     window.openModalHapusTips = function(row) {
       if (!row) return;
       const rowId = row.dataset.id;
-      const form = document.getElementById('form-hapus-tips');
-      if (form) {
-        form.action = '{{ url("admin/edukasi/tips") }}/' + rowId;
+      const deleteForm = document.getElementById('form-hapus-tips');
+      if (deleteForm) {
+        deleteForm.action = '{{ url("admin/edukasi/tips") }}/' + rowId;
       }
-
       document.getElementById('hapus-tips-title').textContent = `"${row.dataset.rawTitle}"`;
       openModal('modal-hapus-tips');
     };
 
-    // Open Tambah Komoditas Modal
+    // Tambah Komoditas Modal logic
     window.openModalTambahKomoditas = function() {
-      const form = document.getElementById('form-tambah-komoditas');
-      if (form) form.reset();
+      const komoditasForm = document.getElementById('form-tambah-komoditas');
+      if (komoditasForm) komoditasForm.reset();
       const errEl = document.getElementById('komoditas-error-alert');
       if (errEl) {
         errEl.classList.add('hidden');
@@ -899,15 +932,17 @@
       openModal('modal-tambah-komoditas');
     };
 
-    // Handle AJAX Submit Tambah Komoditas
+    // AJAX Tambah Komoditas
     const formKomoditas = document.getElementById('form-tambah-komoditas');
     if (formKomoditas) {
       formKomoditas.addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-komoditas');
         const errEl = document.getElementById('komoditas-error-alert');
-        errEl.classList.add('hidden');
-        errEl.textContent = '';
+        if (errEl) {
+          errEl.classList.add('hidden');
+          errEl.textContent = '';
+        }
         btn.disabled = true;
         btn.innerHTML = '<span>Menyimpan...</span>';
 
@@ -930,45 +965,118 @@
             const newId = result.data.id_komoditas;
             const category = result.data.kategori;
 
-            // Add option to both select elements (tambah & edit)
-            ['tambah-commodity', 'edit-commodity'].forEach(selectId => {
-              const selectEl = document.getElementById(selectId);
-              if (selectEl) {
-                let targetOptgroup = Array.from(selectEl.querySelectorAll('optgroup')).find(
-                  og => (og.getAttribute('data-kategori') || og.label || '').includes(category)
-                );
-                if (!targetOptgroup) {
-                  targetOptgroup = document.createElement('optgroup');
-                  targetOptgroup.label = category;
-                  targetOptgroup.setAttribute('data-kategori', category);
-                  selectEl.appendChild(targetOptgroup);
-                }
-                const opt = document.createElement('option');
-                opt.value = newId;
-                opt.textContent = newName;
-                targetOptgroup.appendChild(opt);
-
-                // Auto select the newly created crop
-                selectEl.value = newName;
+            const selectEl = document.getElementById('tips-commodity');
+            if (selectEl) {
+              let targetOptgroup = Array.from(selectEl.querySelectorAll('optgroup')).find(
+                og => (og.getAttribute('data-kategori') || og.label || '').includes(category)
+              );
+              if (!targetOptgroup) {
+                targetOptgroup = document.createElement('optgroup');
+                targetOptgroup.label = category;
+                targetOptgroup.setAttribute('data-kategori', category);
+                selectEl.appendChild(targetOptgroup);
               }
-            });
+              const opt = document.createElement('option');
+              opt.value = newId;
+              opt.textContent = newName;
+              targetOptgroup.appendChild(opt);
+
+              selectEl.value = newId;
+            }
 
             closeModal('modal-tambah-komoditas');
             formKomoditas.reset();
           } else {
             const errMsg = result.message || (result.errors ? Object.values(result.errors).flat().join(', ') : 'Gagal menyimpan komoditas.');
-            errEl.textContent = errMsg;
-            errEl.classList.remove('hidden');
+            if (errEl) {
+              errEl.textContent = errMsg;
+              errEl.classList.remove('hidden');
+            }
           }
         } catch (err) {
-          errEl.textContent = 'Terjadi kesalahan koneksi. Silakan coba lagi.';
-          errEl.classList.remove('hidden');
+          if (errEl) {
+            errEl.textContent = 'Terjadi kesalahan koneksi. Silakan coba lagi.';
+            errEl.classList.remove('hidden');
+          }
         } finally {
           btn.disabled = false;
           btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Simpan Tanaman</span>';
           refreshIcons();
         }
       });
+    }
+
+    if (fields.summaryCount && fields.ringkasan) {
+      fields.ringkasan.addEventListener('input', updateCounters);
+    }
+    if (fields.contentCount && fields.isi) {
+      fields.isi.addEventListener('input', updateCounters);
+    }
+
+    if (fields.gambar) {
+      fields.gambar.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
+
+        if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+          alert('Format file tidak didukung! Format yang diperbolehkan hanya JPG, JPEG, PNG, WEBP, atau SVG.');
+          this.value = '';
+          return;
+        }
+
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        if (file.size > maxSize) {
+          alert('Ukuran file gambar terlalu besar (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB)! Maksimal ukuran yang diperbolehkan adalah 2 MB.');
+          this.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (fields.currentImagePreview) fields.currentImagePreview.src = e.target.result;
+          if (fields.currentImage) {
+            fields.currentImage.classList.remove('hidden');
+            fields.currentImage.classList.add('flex');
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', function() {
+        if (fields.submit) {
+          fields.submit.disabled = true;
+          fields.submit.classList.add('opacity-70', 'cursor-not-allowed');
+        }
+      });
+    }
+
+    // Auto-restore old input on validation error redirect
+    if (document.getElementById('tips-has-errors')) {
+      const oldId = document.getElementById('tips-old-id')?.value;
+      if (oldId) {
+        const targetRow = tbody?.querySelector(`.tips-row[data-id="${oldId}"]`);
+        if (targetRow) {
+          window.openTipsModal(targetRow, true);
+        } else {
+          window.openTipsModal({ id: oldId }, true);
+        }
+      } else {
+        window.openTipsModal(null, true);
+      }
+
+      if (fields.judul) fields.judul.value = document.getElementById('tips-old-judul')?.value || '';
+      if (fields.kategori) fields.kategori.value = document.getElementById('tips-old-kategori')?.value || 'Budidaya Tanaman';
+      if (fields.komoditas) fields.komoditas.value = document.getElementById('tips-old-komoditas')?.value || '';
+      if (fields.status) fields.status.value = document.getElementById('tips-old-status')?.value || 'Publik';
+      if (fields.ringkasan) fields.ringkasan.value = document.getElementById('tips-old-ringkasan')?.value || '';
+      if (fields.isi) fields.isi.value = document.getElementById('tips-old-isi')?.value || '';
+      updateCounters();
     }
 
     refreshIcons();

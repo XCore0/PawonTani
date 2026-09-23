@@ -23,19 +23,7 @@
     </div>
   @endif
 
-  @if($errors->any())
-    <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm space-y-1">
-      <div class="flex items-center gap-2 font-bold text-red-900">
-        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
-        <span>Terjadi kesalahan saat memproses data pengurus:</span>
-      </div>
-      <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
+
 
   <!-- ==================== 1. TOP HEADER & ACTION BUTTONS ==================== -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -400,6 +388,20 @@
       <!-- Role locked to Pengurus -->
       <input type="hidden" name="role" value="Pengurus">
 
+      @if($errors->any() && !old('_edit_mode'))
+        <div id="pengurus-tambah-errors" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal menyimpan data pengurus. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
       <!-- Nama Lengkap -->
       <div>
         <label for="form-nama" class="block font-semibold text-[#1A2D10] mb-1">
@@ -634,6 +636,22 @@
     <form id="form-edit-pengurus" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-xs sm:text-sm max-h-[80vh] overflow-y-auto">
       @csrf
       @method('PUT')
+      <input type="hidden" name="_edit_mode" value="1">
+      <input type="hidden" name="_pengurus_id" id="edit-pengurus-id-input" value="">
+
+      @if($errors->any() && old('_edit_mode'))
+        <div id="pengurus-edit-errors" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal memperbarui data pengurus. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
 
       <!-- Nama Lengkap -->
       <div>
@@ -810,6 +828,21 @@
   </div>
 </div>
 
+@if($errors->any())
+<input type="hidden" id="pengurus-has-errors" value="1">
+<input type="hidden" id="pengurus-error-mode" value="{{ old('_edit_mode') ? 'edit' : 'tambah' }}">
+<input type="hidden" id="pengurus-old-id" value="{{ old('_pengurus_id', '') }}">
+<input type="hidden" id="pengurus-old-nama" value="{{ old('nama', '') }}">
+<input type="hidden" id="pengurus-old-jabatan" value="{{ old('jabatan', '') }}">
+<input type="hidden" id="pengurus-old-kelompok" value="{{ old('id_kelompok', '') }}">
+<input type="hidden" id="pengurus-old-nik" value="{{ old('nik', '') }}">
+<input type="hidden" id="pengurus-old-telepon" value="{{ old('no_telepon', '') }}">
+<input type="hidden" id="pengurus-old-username" value="{{ old('username', '') }}">
+<input type="hidden" id="pengurus-old-email" value="{{ old('email', '') }}">
+<input type="hidden" id="pengurus-old-status" value="{{ old('status', 'Aktif') }}">
+<input type="hidden" id="pengurus-old-alamat" value="{{ old('alamat', '') }}">
+@endif
+
 <!-- ==================== 9. PAGE JAVASCRIPT ==================== -->
 <script>
   let currentDetailBtn = null;
@@ -889,6 +922,8 @@
 
   // Modal Tambah
   function openModalTambah() {
+    const errorEl = document.getElementById('pengurus-tambah-errors');
+    if (errorEl) errorEl.classList.add('hidden');
     const modal = document.getElementById('modal-tambah');
     modal.classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -966,6 +1001,9 @@
 
   // Modal Edit
   function openModalEdit(btn, id) {
+    const errorEl = document.getElementById('pengurus-edit-errors');
+    if (errorEl) errorEl.classList.add('hidden');
+
     const row = btn.closest('tr');
     if (!row) return;
 
@@ -987,6 +1025,8 @@
     // Set Form Action
     const form = document.getElementById('form-edit-pengurus');
     form.action = "{{ url('/admin/pengurus') }}/" + encodeURIComponent(id);
+    const editIdInput = document.getElementById('edit-pengurus-id-input');
+    if (editIdInput) editIdInput.value = id;
 
     // Populate Form Inputs
     document.getElementById('edit-nama').value = nama;
@@ -1069,6 +1109,54 @@
   document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) {
       lucide.createIcons();
+    }
+
+    // Auto-reopen modal on validation error
+    if (document.getElementById('pengurus-has-errors')) {
+      const mode = document.getElementById('pengurus-error-mode')?.value;
+      const oldNama     = document.getElementById('pengurus-old-nama')?.value     || '';
+      const oldJabatan  = document.getElementById('pengurus-old-jabatan')?.value  || '';
+      const oldKelompok = document.getElementById('pengurus-old-kelompok')?.value || '';
+      const oldNik      = document.getElementById('pengurus-old-nik')?.value      || '';
+      const oldTelepon  = document.getElementById('pengurus-old-telepon')?.value  || '';
+      const oldUsername = document.getElementById('pengurus-old-username')?.value || '';
+      const oldEmail    = document.getElementById('pengurus-old-email')?.value    || '';
+      const oldStatus   = document.getElementById('pengurus-old-status')?.value   || 'Aktif';
+      const oldAlamat   = document.getElementById('pengurus-old-alamat')?.value   || '';
+
+      if (mode === 'edit') {
+        const oldId = document.getElementById('pengurus-old-id')?.value || '';
+        const form = document.getElementById('form-edit-pengurus');
+        if (form && oldId) {
+          form.action = "{{ url('/admin/pengurus') }}/" + encodeURIComponent(oldId);
+        }
+        const editIdInput = document.getElementById('edit-pengurus-id-input');
+        if (editIdInput) editIdInput.value = oldId;
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        setVal('edit-nama',     oldNama);
+        setVal('edit-jabatan',  oldJabatan);
+        setVal('edit-kelompok', oldKelompok);
+        setVal('edit-nik',      oldNik);
+        setVal('edit-telepon',  oldTelepon);
+        setVal('edit-username', oldUsername);
+        setVal('edit-email',    oldEmail);
+        setVal('edit-status',   oldStatus);
+        setVal('edit-alamat',   oldAlamat);
+        document.getElementById('modal-edit')?.classList.remove('hidden');
+      } else {
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        setVal('form-nama',     oldNama);
+        setVal('form-jabatan',  oldJabatan);
+        setVal('form-kelompok', oldKelompok);
+        setVal('form-nik',      oldNik);
+        setVal('form-telepon',  oldTelepon);
+        setVal('form-username', oldUsername);
+        setVal('form-email',    oldEmail);
+        setVal('form-status',   oldStatus);
+        setVal('form-alamat',   oldAlamat);
+        document.getElementById('modal-tambah')?.classList.remove('hidden');
+      }
+      if (window.lucide) lucide.createIcons();
     }
 
     // Real-time username availability check

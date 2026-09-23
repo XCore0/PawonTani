@@ -71,7 +71,8 @@ class ArtikelController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateArticle($request);
-        $validated['tanggal'] = now()->toDateString();
+        $isPublik = ($validated['status'] ?? 'Draft') === 'Publik';
+        $validated['tanggal'] = $isPublik ? now()->toDateString() : null;
         $gambar = null;
 
         if ($request->hasFile('gambar')) {
@@ -95,6 +96,10 @@ class ArtikelController extends Controller
     {
         $artikel = Artikel::findOrFail($id_artikel);
         $validated = $this->validateArticle($request, true);
+        $isPublik = ($validated['status'] ?? 'Draft') === 'Publik';
+        $validated['tanggal'] = $isPublik
+            ? ($artikel->tanggal?->toDateString() ?: now()->toDateString())
+            : null;
         $oldImage = $artikel->gambar;
         $newImage = null;
 
@@ -137,7 +142,7 @@ class ArtikelController extends Controller
     private function validateArticle(Request $request, bool $isUpdate = false): array
     {
         return $request->validate([
-            'judul' => ['required', 'string', 'max:255', $isUpdate ? Rule::unique('artikel', 'judul')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,judul'],
+            'judul' => ['required', 'string', 'min:5', 'max:255', $isUpdate ? Rule::unique('artikel', 'judul')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,judul'],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
             'komoditas_id' => [
                 'nullable',
@@ -145,17 +150,21 @@ class ArtikelController extends Controller
                 'max:20',
                 'exists:komoditas,id_komoditas',
             ],
-            'ringkasan' => ['required', 'string', 'max:1000'],
-            'isi' => ['required', 'string', $isUpdate ? Rule::unique('artikel', 'isi')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,isi'],
+            'ringkasan' => ['required', 'string', 'min:10', 'max:1000'],
+            'isi' => ['required', 'string', 'min:20', $isUpdate ? Rule::unique('artikel', 'isi')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,isi'],
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'tanggal' => ['nullable', 'date'],
             'status' => ['required', 'in:Publik,Draft'],
         ], [
             'judul.required' => 'Judul artikel wajib diisi.',
+            'judul.min' => 'Judul artikel minimal 5 karakter.',
+            'judul.max' => 'Judul artikel maksimal 255 karakter.',
             'judul.unique' => 'Judul artikel sudah digunakan.',
             'kategori.required' => 'Kategori artikel wajib diisi.',
             'ringkasan.required' => 'Ringkasan artikel wajib diisi.',
+            'ringkasan.min' => 'Ringkasan artikel minimal 10 karakter.',
+            'ringkasan.max' => 'Ringkasan artikel maksimal 1000 karakter.',
             'isi.required' => 'Isi artikel wajib diisi.',
+            'isi.min' => 'Isi artikel minimal 20 karakter.',
             'isi.unique' => 'Isi artikel sudah digunakan.',
             'gambar.image' => 'File gambar harus berupa gambar.',
             'gambar.mimes' => 'Gambar harus berformat JPG, JPEG, PNG, WEBP, atau SVG.',

@@ -23,19 +23,7 @@
     </div>
   @endif
 
-  @if($errors->any())
-    <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm space-y-1">
-      <div class="flex items-center gap-2 font-bold text-red-900">
-        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
-        <span>Terjadi kesalahan pada input data:</span>
-      </div>
-      <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
+
 
   <!-- ==================== 1. TOP HEADER & ACTION BUTTONS ==================== -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -268,6 +256,20 @@
     <form action="{{ route('admin.kelompok.store') }}" method="POST" id="form-tambah-kelompok" class="p-5 space-y-4">
       @csrf
 
+      @if($errors->any() && !old('_edit_mode'))
+        <div id="kelompok-tambah-errors" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal menyimpan data. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
       <!-- Nama Kelompok -->
       <div>
         <label for="input-nama" class="block text-xs font-semibold text-[#1A2D10] mb-1.5">
@@ -338,6 +340,22 @@
     <form id="form-edit-kelompok" method="POST" class="p-5 space-y-4">
       @csrf
       @method('PUT')
+      <input type="hidden" name="_edit_mode" value="1">
+      <input type="hidden" name="id_kelompok" id="edit-id-input" value="">
+
+      @if($errors->any() && old('_edit_mode'))
+        <div id="kelompok-edit-errors" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal menyimpan data. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
 
       <!-- Nama Kelompok -->
       <div>
@@ -462,6 +480,15 @@
   </div>
 </div>
 
+@if($errors->any())
+<input type="hidden" id="kelompok-has-errors" value="1">
+<input type="hidden" id="kelompok-error-mode" value="{{ old('_edit_mode') ? 'edit' : 'tambah' }}">
+<input type="hidden" id="kelompok-old-id" value="{{ old('id_kelompok', '') }}">
+<input type="hidden" id="kelompok-old-nama" value="{{ old('nama_kelompok', '') }}">
+<input type="hidden" id="kelompok-old-alamat" value="{{ old('alamat', '') }}">
+<input type="hidden" id="kelompok-old-status" value="{{ old('status', 'Aktif') }}">
+@endif
+
 <!-- ==================== 7. TOAST NOTIFICATION ==================== -->
 <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#1A2D10] text-white text-xs sm:text-sm font-semibold shadow-lg">
   <i data-lucide="check-circle" class="w-4 h-4 text-[#4D9830]"></i>
@@ -525,6 +552,8 @@
 
   // Modal Tambah
   function openModalTambah() {
+    const errorEl = document.getElementById('kelompok-tambah-errors');
+    if (errorEl) errorEl.classList.add('hidden');
     const modal = document.getElementById('modal-tambah');
     const container = document.getElementById('modal-tambah-container');
     modal.classList.remove('hidden');
@@ -549,6 +578,9 @@
 
   // Modal Edit
   function openModalEdit(btn, explicitId = null) {
+    const errorEl = document.getElementById('kelompok-edit-errors');
+    if (errorEl) errorEl.classList.add('hidden');
+
     const row = btn ? btn.closest('tr') : null;
     const id = explicitId || (row ? row.getAttribute('data-id') : null);
     const nama = row ? (row.getAttribute('data-nama') || '') : '';
@@ -557,6 +589,9 @@
 
     const editBadge = document.getElementById('edit-id-badge');
     if (editBadge) editBadge.textContent = id || '';
+
+    const editIdInput = document.getElementById('edit-id-input');
+    if (editIdInput) editIdInput.value = id || '';
 
     const inputNama = document.getElementById('edit-nama');
     if (inputNama) inputNama.value = nama;
@@ -689,6 +724,62 @@
   document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) {
       lucide.createIcons();
+    }
+
+    // Auto-reopen modal on validation error
+    if (document.getElementById('kelompok-has-errors')) {
+      const mode = document.getElementById('kelompok-error-mode')?.value;
+      const oldNama = document.getElementById('kelompok-old-nama')?.value || '';
+      const oldAlamat = document.getElementById('kelompok-old-alamat')?.value || '';
+      const oldStatus = document.getElementById('kelompok-old-status')?.value || 'Aktif';
+
+      if (mode === 'edit') {
+        const oldId = document.getElementById('kelompok-old-id')?.value || '';
+        // Prefill edit modal then open it
+        const editNamaEl = document.getElementById('edit-nama');
+        const editAlamatEl = document.getElementById('edit-alamat');
+        const editStatusEl = document.getElementById('edit-status');
+        const editIdInput = document.getElementById('edit-id-input');
+        const editBadge = document.getElementById('edit-id-badge');
+        const editForm = document.getElementById('form-edit-kelompok');
+        if (editNamaEl) editNamaEl.value = oldNama;
+        if (editAlamatEl) editAlamatEl.value = oldAlamat;
+        if (editStatusEl) editStatusEl.value = oldStatus;
+        if (editIdInput) editIdInput.value = oldId;
+        if (editBadge) editBadge.textContent = oldId;
+        if (editForm && oldId) {
+          editForm.action = "{{ url('admin/kelompok') }}/" + encodeURIComponent(oldId);
+        }
+        const modal = document.getElementById('modal-edit');
+        const container = document.getElementById('modal-edit-container');
+        if (modal && container) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          setTimeout(() => {
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+          }, 10);
+        }
+      } else {
+        // Prefill tambah modal then open it
+        const inputNama = document.getElementById('input-nama');
+        const inputAlamat = document.getElementById('input-alamat');
+        const inputStatus = document.getElementById('input-status');
+        if (inputNama) inputNama.value = oldNama;
+        if (inputAlamat) inputAlamat.value = oldAlamat;
+        if (inputStatus) inputStatus.value = oldStatus;
+        const modal = document.getElementById('modal-tambah');
+        const container = document.getElementById('modal-tambah-container');
+        if (modal && container) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          setTimeout(() => {
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+          }, 10);
+        }
+      }
+      if (window.lucide) lucide.createIcons();
     }
 
     // Prevent double form submission

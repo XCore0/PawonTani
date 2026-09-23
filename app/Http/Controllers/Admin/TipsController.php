@@ -107,7 +107,7 @@ class TipsController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $tips = $query->orderBy('created_at', 'desc')->get();
+        $tips = $query->with('komoditas')->orderBy('created_at', 'desc')->get();
         $totalCount = Tip::count();
         $publikCount = Tip::where('status', 'Publik')->count();
         $draftCount = Tip::where('status', 'Draft')->count();
@@ -140,7 +140,7 @@ class TipsController extends Controller
     public function store(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'judul' => ['required', 'string', 'max:255', 'unique:tips,judul'],
+            'judul' => ['required', 'string', 'min:5', 'max:255', 'unique:tips,judul'],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
             'komoditas_id' => [
                 'nullable',
@@ -149,18 +149,23 @@ class TipsController extends Controller
                 'exists:komoditas,id_komoditas',
             ],
             'target' => 'nullable|string|max:150',
-            'ringkasan' => 'required|string',
-            'isi' => 'required|string|unique:tips,isi',
+            'ringkasan' => 'required|string|min:10|max:1000',
+            'isi' => 'required|string|min:20|unique:tips,isi',
             'gambar_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'gambar' => 'nullable|string|max:255',
             'status' => 'required|in:Publik,Draft',
         ], [
             'judul.required' => 'Judul tips wajib diisi.',
+            'judul.min' => 'Judul tips minimal 5 karakter.',
+            'judul.max' => 'Judul tips maksimal 255 karakter.',
             'judul.unique' => 'Judul tips sudah digunakan.',
             'kategori.required' => 'Kategori tips wajib dipilih.',
             'komoditas_id.exists' => 'Komoditas sasaran harus dipilih dari daftar yang tersedia.',
             'ringkasan.required' => 'Ringkasan / inti tips wajib diisi.',
+            'ringkasan.min' => 'Ringkasan tips minimal 10 karakter.',
+            'ringkasan.max' => 'Ringkasan tips maksimal 1000 karakter.',
             'isi.required' => 'Isi tips wajib diisi.',
+            'isi.min' => 'Isi tips minimal 20 karakter.',
             'isi.unique' => 'Isi tips sudah digunakan.',
             'status.required' => 'Status tips wajib dipilih.',
             'status.in' => 'Status harus bernilai Publik atau Draft.',
@@ -181,6 +186,9 @@ class TipsController extends Controller
             $gambarPath = 'uploads/tips/' . $filename;
         }
 
+        $isPublik = ($validated['status'] ?? 'Draft') === 'Publik';
+        $tanggal = $isPublik ? now()->toDateString() : null;
+
         $tip = Tip::create([
             'judul' => $validated['judul'],
             'kategori' => $validated['kategori'],
@@ -189,7 +197,7 @@ class TipsController extends Controller
             'ringkasan' => $validated['ringkasan'],
             'isi' => $validated['isi'] ?? null,
             'gambar' => $gambarPath,
-            'tanggal' => now()->toDateString(),
+            'tanggal' => $tanggal,
             'status' => $validated['status'],
         ]);
 
@@ -213,7 +221,7 @@ class TipsController extends Controller
         $tip = Tip::findOrFail($id_tips);
 
         $validated = Validator::make($request->all(), [
-            'judul' => ['required', 'string', 'max:255', Rule::unique('tips', 'judul')->ignore($tip->id_tips, 'id_tips')],
+            'judul' => ['required', 'string', 'min:5', 'max:255', Rule::unique('tips', 'judul')->ignore($tip->id_tips, 'id_tips')],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
             'komoditas_id' => [
                 'nullable',
@@ -222,18 +230,23 @@ class TipsController extends Controller
                 'exists:komoditas,id_komoditas',
             ],
             'target' => 'nullable|string|max:150',
-            'ringkasan' => 'required|string',
-            'isi' => ['required', 'string', Rule::unique('tips', 'isi')->ignore($tip->id_tips, 'id_tips')],
+            'ringkasan' => 'required|string|min:10|max:1000',
+            'isi' => ['required', 'string', 'min:20', Rule::unique('tips', 'isi')->ignore($tip->id_tips, 'id_tips')],
             'gambar_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'gambar' => 'nullable|string|max:255',
             'status' => 'required|in:Publik,Draft',
         ], [
             'judul.required' => 'Judul tips wajib diisi.',
+            'judul.min' => 'Judul tips minimal 5 karakter.',
+            'judul.max' => 'Judul tips maksimal 255 karakter.',
             'judul.unique' => 'Judul tips sudah digunakan.',
             'kategori.required' => 'Kategori tips wajib dipilih.',
             'komoditas_id.exists' => 'Komoditas sasaran harus dipilih dari daftar yang tersedia.',
             'ringkasan.required' => 'Ringkasan / inti tips wajib diisi.',
+            'ringkasan.min' => 'Ringkasan tips minimal 10 karakter.',
+            'ringkasan.max' => 'Ringkasan tips maksimal 1000 karakter.',
             'isi.required' => 'Isi tips wajib diisi.',
+            'isi.min' => 'Isi tips minimal 20 karakter.',
             'isi.unique' => 'Isi tips sudah digunakan.',
             'status.required' => 'Status tips wajib dipilih.',
             'status.in' => 'Status harus bernilai Publik atau Draft.',
@@ -262,6 +275,9 @@ class TipsController extends Controller
             $gambarPath = $validated['gambar'];
         }
 
+        $isPublik = ($validated['status'] ?? 'Draft') === 'Publik';
+        $tanggal = $isPublik ? ($tip->tanggal?->toDateString() ?: now()->toDateString()) : null;
+
         $tip->update([
             'judul' => $validated['judul'],
             'kategori' => $validated['kategori'],
@@ -270,6 +286,7 @@ class TipsController extends Controller
             'ringkasan' => $validated['ringkasan'],
             'isi' => $validated['isi'] ?? null,
             'gambar' => $gambarPath,
+            'tanggal' => $tanggal,
             'status' => $validated['status'],
         ]);
 
@@ -317,11 +334,12 @@ class TipsController extends Controller
     public function storeKomoditas(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'nama_komoditas' => 'required|string|max:100|unique:komoditas,nama_komoditas',
+            'nama_komoditas' => ['required', 'string', 'max:100', 'unique:komoditas,nama_komoditas', 'regex:/^[\pL\s\-\/]+$/u'],
             'kategori' => 'required|string|in:Tanaman Pangan,Hortikultura & Sayuran,Buah-buahan,Perkebunan & Rempah',
         ], [
             'nama_komoditas.required' => 'Nama tanaman komoditas wajib diisi.',
-            'nama_komoditas.unique' => 'Tanaman komoditas ini sudah terdaftar.',
+            'nama_komoditas.regex'    => 'Nama komoditas hanya boleh berisi huruf, tanda hubung (-), dan garis miring (/).',
+            'nama_komoditas.unique'   => 'Tanaman komoditas ini sudah terdaftar.',
             'kategori.required' => 'Kategori tanaman wajib dipilih.',
             'kategori.in' => 'Kategori tanaman tidak valid.',
         ])->validate();

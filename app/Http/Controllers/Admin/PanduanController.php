@@ -28,7 +28,7 @@ class PanduanController extends Controller
             ->when($kategori, fn ($q) => $q->where('kategori', $kategori))
             ->when($komoditas, fn ($q) => $q->where('komoditas_id', $komoditas));
 
-        $panduan = $query->with('author')
+        $panduan = $query->with(['author', 'komoditas'])
             ->latest('tanggal')
             ->latest('id_panduan')
             ->paginate(10)
@@ -56,7 +56,8 @@ class PanduanController extends Controller
     public function store(StorePanduanRequest $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $data = $request->validated();
-        $data['tanggal'] = now()->toDateString();
+        $isPublik = ($data['status'] ?? 'Draft') === 'Publik';
+        $data['tanggal'] = $isPublik ? now()->toDateString() : null;
         $data['slug'] = $this->uniqueSlug($data['judul']);
         $data['created_by'] = auth()->id();
 
@@ -82,6 +83,10 @@ class PanduanController extends Controller
     {
         $panduan = Panduan::findOrFail($id_panduan);
         $data = $request->validated();
+        $isPublik = ($data['status'] ?? 'Draft') === 'Publik';
+        $data['tanggal'] = $isPublik
+            ? ($panduan->tanggal?->toDateString() ?: now()->toDateString())
+            : null;
 
         if ($panduan->judul !== $data['judul']) {
             $data['slug'] = $this->uniqueSlug($data['judul'], $panduan->id_panduan);

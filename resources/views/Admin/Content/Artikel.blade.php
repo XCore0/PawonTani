@@ -11,12 +11,7 @@
     </div>
   @endif
 
-  @if($errors->any())
-    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-bold">Periksa kembali data artikel.</p>
-      <ul class="mt-1 list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-    </div>
-  @endif
+
 
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div class="flex items-start gap-3">
@@ -90,7 +85,7 @@
               <th class="w-36 px-3 py-3">Kategori</th>
               <th class="w-36 px-3 py-3">Komoditas</th>
               <th class="w-28 px-3 py-3">Gambar</th>
-              <th class="w-28 px-3 py-3">Tanggal</th>
+              <th class="w-36 px-3 py-3">Tanggal</th>
               <th class="w-20 px-3 py-3 text-center">Status</th>
               <th class="w-48 px-3 py-3 text-center">Aksi</th>
             </tr>
@@ -102,14 +97,16 @@
                 data-title="{{ strtolower($artikel->judul) }}"
                 data-category="{{ $artikel->kategori }}"
                 data-komoditas-id="{{ $artikel->komoditas_id ?? '' }}"
-                data-commodity="{{ strtolower($artikel->komoditas?->nama_komoditas ?? '') }}"
+                data-commodity="{{ strtolower($artikel->komoditas?->nama_komoditas ?? 'Semua Komoditas') }}"
+                data-raw-commodity="{{ $artikel->komoditas?->nama_komoditas ?? 'Semua Komoditas' }}"
                 data-status="{{ $artikel->status }}"
                 data-raw-title="{{ $artikel->judul }}"
                 data-raw-excerpt="{{ $artikel->ringkasan }}"
                 data-raw-content="{{ $artikel->isi }}"
                 data-raw-image="{{ $artikel->gambar }}"
                 data-image-url="{{ $artikel->gambar ? asset($artikel->gambar) : '' }}"
-                data-raw-date="{{ optional($artikel->tanggal)->format('Y-m-d') }}">
+                data-raw-date="{{ $artikel->tanggal ? $artikel->tanggal->format('d M Y') : 'Draft' }}"
+                data-raw-created-at="{{ $artikel->created_at ? $artikel->created_at->format('d M Y') : '-' }}">
               <td class="px-3 py-3.5 text-center text-[#9AB880] font-medium">{{ $artikelList->firstItem() + $index }}</td>
               <td class="px-3 py-3.5">
                 <div class="max-w-[340px]">
@@ -135,7 +132,7 @@
                   <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#EBF6E0] text-[#4D9830]">
                     <i data-lucide="sprout" class="h-3.5 w-3.5"></i>
                   </span>
-                  <span class="font-semibold text-[#1A2D10]">{{ $artikel->komoditas?->nama_komoditas ?: '-' }}</span>
+                  <span class="font-semibold text-[#1A2D10]">{{ $artikel->komoditas?->nama_komoditas ?? 'Semua Komoditas' }}</span>
                 </div>
               </td>
               <td class="px-3 py-3.5">
@@ -152,8 +149,15 @@
                   </span>
                 </div>
               </td>
-              <td class="whitespace-nowrap px-3 py-3.5 text-[#9AB880] font-mono text-[11px]">
-                {{ optional($artikel->tanggal)->format('Y-m-d') ?: '-' }}
+              <td class="px-3 py-3.5">
+                @if($artikel->tanggal)
+                  <span class="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-slate-700">
+                    <i data-lucide="calendar" class="h-3 w-3 text-[#4D9830]"></i>
+                    <span>{{ $artikel->tanggal->format('d M Y') }}</span>
+                  </span>
+                @else
+                  <span class="font-mono text-[11px] text-[#9AB880]">-</span>
+                @endif
               </td>
               <td class="px-3 py-3.5 text-center">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold {{ $artikel->status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]' }}">
@@ -236,9 +240,23 @@
       <input type="hidden" name="_method" id="artikel-form-method" value="POST">
       <input type="hidden" name="id_artikel" id="artikel-form-id" value="">
 
+      @if($errors->any())
+        <div id="artikel-modal-errors" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal menyimpan data. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Judul Artikel <span class="text-red-500">*</span></label>
-        <input type="text" name="judul" id="artikel-judul" required maxlength="255" placeholder="Contoh: 5 Tips Mengatasi Hama Wereng Alami"
+        <input type="text" name="judul" id="artikel-judul" required minlength="5" maxlength="255" placeholder="Contoh: 5 Tips Mengatasi Hama Wereng Alami"
           class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
       </div>
 
@@ -254,24 +272,24 @@
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran <span class="text-red-500">*</span></label>
+            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran</label>
             <button type="button" id="btn-tambah-komoditas-artikel" class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4D9830] hover:text-[#3d7a26] transition-colors cursor-pointer">
               <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
               <span>+ Tambah Baru</span>
             </button>
           </div>
           <select name="komoditas_id" id="artikel-komoditas" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="">Pilih Komoditas</option>
+            <option value="">Semua Komoditas (Umum)</option>
             @php
               $categoryIcons = [
-                'Tanaman Pangan' => '',
+                'Tanaman Pangan' => '🌾',
                 'Hortikultura & Sayuran' => '🌶️',
                 'Buah-buahan' => '🍉',
                 'Perkebunan & Rempah' => '☕',
               ];
             @endphp
             @foreach($komoditasOptions as $categoryName => $items)
-              <optgroup label="{{ ($categoryIcons[$categoryName] ?? '🌱') . ' ' . $categoryName }}">
+              <optgroup label="{{ ($categoryIcons[$categoryName] ?? '🌱') . ' ' . $categoryName }}" data-kategori="{{ $categoryName }}">
                 @foreach($items as $komoditas)
                   <option value="{{ $komoditas->id_komoditas }}">{{ $komoditas->nama_komoditas }}</option>
                 @endforeach
@@ -286,7 +304,7 @@
           <label class="block font-semibold text-[#1A2D10]">Ringkasan <span class="text-red-500">*</span></label>
           <span id="artikel-ringkasan-count" class="text-[10px] text-[#9AB880]">0/1000</span>
         </div>
-        <textarea name="ringkasan" id="artikel-ringkasan" rows="2" required maxlength="1000" placeholder="Tuliskan rangkuman artikel yang langsung bisa dipraktikkan petani..."
+        <textarea name="ringkasan" id="artikel-ringkasan" rows="2" required minlength="10" maxlength="1000" placeholder="Tuliskan rangkuman artikel yang langsung bisa dipraktikkan petani..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
@@ -295,7 +313,7 @@
           <label class="block font-semibold text-[#1A2D10]">Isi Artikel <span class="text-red-500">*</span></label>
           <span id="artikel-isi-count" class="text-[10px] text-[#9AB880]">0 karakter</span>
         </div>
-        <textarea name="isi" id="artikel-isi" rows="4" required placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
+        <textarea name="isi" id="artikel-isi" rows="4" required minlength="20" placeholder="1. Siapkan bahan...&#10;2. Aplikasikan di sore hari...&#10;3. Ulangi tiap 5 hari..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
@@ -343,7 +361,16 @@
     <form id="form-tambah-komoditas-artikel" class="p-5 space-y-4 text-xs">
       @csrf
       <div id="komoditas-artikel-error" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"></div>
-      <div><label class="block font-semibold text-[#1A2D10] mb-1">Nama Tanaman / Komoditas <span class="text-red-500">*</span></label><input type="text" name="nama_komoditas" required placeholder="Contoh: Buncis, Selada, Vanili, dll" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></div>
+      <div>
+        <label class="block font-semibold text-[#1A2D10] mb-1">Nama Tanaman / Komoditas <span class="text-red-500">*</span></label>
+        <input type="text" name="nama_komoditas" required
+          pattern="[a-zA-ZÀ-öø-ÿ\-\/]+(\s[a-zA-ZÀ-öø-ÿ\-\/]+)*"
+          title="Nama komoditas hanya boleh berisi huruf, tanda hubung (-), dan garis miring (/)."
+          placeholder="Contoh: Padi Sawah, Cabai/Lombok, Kacang-kacangan"
+          oninput="this.value = this.value.replace(/[^a-zA-ZÀ-öø-ÿ\s\-\/]/g, '')"
+          class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
+        <p class="mt-1 text-[10px] text-[#9AB880]">Hanya huruf, tanda hubung <span class="font-mono font-bold">-</span>, dan garis miring <span class="font-mono font-bold">/</span> yang diperbolehkan.</p>
+      </div>
       <div><label class="block font-semibold text-[#1A2D10] mb-1">Kelompok Tanaman <span class="text-red-500">*</span></label><select name="kategori" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]"><option value="Tanaman Pangan">🌾 Tanaman Pangan</option><option value="Hortikultura & Sayuran" selected>🌶️ Hortikultura & Sayuran</option><option value="Buah-buahan">🍉 Buah-buahan</option><option value="Perkebunan & Rempah">☕ Perkebunan & Rempah</option></select></div>
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" id="cancel-tambah-komoditas-artikel" class="h-9 px-4 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer">Batal</button><button type="submit" id="submit-tambah-komoditas-artikel" class="h-9 px-4 rounded-lg bg-[#4D9830] hover:bg-[#3d7a26] text-white font-medium flex items-center gap-1.5 cursor-pointer"><i data-lucide="check" class="w-3.5 h-3.5"></i><span>Simpan Tanaman</span></button></div>
     </form>
@@ -406,9 +433,13 @@
 
     <div class="overflow-y-auto p-5 space-y-4 text-xs">
       <div class="flex flex-wrap items-center gap-2">
-        <span id="detail-artikel-kategori" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]"></span>
-        <span id="detail-artikel-status" class="rounded-full px-2.5 py-0.5 text-[10px] font-bold"></span>
-        <span class="text-[11px] text-[#9AB880] flex items-center gap-1 font-mono"><i data-lucide="calendar" class="h-3.5 w-3.5"></i><span id="detail-artikel-tanggal"></span></span>
+        <span id="detail-artikel-kategori" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]"></span>
+        <span id="detail-artikel-status" class="rounded-full px-2.5 py-1 text-[10px] font-bold"></span>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#F5F8F1] border border-[#E4F0D6] px-2.5 py-1 text-[10px] text-[#4A6030]">
+          <i data-lucide="calendar" class="h-3 w-3 text-[#4D9830]"></i>
+          <span class="font-medium text-[#6B7F5B]">Tanggal:</span>
+          <span id="detail-artikel-tanggal" class="font-mono font-semibold text-[#1A2D10]">-</span>
+        </span>
       </div>
       <h3 id="detail-artikel-judul" class="text-base sm:text-lg font-extrabold text-[#1A2D10] leading-snug"></h3>
       <div class="flex flex-wrap gap-4 p-3 rounded-xl bg-[#F5F8F1] border border-[#E4F0D6] text-[11px]">
@@ -434,7 +465,7 @@
 <input type="hidden" id="artikel-old-id" value="{{ old('id_artikel') }}">
 <input type="hidden" id="artikel-old-judul" value="{{ old('judul', '') }}">
 <input type="hidden" id="artikel-old-kategori" value="{{ old('kategori', '') }}">
-<input type="hidden" id="artikel-old-komoditas" value="{{ old('komoditas', '') }}">
+<input type="hidden" id="artikel-old-komoditas" value="{{ old('komoditas_id', '') }}">
 <input type="hidden" id="artikel-old-status" value="{{ old('status', 'Draft') }}">
 <input type="hidden" id="artikel-old-ringkasan" value="{{ old('ringkasan', '') }}">
 <input type="hidden" id="artikel-old-isi" value="{{ old('isi', '') }}">
@@ -499,7 +530,12 @@
     fields.currentImagePreview.src = '';
   }
 
-  window.openArtikelModal = function (artikel = null) {
+  window.openArtikelModal = function (artikel = null, isAutoRestore = false) {
+    const modalErrors = document.getElementById('artikel-modal-errors');
+    if (modalErrors && !isAutoRestore) {
+      modalErrors.classList.add('hidden');
+    }
+
     const editing = Boolean(artikel && artikel.id);
     form.reset();
     fields.id.value = editing ? artikel.id : '';
@@ -566,10 +602,10 @@
     // Populate data
     document.getElementById('detail-artikel-judul').textContent = data.rawTitle || '';
     document.getElementById('detail-artikel-kategori').textContent = data.category || '';
-    document.getElementById('detail-artikel-tanggal').textContent = data.rawDate || 'Tanggal belum ditentukan';
+    document.getElementById('detail-artikel-tanggal').textContent = data.rawDate || 'Draft';
     document.getElementById('detail-artikel-ringkasan').textContent = data.rawExcerpt || '';
     document.getElementById('detail-artikel-isi').textContent = data.rawContent || '';
-    document.getElementById('detail-artikel-komoditas').textContent = data.commodity || '-';
+    document.getElementById('detail-artikel-komoditas').textContent = data.rawCommodity || data.commodity || 'Semua Komoditas';
     document.getElementById('detail-artikel-image-name').textContent = data.rawImage || '-';
 
     // Status badge
@@ -685,8 +721,9 @@
       }
 
       const newName = result.data.nama_komoditas;
+      const newId = result.data.id_komoditas;
       const category = result.data.kategori;
-      let optgroup = Array.from(commoditySelect.querySelectorAll('optgroup')).find((group) => group.dataset.kategori === category);
+      let optgroup = Array.from(commoditySelect.querySelectorAll('optgroup')).find((group) => (group.dataset.kategori || group.label || '').includes(category));
       if (!optgroup) {
         optgroup = document.createElement('optgroup');
         optgroup.label = category;
@@ -694,10 +731,10 @@
         commoditySelect.appendChild(optgroup);
       }
       const option = document.createElement('option');
-      option.value = newName;
+      option.value = newId;
       option.textContent = newName;
       optgroup.appendChild(option);
-      commoditySelect.value = newName;
+      commoditySelect.value = newId;
       commodityForm.reset();
       closeCommodityModal();
     } catch (error) {
@@ -711,6 +748,40 @@
 
   fields.summaryCount && fields.ringkasan.addEventListener('input', updateCounters);
   fields.contentCount && fields.isi.addEventListener('input', updateCounters);
+
+  if (fields.gambar) {
+    fields.gambar.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+      const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
+
+      if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+        alert('Format file tidak didukung! Format yang diperbolehkan hanya JPG, JPEG, PNG, WEBP, atau SVG.');
+        this.value = '';
+        return;
+      }
+
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        alert('Ukuran file gambar terlalu besar (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB)! Maksimal ukuran yang diperbolehkan adalah 2 MB.');
+        this.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (fields.currentImagePreview) fields.currentImagePreview.src = e.target.result;
+        if (fields.currentImage) {
+          fields.currentImage.classList.remove('hidden');
+          fields.currentImage.classList.add('flex');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
   modal.addEventListener('click', function (event) {
     if (event.target === modal) window.closeArtikelModal();
@@ -730,19 +801,35 @@
   });
 
   if (document.getElementById('artikel-has-errors')) {
-    const oldArtikelId = document.getElementById('artikel-old-id').value;
+    const oldArtikelId = document.getElementById('artikel-old-id')?.value;
     if (oldArtikelId) {
-      const editButton = Array.from(document.querySelectorAll('[onclick*="openArtikelModal"]')).find(button => button.getAttribute('onclick')?.includes(`"id":${oldArtikelId}`));
-      if (editButton) editButton.click();
+      const editButton = Array.from(document.querySelectorAll('.js-edit-artikel')).find(button => {
+        try {
+          const data = JSON.parse(button.dataset.artikel || '{}');
+          return String(data.id) === String(oldArtikelId);
+        } catch (e) {
+          return false;
+        }
+      });
+      if (editButton) {
+        try {
+          const artikel = JSON.parse(editButton.dataset.artikel || '{}');
+          window.openArtikelModal(artikel, true);
+        } catch (e) {
+          window.openArtikelModal({ id: oldArtikelId, action: '{{ url("admin/edukasi/artikel") }}/' + oldArtikelId }, true);
+        }
+      } else {
+        window.openArtikelModal({ id: oldArtikelId, action: '{{ url("admin/edukasi/artikel") }}/' + oldArtikelId }, true);
+      }
     } else {
-      window.openArtikelModal();
+      window.openArtikelModal(null, true);
     }
-    fields.judul.value = document.getElementById('artikel-old-judul').value;
-    setFieldValue(fields.kategori, document.getElementById('artikel-old-kategori').value);
-    setFieldValue(fields.komoditas, document.getElementById('artikel-old-komoditas').value);
-    fields.status.value = document.getElementById('artikel-old-status').value;
-    fields.ringkasan.value = document.getElementById('artikel-old-ringkasan').value;
-    fields.isi.value = document.getElementById('artikel-old-isi').value;
+    if (fields.judul) fields.judul.value = document.getElementById('artikel-old-judul')?.value || '';
+    if (fields.kategori) setFieldValue(fields.kategori, document.getElementById('artikel-old-kategori')?.value || '');
+    if (fields.komoditas) setFieldValue(fields.komoditas, document.getElementById('artikel-old-komoditas')?.value || '');
+    if (fields.status) fields.status.value = document.getElementById('artikel-old-status')?.value || 'Draft';
+    if (fields.ringkasan) fields.ringkasan.value = document.getElementById('artikel-old-ringkasan')?.value || '';
+    if (fields.isi) fields.isi.value = document.getElementById('artikel-old-isi')?.value || '';
     updateCounters();
   }
 })();

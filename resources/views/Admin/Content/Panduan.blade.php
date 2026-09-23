@@ -9,10 +9,12 @@
           'id' => $item->id_panduan,
           'judul' => $item->judul,
           'kategori' => $item->kategori,
-          'komoditas' => $item->komoditas,
+          'komoditas' => $item->komoditas?->nama_komoditas ?? 'Semua Komoditas',
+          'komoditas_id' => $item->komoditas_id,
           'ringkasan' => $item->ringkasan,
           'isi' => $item->isi,
-          'tanggal' => $item->tanggal?->format('d F Y'),
+          'tanggal' => $item->tanggal?->format('d M Y'),
+          'created_at' => $item->created_at ? $item->created_at->format('d M Y') : '-',
           'status' => $item->status,
           'gambar' => $item->gambar ? asset($item->gambar) : null,
           'slug' => $item->slug,
@@ -30,6 +32,8 @@
       <span>{{ session('success') }}</span>
     </div>
   @endif
+
+
 
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div class="flex items-start gap-3">
@@ -102,7 +106,7 @@
             <th class="w-36 px-3 py-3">Kategori</th>
             <th class="w-36 px-3 py-3">Komoditas</th>
             <th class="w-28 px-3 py-3">Gambar</th>
-            <th class="w-28 px-3 py-3">Tanggal</th>
+            <th class="w-36 px-3 py-3">Tanggal</th>
             <th class="w-20 px-3 py-3 text-center">Status</th>
             <th class="w-48 px-3 py-3 text-center">Aksi</th>
           </tr>
@@ -113,7 +117,7 @@
                 data-id="{{ $item->id_panduan }}"
                 data-title="{{ strtolower($item->judul) }}"
                 data-category="{{ $item->kategori }}"
-                data-commodity="{{ strtolower($item->komoditas) }}"
+                data-commodity="{{ strtolower($item->komoditas?->nama_komoditas ?? 'Semua Komoditas') }}"
                 data-status="{{ $item->status }}"
                 data-raw-title="{{ $item->judul }}"
                 data-raw-excerpt="{{ $item->ringkasan }}"
@@ -146,7 +150,7 @@
                   <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#EBF6E0] text-[#4D9830]">
                     <i data-lucide="sprout" class="h-3.5 w-3.5"></i>
                   </span>
-                  <span class="font-semibold text-[#1A2D10]">{{ $item->komoditas ?: '-' }}</span>
+                  <span class="font-semibold text-[#1A2D10]">{{ $item->komoditas?->nama_komoditas ?? 'Semua Komoditas' }}</span>
                 </div>
               </td>
               <td class="px-3 py-3.5">
@@ -163,8 +167,15 @@
                   </span>
                 </div>
               </td>
-              <td class="whitespace-nowrap px-3 py-3.5 text-[#9AB880] font-mono text-[11px]">
-                {{ $item->tanggal?->format('Y-m-d') ?: '-' }}
+              <td class="px-3 py-3.5">
+                @if($item->tanggal)
+                  <span class="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-slate-700">
+                    <i data-lucide="calendar" class="h-3 w-3 text-[#4D9830]"></i>
+                    <span>{{ $item->tanggal->format('d M Y') }}</span>
+                  </span>
+                @else
+                  <span class="font-mono text-[11px] text-[#9AB880]">-</span>
+                @endif
               </td>
               <td class="px-3 py-3.5 text-center">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold {{ $item->status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]' }}">
@@ -237,9 +248,13 @@
 
     <div class="overflow-y-auto p-5 space-y-4 text-xs">
       <div class="flex flex-wrap items-center gap-2">
-        <span id="detail-panduan-kategori" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]"></span>
-        <span id="detail-panduan-status" class="rounded-full px-2.5 py-0.5 text-[10px] font-bold"></span>
-        <span id="detail-panduan-tanggal" class="text-[11px] text-[#9AB880] flex items-center gap-1 font-mono"><i data-lucide="calendar" class="h-3.5 w-3.5"></i></span>
+        <span id="detail-panduan-kategori" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830]"></span>
+        <span id="detail-panduan-status" class="rounded-full px-2.5 py-1 text-[10px] font-bold"></span>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#F5F8F1] border border-[#E4F0D6] px-2.5 py-1 text-[10px] text-[#4A6030]">
+          <i data-lucide="calendar" class="h-3 w-3 text-[#4D9830]"></i>
+          <span class="font-medium text-[#6B7F5B]">Tanggal:</span>
+          <span id="detail-panduan-tanggal" class="font-mono font-semibold text-[#1A2D10]">-</span>
+        </span>
       </div>
       <h3 id="detail-panduan-judul" class="text-base sm:text-lg font-extrabold text-[#1A2D10] leading-snug"></h3>
       <div class="flex flex-wrap gap-4 p-3 rounded-xl bg-[#F5F8F1] border border-[#E4F0D6] text-[11px]">
@@ -284,12 +299,25 @@
     <form id="form-panduan-modal" method="POST" action="{{ route('admin.edukasi.panduan.store') }}" enctype="multipart/form-data" class="overflow-y-auto p-5 space-y-4 text-xs">
       @csrf
       <input type="hidden" name="_method" id="panduan-modal-method" value="POST">
+      <input type="hidden" name="id_panduan" id="panduan-modal-id" value="">
 
-      <div id="panduan-modal-errors" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"></div>
+      <div id="panduan-modal-errors" class="@if(!$errors->any()) hidden @endif p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs space-y-1">
+        @if($errors->any())
+          <div class="flex items-center gap-2 font-bold text-red-900">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span>Gagal menyimpan data panduan. Periksa kesalahan berikut:</span>
+          </div>
+          <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        @endif
+      </div>
 
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Judul Panduan <span class="text-red-500">*</span></label>
-        <input id="panduan-modal-judul" name="judul" type="text" required maxlength="255" placeholder="Contoh: Panduan Budidaya Jagung Hibrida"
+        <input id="panduan-modal-judul" name="judul" type="text" required minlength="5" maxlength="255" placeholder="Contoh: Panduan Budidaya Jagung Hibrida"
           class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20">
       </div>
 
@@ -298,24 +326,22 @@
           <label class="block font-semibold text-[#1A2D10] mb-1">Kategori Panduan <span class="text-red-500">*</span></label>
           <select id="panduan-modal-kategori" name="kategori" required
             class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Budidaya Tanaman">Budidaya Tanaman</option>
-            <option value="Hama & Penyakit">Hama & Penyakit</option>
-            <option value="Irigasi & Air">Irigasi & Air</option>
-            <option value="Nutrisi & Pupuk">Nutrisi & Pupuk</option>
-            <option value="Panen & Pasca Panen">Panen & Pasca Panen</option>
+            @foreach($categories as $category)
+              <option value="{{ $category }}">{{ $category }}</option>
+            @endforeach
           </select>
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran <span class="text-red-500">*</span></label>
+            <label class="block font-semibold text-[#1A2D10]">Komoditas Sasaran</label>
             <button type="button" id="btn-tambah-komoditas-panduan" class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4D9830] hover:text-[#3d7a26] transition-colors cursor-pointer">
               <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
               <span>+ Tambah Baru</span>
             </button>
           </div>
-          <select id="panduan-modal-komoditas" name="komoditas" required
+          <select id="panduan-modal-komoditas" name="komoditas_id"
             class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Semua Komoditas">Semua Komoditas (Umum)</option>
+            <option value="">Semua Komoditas (Umum)</option>
             @php
               $categoryIcons = [
                 'Tanaman Pangan' => '🌾',
@@ -325,9 +351,9 @@
               ];
             @endphp
             @foreach($commodities as $categoryName => $items)
-              <optgroup label="{{ ($categoryIcons[$categoryName] ?? '🌱') . ' ' . $categoryName }}">
+              <optgroup label="{{ ($categoryIcons[$categoryName] ?? '🌱') . ' ' . $categoryName }}" data-kategori="{{ $categoryName }}">
                 @foreach($items as $commodity)
-                  <option value="{{ $commodity->nama_komoditas }}">{{ $commodity->nama_komoditas }}</option>
+                  <option value="{{ $commodity->id_komoditas }}">{{ $commodity->nama_komoditas }}</option>
                 @endforeach
               </optgroup>
             @endforeach
@@ -338,14 +364,20 @@
       <input type="hidden" name="target" value="Semua Kelompok">
 
       <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Ringkasan / Inti Panduan (1 Kalimat Actionable) <span class="text-red-500">*</span></label>
-        <textarea id="panduan-modal-ringkasan" name="ringkasan" rows="2" required placeholder="Tuliskan rangkuman panduan yang langsung bisa dipraktikkan petani..."
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="block font-semibold text-[#1A2D10]">Ringkasan / Inti Panduan (1 Kalimat Actionable) <span class="text-red-500">*</span></label>
+          <span id="panduan-ringkasan-count" class="text-[10px] text-[#9AB880]">0/1000</span>
+        </div>
+        <textarea id="panduan-modal-ringkasan" name="ringkasan" rows="2" required minlength="10" maxlength="1000" placeholder="Tuliskan rangkuman panduan yang langsung bisa dipraktikkan petani..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
       <div>
-        <label class="block font-semibold text-[#1A2D10] mb-1">Langkah-langkah / Rincian Panduan <span class="text-red-500">*</span></label>
-        <textarea id="panduan-modal-isi" name="isi" rows="4" required placeholder="1. Siapkan bahan...&#10;2. Ikuti langkah budidaya...&#10;3. Ulangi sesuai kebutuhan..."
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <label class="block font-semibold text-[#1A2D10]">Langkah-langkah / Rincian Panduan <span class="text-red-500">*</span></label>
+          <span id="panduan-isi-count" class="text-[10px] text-[#9AB880]">0 karakter</span>
+        </div>
+        <textarea id="panduan-modal-isi" name="isi" rows="4" required minlength="20" placeholder="1. Siapkan bahan...&#10;2. Ikuti langkah budidaya...&#10;3. Ulangi sesuai kebutuhan..."
           class="w-full rounded-lg border border-[#C5DFB0] p-2.5 text-xs text-slate-800 outline-none focus:border-[#4D9830]"></textarea>
       </div>
 
@@ -398,7 +430,13 @@
       <div id="komoditas-panduan-error" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs"></div>
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Nama Tanaman / Komoditas <span class="text-red-500">*</span></label>
-        <input type="text" name="nama_komoditas" required placeholder="Contoh: Buncis, Selada, Vanili, dll" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+        <input type="text" name="nama_komoditas" required
+          pattern="[a-zA-ZÀ-öø-ÿ\-\/]+(\s[a-zA-ZÀ-öø-ÿ\-\/]+)*"
+          title="Nama komoditas hanya boleh berisi huruf, tanda hubung (-), dan garis miring (/)."
+          placeholder="Contoh: Padi Sawah, Cabai/Lombok, Kacang-kacangan"
+          oninput="this.value = this.value.replace(/[^a-zA-ZÀ-öø-ÿ\s\-\/]/g, '')"
+          class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+        <p class="mt-1 text-[10px] text-[#9AB880]">Hanya huruf, tanda hubung <span class="font-mono font-bold">-</span>, dan garis miring <span class="font-mono font-bold">/</span> yang diperbolehkan.</p>
       </div>
       <div>
         <label class="block font-semibold text-[#1A2D10] mb-1">Kelompok Tanaman <span class="text-red-500">*</span></label>
@@ -450,6 +488,17 @@
 
 <input type="hidden" id="panduan-store-url" value="{{ route('admin.edukasi.panduan.store') }}">
 <input type="hidden" id="panduan-index-url" value="{{ route('admin.edukasi.panduan') }}">
+@if($errors->any())
+<input type="hidden" id="panduan-old-id" value="{{ old('id_panduan', '') }}">
+<input type="hidden" id="panduan-old-judul" value="{{ old('judul', '') }}">
+<input type="hidden" id="panduan-old-kategori" value="{{ old('kategori', '') }}">
+<input type="hidden" id="panduan-old-komoditas" value="{{ old('komoditas_id', '') }}">
+<input type="hidden" id="panduan-old-status" value="{{ old('status', 'Draft') }}">
+<input type="hidden" id="panduan-old-ringkasan" value="{{ old('ringkasan', '') }}">
+<input type="hidden" id="panduan-old-isi" value="{{ old('isi', '') }}">
+<input type="hidden" id="panduan-has-errors" value="1">
+<input type="hidden" id="panduan-error-messages" value="{{ json_encode($errors->all()) }}">
+@endif
 <script>
 (() => {
   const data = @json($panduanModalData);
@@ -478,7 +527,18 @@
     ringkasan: document.getElementById('panduan-modal-ringkasan'),
     isi: document.getElementById('panduan-modal-isi'),
     gambar: document.getElementById('panduan-modal-gambar'),
+    summaryCount: document.getElementById('panduan-ringkasan-count'),
+    contentCount: document.getElementById('panduan-isi-count'),
   };
+
+  function updateCounters() {
+    if (fields.summaryCount && fields.ringkasan) {
+      fields.summaryCount.textContent = `${fields.ringkasan.value.length}/1000`;
+    }
+    if (fields.contentCount && fields.isi) {
+      fields.contentCount.textContent = `${fields.isi.value.length} karakter`;
+    }
+  }
 
   function setErrors(messages) {
     if (!messages || !messages.length) {
@@ -486,7 +546,13 @@
       errorBox.innerHTML = '';
       return;
     }
-    errorBox.innerHTML = '<p class="font-bold">Periksa kembali data yang diisi.</p><ul class="mt-1 list-inside list-disc"></ul>';
+    errorBox.innerHTML = `
+      <div class="flex items-center gap-2 font-bold text-red-900">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+        <span>Gagal menyimpan data panduan. Periksa kesalahan berikut:</span>
+      </div>
+      <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5 text-[11px]"></ul>
+    `;
     const list = errorBox.querySelector('ul');
     messages.forEach(message => {
       const li = document.createElement('li');
@@ -494,17 +560,21 @@
       list.appendChild(li);
     });
     errorBox.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
   }
 
-  function resetFields() {
+  function resetFields(keepErrors = false) {
     form.reset();
+    const idInput = document.getElementById('panduan-modal-id');
+    if (idInput) idInput.value = '';
     methodInput.value = 'POST';
-    form.action = document.getElementById('panduan-store-url').textContent;
+    form.action = document.getElementById('panduan-store-url').value;
     fields.status.value = 'Draft';
     imageBox.classList.add('hidden');
     imageBox.classList.remove('flex');
     imagePreview.src = '';
-    setErrors([]);
+    if (!keepErrors) setErrors([]);
+    updateCounters();
   }
 
   function openModal() {
@@ -523,8 +593,8 @@
     document.body.classList.remove('overflow-hidden');
   }
 
-  window.openPanduanCreateModal = function () {
-    resetFields();
+  window.openPanduanCreateModal = function (isAutoRestore = false) {
+    resetFields(isAutoRestore);
     title.textContent = 'Tambah Data Panduan';
     subtitle.textContent = 'Simpan data panduan ke database';
     iconBox.className = 'flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]';
@@ -535,21 +605,33 @@
 
   document.getElementById('btn-tambah-panduan')?.addEventListener('click', window.openPanduanCreateModal);
 
-  window.openPanduanEditModal = function (id, itemOverride = null) {
-    const item = itemOverride || data[String(id)];
-    if (!item) return;
+  window.openPanduanEditModal = function (id, itemOverride = null, isAutoRestore = false) {
+    const item = itemOverride || data[String(id)] || {
+      id: id,
+      update_url: '{{ url("admin/edukasi/panduan") }}/' + id,
+      judul: '',
+      kategori: 'Budidaya Tanaman',
+      komoditas_id: '',
+      status: 'Draft',
+      ringkasan: '',
+      isi: '',
+      gambar: null
+    };
 
     form.reset();
+    const idInput = document.getElementById('panduan-modal-id');
+    if (idInput) idInput.value = id;
     methodInput.value = 'PUT';
     form.action = item.update_url;
     fields.judul.value = item.judul || '';
     fields.kategori.value = item.kategori || '';
-    fields.komoditas.value = item.komoditas || '';
+    fields.komoditas.value = item.komoditas_id || '';
     fields.status.value = item.status || 'Draft';
     fields.ringkasan.value = item.ringkasan || '';
     fields.isi.value = item.isi || '';
     fields.gambar.value = '';
-    setErrors([]);
+    if (!isAutoRestore) setErrors([]);
+    updateCounters();
 
     title.textContent = 'Edit Data Panduan';
     subtitle.textContent = 'Perbarui data panduan yang tersimpan';
@@ -595,7 +677,7 @@
     // Populate data
     document.getElementById('detail-panduan-judul').textContent = item.judul || '';
     document.getElementById('detail-panduan-kategori').textContent = item.kategori || '';
-    document.getElementById('detail-panduan-tanggal').textContent = item.tanggal || 'Tanggal belum ditentukan';
+    document.getElementById('detail-panduan-tanggal').textContent = item.tanggal || 'Draft';
     document.getElementById('detail-panduan-ringkasan').textContent = item.ringkasan || '';
     document.getElementById('detail-panduan-isi').textContent = item.isi || '';
     document.getElementById('detail-panduan-slug').textContent = item.slug || '-';
@@ -608,7 +690,7 @@
       (item.status === 'Publik' ? 'bg-[#DFF7E7] text-[#287442]' : 'bg-[#FFF4B8] text-[#8A5A0A]');
 
     // Komoditas
-    document.getElementById('detail-panduan-komoditas').textContent = item.komoditas || '-';
+    document.getElementById('detail-panduan-komoditas').textContent = item.komoditas || 'Semua Komoditas';
 
     // Show modal
     detailModal.classList.remove('hidden');
@@ -644,6 +726,41 @@
     deleteModal.classList.remove('flex');
     deleteModal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('overflow-hidden');
+  }
+
+  fields.ringkasan && fields.ringkasan.addEventListener('input', updateCounters);
+  fields.isi && fields.isi.addEventListener('input', updateCounters);
+
+  if (fields.gambar) {
+    fields.gambar.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+      const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
+
+      if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+        alert('Format file tidak didukung! Format yang diperbolehkan hanya JPG, JPEG, PNG, WEBP, atau SVG.');
+        this.value = '';
+        return;
+      }
+
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        alert('Ukuran file gambar terlalu besar (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB)! Maksimal ukuran yang diperbolehkan adalah 2 MB.');
+        this.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.src = e.target.result;
+        imageBox.classList.remove('hidden');
+        imageBox.classList.add('flex');
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   document.querySelectorAll('[data-panduan-modal-close]').forEach(button => button.addEventListener('click', closeModal));
@@ -695,8 +812,9 @@
       }
 
       const newName = result.data.nama_komoditas;
+      const newId = result.data.id_komoditas;
       const category = result.data.kategori;
-      let optgroup = Array.from(commoditySelect.querySelectorAll('optgroup')).find((group) => group.dataset.kategori === category);
+      let optgroup = Array.from(commoditySelect.querySelectorAll('optgroup')).find((group) => (group.dataset.kategori || group.label || '').includes(category));
       if (!optgroup) {
         optgroup = document.createElement('optgroup');
         optgroup.label = category;
@@ -704,10 +822,10 @@
         commoditySelect.appendChild(optgroup);
       }
       const option = document.createElement('option');
-      option.value = newName;
+      option.value = newId;
       option.textContent = newName;
       optgroup.appendChild(option);
-      commoditySelect.value = newName;
+      commoditySelect.value = newId;
       commodityForm.reset();
       closeCommodityModal();
     } catch (error) {
@@ -718,6 +836,40 @@
       if (window.lucide) window.lucide.createIcons();
     }
   });
+
+  if (form) {
+    form.addEventListener('submit', function() {
+      const submitBtn = document.getElementById('btn-submit-panduan-modal');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+      }
+    });
+  }
+
+  // Auto-restore old input on validation error redirect
+  if (document.getElementById('panduan-has-errors')) {
+    const oldId = document.getElementById('panduan-old-id')?.value;
+    if (oldId) {
+      window.openPanduanEditModal(oldId, null, true);
+    } else {
+      window.openPanduanCreateModal(true);
+    }
+
+    if (fields.judul) fields.judul.value = document.getElementById('panduan-old-judul')?.value || '';
+    if (fields.kategori) fields.kategori.value = document.getElementById('panduan-old-kategori')?.value || 'Budidaya Tanaman';
+    if (fields.komoditas) fields.komoditas.value = document.getElementById('panduan-old-komoditas')?.value || '';
+    if (fields.status) fields.status.value = document.getElementById('panduan-old-status')?.value || 'Draft';
+    if (fields.ringkasan) fields.ringkasan.value = document.getElementById('panduan-old-ringkasan')?.value || '';
+    if (fields.isi) fields.isi.value = document.getElementById('panduan-old-isi')?.value || '';
+
+    const errMessages = document.getElementById('panduan-error-messages')?.value;
+    if (errMessages) {
+      try {
+        setErrors(JSON.parse(errMessages));
+      } catch (e) {}
+    }
+  }
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
