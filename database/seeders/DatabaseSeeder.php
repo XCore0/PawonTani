@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             KomoditasSeeder::class,
             TipsSeeder::class,
             PanduanSeeder::class,
+            ArtikelSeeder::class,
         ]);
     }
 }
