@@ -488,7 +488,7 @@
           <label for="form-email" class="block font-semibold text-[#1A2D10] mb-1">
             Alamat Email
           </label>
-          <input type="email" name="email" id="form-email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email harus menggunakan format dengan @, contoh nama@domain.com." placeholder="pengurus@pawontani.id" value="{{ old('email') }}"
+          <input type="email" name="email" id="form-email" pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" title="Format email tidak valid. Contoh: nama@gmail.com (tidak boleh ada angka atau karakter lain setelah ekstensi domain seperti .com)" placeholder="pengurus@pawontani.id" value="{{ old('email') }}"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
         <div>
@@ -721,7 +721,7 @@
           <label for="edit-email" class="block font-semibold text-[#1A2D10] mb-1">
             Alamat Email
           </label>
-          <input type="email" name="email" id="edit-email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email harus menggunakan format dengan @, contoh nama@domain.com." placeholder="pengurus@pawontani.id"
+          <input type="email" name="email" id="edit-email" pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" title="Format email tidak valid. Contoh: nama@gmail.com (tidak boleh ada angka atau karakter lain setelah ekstensi domain seperti .com)" placeholder="pengurus@pawontani.id"
             class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
         </div>
         <div>
