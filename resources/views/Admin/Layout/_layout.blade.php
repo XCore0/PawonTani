@@ -1,5 +1,7 @@
 @if(request()->header('X-Admin-Partial') === 'true')
   @yield('content')
+  @stack('styles')
+  @stack('scripts')
 @else
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -209,6 +211,7 @@
           });
 
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          document.querySelectorAll('[data-page-modal]').forEach((el) => el.remove());
           adminContent.innerHTML = await response.text();
           runContentScripts();
           updateAdminNavigation(url);

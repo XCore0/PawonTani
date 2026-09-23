@@ -1,5 +1,7 @@
 @if(request()->header('X-Pengurus-Partial') === 'true')
   @yield('content')
+  @stack('styles')
+  @stack('scripts')
 @else
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -201,6 +203,7 @@
           });
 
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          document.querySelectorAll('[data-page-modal]').forEach((el) => el.remove());
           pengurusContent.innerHTML = await response.text();
           runContentScripts();
           updatePengurusNavigation(url);
@@ -232,6 +235,8 @@
       updatePengurusNavigation(window.location.href);
     });
   </script>
+
+  <!-- Portal target: modals are injected here as direct children of <body> -->
 
   @stack('scripts')
 </body>

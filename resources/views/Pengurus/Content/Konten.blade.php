@@ -33,13 +33,13 @@
   @php
     $allContent = collect();
     foreach ($tips as $t) {
-      $allContent->push(['type' => 'Tips', 'id' => $t->id_tips, 'judul' => $t->judul, 'ringkasan' => $t->ringkasan, 'isi' => $t->isi, 'tanggal' => $t->tanggal?->locale('id')->isoFormat('D MMM YYYY'), 'kategori' => $t->kategori, 'komoditas' => $t->komoditas]);
+      $allContent->push(['type' => 'Tips', 'id' => $t->id_tips, 'judul' => $t->judul, 'ringkasan' => $t->ringkasan, 'isi' => $t->isi, 'tanggal' => $t->tanggal?->locale('id')->isoFormat('D MMM YYYY'), 'kategori' => $t->kategori, 'komoditas' => $t->komoditas?->nama_komoditas, 'gambar' => $t->gambar]);
     }
     foreach ($artikels as $a) {
-      $allContent->push(['type' => 'Artikel', 'id' => $a->id_artikel, 'judul' => $a->judul, 'ringkasan' => $a->ringkasan, 'isi' => $a->isi, 'tanggal' => $a->tanggal?->locale('id')->isoFormat('D MMM YYYY'), 'kategori' => $a->kategori, 'komoditas' => $a->komoditas]);
+      $allContent->push(['type' => 'Artikel', 'id' => $a->id_artikel, 'judul' => $a->judul, 'ringkasan' => $a->ringkasan, 'isi' => $a->isi, 'tanggal' => $a->tanggal?->locale('id')->isoFormat('D MMM YYYY'), 'kategori' => $a->kategori, 'komoditas' => $a->komoditas?->nama_komoditas, 'gambar' => $a->gambar]);
     }
     foreach ($panduans as $p) {
-      $allContent->push(['type' => 'Panduan', 'id' => $p->id_panduan, 'judul' => $p->judul, 'ringkasan' => $p->ringkasan, 'isi' => $p->isi, 'tanggal' => $p->tanggal?->locale('id')->isoFormat('D MMM YYYY'), 'kategori' => $p->kategori, 'komoditas' => $p->komoditas]);
+      $allContent->push(['type' => 'Panduan', 'id' => $p->id_panduan, 'judul' => $p->judul, 'ringkasan' => $p->ringkasan, 'isi' => $p->isi, 'tanggal' => $p->tanggal?->locale('id')->isoFormat('D MMM YYYY'), 'kategori' => $p->kategori, 'komoditas' => $p->komoditas?->nama_komoditas, 'gambar' => $p->gambar]);
     }
     $allContent = $allContent->sortByDesc(fn($c) => $c['tanggal'] ?? '')->values();
 
@@ -60,16 +60,27 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="konten-grid">
   @endif
     <div class="rounded-2xl overflow-hidden border border-[#E4F0D6] shadow-sm konten-card" data-type="{{ $item['type'] }}" data-title="{{ strtolower($item['judul']) }}" data-kategori="{{ strtolower($item['kategori'] ?? '') }}">
-      <!-- Colored Header -->
-      <div class="h-28 flex items-center justify-center" style="background: {{ $headerColor[$item['type']] }};">
-        @if($item['type'] === 'Artikel')
-          <i data-lucide="newspaper" class="w-10 h-10 text-[#4D9830]/40"></i>
-        @elseif($item['type'] === 'Tips')
-          <i data-lucide="lightbulb" class="w-10 h-10 text-[#D97706]/40"></i>
-        @else
-          <i data-lucide="book-open" class="w-10 h-10 text-[#2563EB]/40"></i>
-        @endif
-      </div>
+      <!-- Colored Header / Gambar -->
+      @if(!empty($item['gambar']))
+        <div class="h-36 overflow-hidden">
+          <img
+            src="{{ Str::startsWith($item['gambar'], ['http://', 'https://']) ? $item['gambar'] : asset('storage/' . $item['gambar']) }}"
+            alt="{{ $item['judul'] }}"
+            class="w-full h-full object-cover"
+            onerror="this.parentElement.innerHTML='<div class=\'h-full flex items-center justify-center\' style=\'background: {{ addslashes($headerColor[$item['type']]) }}\'><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' class=\'opacity-30\'><path d=\'M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z\'/><circle cx=\'12\' cy=\'13\' r=\'3\'/></svg></div>'"
+          >
+        </div>
+      @else
+        <div class="h-36 flex items-center justify-center" style="background: {{ $headerColor[$item['type']] }};">
+          @if($item['type'] === 'Artikel')
+            <i data-lucide="newspaper" class="w-10 h-10 text-[#4D9830]/40"></i>
+          @elseif($item['type'] === 'Tips')
+            <i data-lucide="lightbulb" class="w-10 h-10 text-[#D97706]/40"></i>
+          @else
+            <i data-lucide="book-open" class="w-10 h-10 text-[#2563EB]/40"></i>
+          @endif
+        </div>
+      @endif
       <!-- Body -->
       <div class="bg-white p-5 space-y-3">
         <div class="flex items-center gap-2">
@@ -80,8 +91,8 @@
         @if($item['ringkasan'])
         <p class="text-xs text-[#4A6030] leading-relaxed line-clamp-3">{{ \Illuminate\Support\Str::limit($item['ringkasan'], 120) }}</p>
         @endif
-        <button type="button" onclick="openKontenModal({{ $idx }})" class="w-full mt-2 h-10 rounded-xl border-2 border-[#C5DFB0] bg-[#F0F9E8] text-[#4D9830] text-sm font-semibold hover:bg-[#E8F5E0] transition-colors cursor-pointer flex items-center justify-center gap-1.5">
-          <span></span> Baca Selengkapnya
+        <button type="button" data-konten-index="{{ $idx }}" class="konten-open-btn w-full mt-2 h-10 rounded-xl border-2 border-[#C5DFB0] bg-[#F0F9E8] text-[#4D9830] text-sm font-semibold hover:bg-[#E8F5E0] transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+          Baca Selengkapnya
         </button>
       </div>
     </div>
@@ -98,129 +109,177 @@
 
 </div>
 
-<!-- ==================== MODAL POPUP ==================== -->
-<div id="konten-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 transition-opacity">
-  <div class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E4F0D6] overflow-hidden flex flex-col max-h-[90vh]">
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-[#F0F7E8] px-5 py-4 bg-[#F5F8F1]">
-      <div class="flex items-center gap-2.5">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EBF6E0] text-[#4D9830]">
-          <i id="modal-icon" data-lucide="file-text" class="h-4 w-4"></i>
-        </div>
-        <div>
-          <p class="text-sm font-bold text-[#1A2D10]">Detail Konten</p>
-          <p id="modal-type-label" class="text-[10px] text-[#9AB880] font-medium"></p>
-        </div>
-      </div>
-      <button type="button" onclick="closeKontenModal()" class="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer">
-        <i data-lucide="x" class="h-5 w-5"></i>
-      </button>
-    </div>
-
-    <!-- Body (scrollable) -->
-    <div class="overflow-y-auto flex-1 p-5 space-y-4">
-      <!-- Meta Row -->
-      <div class="flex flex-wrap items-center gap-2">
-        <span id="modal-type" class="text-[11px] font-bold px-2.5 py-1 rounded-full"></span>
-        <span id="modal-kategori" class="hidden text-xs px-2.5 py-1 rounded-full bg-[#F0F7E8] text-[#4A6030] font-medium"></span>
-        <span id="modal-komoditas" class="hidden text-xs px-2.5 py-1 rounded-full bg-[#FFF4D6] text-[#8A5A0A] font-medium"></span>
-        <span id="modal-tanggal" class="text-xs text-[#9AB880] ml-auto"></span>
-      </div>
-      <!-- Title -->
-      <h2 id="modal-judul" class="text-base sm:text-lg font-extrabold text-[#1A2D10] leading-tight"></h2>
-      <!-- Ringkasan -->
-      <div id="modal-ringkasan-wrap" class="hidden rounded-xl bg-[#F9FCF5] border border-[#E4F0D6] p-4">
-        <p id="modal-ringkasan" class="text-sm text-[#4A6030] leading-relaxed italic"></p>
-      </div>
-      <!-- Divider -->
-      <hr class="border-[#E4F0D6]">
-      <!-- Full Content -->
-      <div id="modal-isi" class="text-sm text-[#1A2D10] leading-relaxed whitespace-pre-wrap"></div>
-    </div>
-
-    <!-- Footer -->
-    <div class="flex items-center justify-end border-t border-[#F0F7E8] px-5 py-3 bg-[#F5F8F1]">
-      <button type="button" onclick="closeKontenModal()" class="rounded-xl border border-[#C5DFB0] bg-white px-4 py-2 text-xs font-semibold text-[#4A6030] hover:bg-[#EBF6E0] transition cursor-pointer">
-        Tutup
-      </button>
-    </div>
-  </div>
-</div>
-
 @push('scripts')
 <script type="application/json" id="konten-data">@json($allContent)</script>
 <script>
 (() => {
-  const kontenData = JSON.parse(document.getElementById('konten-data').textContent);
-  const modal = document.getElementById('konten-modal');
-  const searchInput = document.getElementById('search-konten');
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  const cards = document.querySelectorAll('.konten-card');
-  let activeFilter = 'semua';
+  const dataEl = document.getElementById('konten-data');
+  if (!dataEl) return;
+  const kontenData = JSON.parse(dataEl.textContent);
 
-  const badgeColors = {
-    'Artikel': 'bg-[#DBEAFE] text-[#1E40AF]',
-    'Tips': 'bg-[#D1FAE5] text-[#065F46]',
-    'Panduan': 'bg-[#FEF3C7] text-[#92400E]',
+  // ── Hapus modal lama jika ada (saat AJAX re-load) ──
+  const existingModal = document.getElementById('konten-modal');
+  if (existingModal) existingModal.remove();
+
+  // ── Buat modal HTML dan inject langsung ke document.body ──
+  const modalEl = document.createElement('div');
+  modalEl.id = 'konten-modal';
+  modalEl.style.cssText = 'position:fixed;inset:0;z-index:99999;display:none;';
+  modalEl.innerHTML = `
+    <div id="konten-backdrop" style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);padding:16px;">
+      <div style="width:100%;max-width:560px;background:#fff;border-radius:20px;border:1px solid #E4F0D6;box-shadow:0 25px 60px rgba(0,0,0,0.2);display:flex;flex-direction:column;max-height:90vh;overflow:hidden;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:#F5F8F1;border-bottom:1px solid #E4F0D6;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div id="km-icon-wrap" style="width:36px;height:36px;border-radius:10px;background:#EBF6E0;display:flex;align-items:center;justify-content:center;color:#4D9830;flex-shrink:0;">
+              <i id="km-icon" data-lucide="file-text" style="width:16px;height:16px;"></i>
+            </div>
+            <div>
+              <p style="font-weight:800;font-size:14px;color:#1A2D10;margin:0;" id="km-title-label">Detail Konten</p>
+              <p style="font-size:11px;color:#9AB880;margin:0;" id="km-subtitle"></p>
+            </div>
+          </div>
+          <button id="km-close" type="button" style="padding:6px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:#94a3b8;display:flex;align-items:center;" aria-label="Tutup">
+            <i data-lucide="x" style="width:18px;height:18px;"></i>
+          </button>
+        </div>
+
+        <!-- Gambar (hidden by default) -->
+        <div id="km-img-wrap" style="display:none;overflow:hidden;max-height:200px;">
+          <img id="km-img" src="" alt="" style="width:100%;height:200px;object-fit:cover;display:block;">
+        </div>
+
+        <!-- Body -->
+        <div style="overflow-y:auto;flex:1;padding:20px;display:flex;flex-direction:column;gap:14px;">
+
+          <!-- Badge row -->
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+            <span id="km-badge-type" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;"></span>
+            <span id="km-badge-kategori" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:#F0F7E8;color:#4A6030;display:none;"></span>
+            <span id="km-badge-komoditas" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:#FFF4D6;color:#8A5A0A;display:none;"></span>
+            <span id="km-tanggal" style="font-size:11px;color:#9AB880;margin-left:auto;"></span>
+          </div>
+
+          <!-- Judul -->
+          <h2 id="km-judul" style="font-size:17px;font-weight:900;color:#1A2D10;margin:0;line-height:1.35;"></h2>
+
+          <!-- Ringkasan -->
+          <div id="km-ringkasan-wrap" style="background:#F9FCF5;border:1px solid #E4F0D6;border-radius:12px;padding:14px;display:none;">
+            <p id="km-ringkasan" style="font-size:13px;color:#4A6030;line-height:1.6;font-style:italic;margin:0;"></p>
+          </div>
+
+          <!-- Divider -->
+          <hr style="border:none;border-top:1px solid #E4F0D6;margin:0;">
+
+          <!-- Isi -->
+          <div id="km-isi" style="font-size:13px;color:#1A2D10;line-height:1.75;white-space:pre-wrap;"></div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:12px 20px;background:#F5F8F1;border-top:1px solid #E4F0D6;display:flex;justify-content:flex-end;">
+          <button id="km-close-footer" type="button" style="padding:8px 18px;border-radius:12px;border:1px solid #C5DFB0;background:#fff;font-size:12px;font-weight:700;color:#4A6030;cursor:pointer;">Tutup</button>
+        </div>
+
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modalEl);
+
+  // ── Referensi elemen modal ──
+  const modal       = modalEl;
+  const backdrop    = document.getElementById('konten-backdrop');
+  const closeBtn    = document.getElementById('km-close');
+  const closeBtnFtr = document.getElementById('km-close-footer');
+
+  const badgeStyle = {
+    'Artikel': 'background:#DBEAFE;color:#1E40AF;',
+    'Tips'   : 'background:#D1FAE5;color:#065F46;',
+    'Panduan': 'background:#FEF3C7;color:#92400E;',
   };
-  const iconNames = { 'Artikel': 'newspaper', 'Tips': 'lightbulb', 'Panduan': 'book-open' };
+  const iconMap = { 'Artikel': 'newspaper', 'Tips': 'lightbulb', 'Panduan': 'book-open' };
 
-  window.openKontenModal = function(idx) {
+  function openModal(idx) {
     const item = kontenData[idx];
     if (!item) return;
 
-    document.getElementById('modal-icon').setAttribute('data-lucide', iconNames[item.type] || 'file-text');
-    document.getElementById('modal-type-label').textContent = item.type + ' · ' + (item.kategori || 'Umum');
-    document.getElementById('modal-type').textContent = item.type;
-    document.getElementById('modal-type').className = 'text-[11px] font-bold px-2.5 py-1 rounded-full ' + (badgeColors[item.type] || '');
-    document.getElementById('modal-tanggal').textContent = item.tanggal || '-';
+    // Icon
+    const iconEl = document.getElementById('km-icon');
+    if (iconEl) iconEl.setAttribute('data-lucide', iconMap[item.type] || 'file-text');
 
-    const katEl = document.getElementById('modal-kategori');
-    if (item.kategori) { katEl.textContent = item.kategori; katEl.classList.remove('hidden'); }
-    else { katEl.classList.add('hidden'); }
+    document.getElementById('km-subtitle').textContent = item.type + ' · ' + (item.kategori || 'Umum');
 
-    const komEl = document.getElementById('modal-komoditas');
-    if (item.komoditas) { komEl.textContent = item.komoditas; komEl.classList.remove('hidden'); }
-    else { komEl.classList.add('hidden'); }
+    // Badge
+    const badgeType = document.getElementById('km-badge-type');
+    badgeType.textContent = item.type;
+    badgeType.style.cssText = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;' + (badgeStyle[item.type] || '');
 
-    document.getElementById('modal-judul').textContent = item.judul || '';
+    const badgeKat = document.getElementById('km-badge-kategori');
+    if (item.kategori) { badgeKat.textContent = item.kategori; badgeKat.style.display = 'inline-block'; }
+    else { badgeKat.style.display = 'none'; }
 
-    const ringWrap = document.getElementById('modal-ringkasan-wrap');
-    if (item.ringkasan) {
-      document.getElementById('modal-ringkasan').textContent = item.ringkasan;
-      ringWrap.classList.remove('hidden');
+    const badgeKom = document.getElementById('km-badge-komoditas');
+    if (item.komoditas) { badgeKom.textContent = item.komoditas; badgeKom.style.display = 'inline-block'; }
+    else { badgeKom.style.display = 'none'; }
+
+    document.getElementById('km-tanggal').textContent = item.tanggal || '-';
+    document.getElementById('km-judul').textContent = item.judul || '';
+
+    // Gambar
+    const imgWrap = document.getElementById('km-img-wrap');
+    const img = document.getElementById('km-img');
+    if (item.gambar) {
+      const url = (item.gambar.startsWith('http://') || item.gambar.startsWith('https://'))
+        ? item.gambar : '/storage/' + item.gambar;
+      img.src = url;
+      img.alt = item.judul || '';
+      img.onerror = () => { imgWrap.style.display = 'none'; };
+      imgWrap.style.display = 'block';
     } else {
-      ringWrap.classList.add('hidden');
+      imgWrap.style.display = 'none';
     }
 
-    document.getElementById('modal-isi').textContent = item.isi || 'Konten lengkap belum tersedia.';
+    // Ringkasan
+    const ringWrap = document.getElementById('km-ringkasan-wrap');
+    if (item.ringkasan) {
+      document.getElementById('km-ringkasan').textContent = item.ringkasan;
+      ringWrap.style.display = 'block';
+    } else {
+      ringWrap.style.display = 'none';
+    }
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    document.getElementById('km-isi').textContent = item.isi || 'Konten lengkap belum tersedia.';
+
+    modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
-
     if (window.lucide) window.lucide.createIcons();
-  };
+  }
 
-  window.closeKontenModal = function() {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+  function closeModal() {
+    modal.style.display = 'none';
     document.body.style.overflow = '';
-  };
+  }
 
-  // Close on Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeKontenModal();
+  // Event listeners
+  document.querySelectorAll('.konten-open-btn').forEach((btn) => {
+    btn.addEventListener('click', () => openModal(Number(btn.dataset.kontenIndex)));
   });
+  closeBtn?.addEventListener('click', closeModal);
+  closeBtnFtr?.addEventListener('click', closeModal);
+  backdrop?.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Search & Filter ──
+  const searchInput = document.getElementById('search-konten');
+  const filterBtns  = document.querySelectorAll('.filter-btn');
+  const cards       = document.querySelectorAll('.konten-card');
+  let activeFilter  = 'semua';
 
   function applyFilters() {
     const query = (searchInput?.value || '').toLowerCase().trim();
     cards.forEach(card => {
-      const type = card.dataset.type || '';
-      const title = card.dataset.title || '';
-      const kategori = card.dataset.kategori || '';
-      const matchType = activeFilter === 'semua' || type === activeFilter;
-      const matchSearch = !query || title.includes(query) || kategori.includes(query);
+      const matchType   = activeFilter === 'semua' || card.dataset.type === activeFilter;
+      const matchSearch = !query || card.dataset.title.includes(query) || card.dataset.kategori.includes(query);
       card.style.display = (matchType && matchSearch) ? '' : 'none';
     });
   }
@@ -239,6 +298,7 @@
   });
 
   if (searchInput) searchInput.addEventListener('input', applyFilters);
+  if (window.lucide) window.lucide.createIcons();
 })();
 </script>
 @endpush

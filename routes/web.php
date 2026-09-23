@@ -208,9 +208,9 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     })->name('informasi');
 
     Route::get('/edukasi', function () {
-        $tips = Tip::where('status', 'Publik')->latest('tanggal')->get();
-        $artikels = Artikel::where('status', 'Publik')->latest('tanggal')->get();
-        $panduans = Panduan::where('status', 'Publik')->latest('tanggal')->get();
+        $tips = Tip::with('komoditas')->where('status', 'Publik')->latest('tanggal')->get();
+        $artikels = Artikel::with('komoditas')->where('status', 'Publik')->latest('tanggal')->get();
+        $panduans = Panduan::with('komoditas')->where('status', 'Publik')->latest('tanggal')->get();
 
         $stats = [
             'tips' => ['total' => $tips->count()],
