@@ -16,11 +16,7 @@ class UpdatePanduanRequest extends FormRequest
         return [
             'judul' => ['required', 'string', 'max:255', Rule::unique('panduan', 'judul')->ignore($this->route('id_panduan'), 'id_panduan')],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
-            'komoditas' => ['required', 'string', function ($attribute, $value, $fail) {
-                if ($value !== 'Semua Komoditas' && !\App\Models\Komoditas::where('nama_komoditas', $value)->exists()) {
-                    $fail('Komoditas sasaran harus dipilih dari daftar yang tersedia.');
-                }
-            }],
+            'komoditas_id' => ['nullable', 'string', 'max:20', 'exists:komoditas,id_komoditas'],
             'ringkasan' => ['required', 'string'],
             'isi' => ['required', 'string', Rule::unique('panduan', 'isi')->ignore($this->route('id_panduan'), 'id_panduan')],
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],

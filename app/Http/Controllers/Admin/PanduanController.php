@@ -26,7 +26,7 @@ class PanduanController extends Controller
             ->search($search)
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($kategori, fn ($q) => $q->where('kategori', $kategori))
-            ->when($komoditas, fn ($q) => $q->where('komoditas', $komoditas));
+            ->when($komoditas, fn ($q) => $q->where('komoditas_id', $komoditas));
 
         $panduan = $query->with('author')
             ->latest('tanggal')

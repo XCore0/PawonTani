@@ -154,7 +154,7 @@
               $idTips = $tip->id_tips ?? $tip->id;
               $judul = $tip->judul ?? $tip->title;
               $kategori = $tip->kategori ?? $tip->category ?? 'Perawatan Tanaman';
-              $komoditas = $tip->komoditas ?? $tip->commodity ?? 'Semua Komoditas';
+              $komoditas = $tip->komoditas?->nama_komoditas ?? 'Semua Komoditas';
               $target = $tip->target ?? 'Semua Kelompok';
               $ringkasan = $tip->ringkasan ?? $tip->excerpt ?? 'Tips dan trik praktis untuk membantu produktivitas pertanian secara efisien.';
               $isi = $tip->isi ?? $tip->content ?? '';
@@ -181,6 +181,7 @@
                 data-id="{{ $idTips }}"
                 data-title="{{ strtolower($judul) }}"
                 data-category="{{ $kategori }}"
+                data-komoditas-id="{{ $tip->komoditas_id ?? '' }}"
                 data-commodity="{{ strtolower($komoditas) }}"
                 data-target="{{ $target }}"
                 data-status="{{ $status }}"
@@ -370,8 +371,8 @@
               <span>+ Tambah Baru</span>
             </button>
           </div>
-          <select id="tambah-commodity" name="komoditas" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Semua Komoditas">Semua Komoditas (Umum)</option>
+          <select id="tambah-commodity" name="komoditas_id" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="">Semua Komoditas (Umum)</option>
             @php
               $categoryIcons = [
                 'Tanaman Pangan' => '🌾',
@@ -384,7 +385,7 @@
               @foreach($commodities as $catName => $items)
                 <optgroup label="{{ ($categoryIcons[$catName] ?? '🌱') . ' ' . $catName }}" data-kategori="{{ $catName }}">
                   @foreach($items as $item)
-                    <option value="{{ $item->nama_komoditas }}">{{ $item->nama_komoditas }}</option>
+                    <option value="{{ $item->id_komoditas }}">{{ $item->nama_komoditas }}</option>
                   @endforeach
                 </optgroup>
               @endforeach
@@ -576,13 +577,13 @@
               <span>+ Tambah Baru</span>
             </button>
           </div>
-          <select id="edit-commodity" name="komoditas" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
-            <option value="Semua Komoditas">Semua Komoditas (Umum)</option>
+          <select id="edit-commodity" name="komoditas_id" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+            <option value="">Semua Komoditas (Umum)</option>
             @if(isset($commodities) && $commodities->isNotEmpty())
               @foreach($commodities as $catName => $items)
                 <optgroup label="{{ ($categoryIcons[$catName] ?? '🌱') . ' ' . $catName }}" data-kategori="{{ $catName }}">
                   @foreach($items as $item)
-                    <option value="{{ $item->nama_komoditas }}">{{ $item->nama_komoditas }}</option>
+                    <option value="{{ $item->id_komoditas }}">{{ $item->nama_komoditas }}</option>
                   @endforeach
                 </optgroup>
               @endforeach
@@ -863,10 +864,7 @@
       document.getElementById('edit-category').value = row.dataset.category || 'Perawatan Tanaman';
       const editCommEl = document.getElementById('edit-commodity');
       if (editCommEl) {
-        editCommEl.value = row.dataset.commodity || 'Semua Komoditas';
-        if (!editCommEl.value) {
-          editCommEl.value = 'Semua Komoditas';
-        }
+        editCommEl.value = row.dataset.komoditasId || '';
       }
       document.getElementById('edit-target').value = 'Semua Kelompok';
       document.getElementById('edit-excerpt').value = row.dataset.rawExcerpt || '';
@@ -929,6 +927,7 @@
 
           if (response.ok && result.success) {
             const newName = result.data.nama_komoditas;
+            const newId = result.data.id_komoditas;
             const category = result.data.kategori;
 
             // Add option to both select elements (tambah & edit)
@@ -945,7 +944,7 @@
                   selectEl.appendChild(targetOptgroup);
                 }
                 const opt = document.createElement('option');
-                opt.value = newName;
+                opt.value = newId;
                 opt.textContent = newName;
                 targetOptgroup.appendChild(opt);
 

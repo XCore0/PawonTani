@@ -101,7 +101,8 @@
                 data-id="{{ $artikel->id_artikel }}"
                 data-title="{{ strtolower($artikel->judul) }}"
                 data-category="{{ $artikel->kategori }}"
-                data-commodity="{{ strtolower($artikel->komoditas) }}"
+                data-komoditas-id="{{ $artikel->komoditas_id ?? '' }}"
+                data-commodity="{{ strtolower($artikel->komoditas?->nama_komoditas ?? '') }}"
                 data-status="{{ $artikel->status }}"
                 data-raw-title="{{ $artikel->judul }}"
                 data-raw-excerpt="{{ $artikel->ringkasan }}"
@@ -134,7 +135,7 @@
                   <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#EBF6E0] text-[#4D9830]">
                     <i data-lucide="sprout" class="h-3.5 w-3.5"></i>
                   </span>
-                  <span class="font-semibold text-[#1A2D10]">{{ $artikel->komoditas ?: '-' }}</span>
+                  <span class="font-semibold text-[#1A2D10]">{{ $artikel->komoditas?->nama_komoditas ?: '-' }}</span>
                 </div>
               </td>
               <td class="px-3 py-3.5">
@@ -173,7 +174,7 @@
                       'id' => $artikel->id_artikel,
                       'judul' => $artikel->judul,
                       'kategori' => $artikel->kategori,
-                      'komoditas' => $artikel->komoditas,
+                      'komoditas_id' => $artikel->komoditas_id,
                       'ringkasan' => $artikel->ringkasan,
                       'isi' => $artikel->isi,
                       'tanggal' => optional($artikel->tanggal)->format('Y-m-d'),
@@ -259,12 +260,11 @@
               <span>+ Tambah Baru</span>
             </button>
           </div>
-          <select name="komoditas" id="artikel-komoditas" required class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
+          <select name="komoditas_id" id="artikel-komoditas" class="w-full h-9 rounded-lg border border-[#C5DFB0] px-3 text-xs text-slate-800 outline-none focus:border-[#4D9830]">
             <option value="">Pilih Komoditas</option>
-            <option value="Semua Komoditas">Semua Komoditas (Umum)</option>
             @php
               $categoryIcons = [
-                'Tanaman Pangan' => '🌾',
+                'Tanaman Pangan' => '',
                 'Hortikultura & Sayuran' => '🌶️',
                 'Buah-buahan' => '🍉',
                 'Perkebunan & Rempah' => '☕',
@@ -273,7 +273,7 @@
             @foreach($komoditasOptions as $categoryName => $items)
               <optgroup label="{{ ($categoryIcons[$categoryName] ?? '🌱') . ' ' . $categoryName }}">
                 @foreach($items as $komoditas)
-                  <option value="{{ $komoditas->nama_komoditas }}">{{ $komoditas->nama_komoditas }}</option>
+                  <option value="{{ $komoditas->id_komoditas }}">{{ $komoditas->nama_komoditas }}</option>
                 @endforeach
               </optgroup>
             @endforeach
@@ -518,7 +518,7 @@
     if (editing) {
       fields.judul.value = artikel.judul ?? '';
       setFieldValue(fields.kategori, artikel.kategori);
-      setFieldValue(fields.komoditas, artikel.komoditas);
+      setFieldValue(fields.komoditas, artikel.komoditas_id);
       fields.status.value = artikel.status ?? 'Draft';
       fields.ringkasan.value = artikel.ringkasan ?? '';
       fields.isi.value = artikel.isi ?? '';

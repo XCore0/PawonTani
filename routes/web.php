@@ -11,6 +11,9 @@ use App\Http\Controllers\Admin\PengurusController;
 use App\Http\Controllers\Admin\ArtikelController;
 use App\Http\Controllers\Admin\PanduanController;
 use App\Http\Controllers\Admin\TipsController;
+use App\Models\Tip;
+use App\Models\Artikel;
+use App\Models\Panduan;
 
 /* ============================================================
    AUTH ROUTES
@@ -204,11 +207,19 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
         ));
     })->name('informasi');
 
-    Route::get('/edukasi', fn () => $errorPage(
-        'Edukasi',
-        'Akses materi edukasi dan panduan pertanian.',
-        'Pengurus.Layout._layout'
-    ))->name('edukasi');
+    Route::get('/edukasi', function () {
+        $tips = Tip::where('status', 'Publik')->latest('tanggal')->get();
+        $artikels = Artikel::where('status', 'Publik')->latest('tanggal')->get();
+        $panduans = Panduan::where('status', 'Publik')->latest('tanggal')->get();
+
+        $stats = [
+            'tips' => ['total' => $tips->count()],
+            'artikel' => ['total' => $artikels->count()],
+            'panduan' => ['total' => $panduans->count()],
+        ];
+
+        return view('Pengurus.Content.Konten', compact('tips', 'artikels', 'panduans', 'stats'));
+    })->name('edukasi');
 
     Route::get('/notifikasi', fn () => view('Notifications', ['layout' => 'Pengurus.Layout._layout']))->name('notifikasi');
 

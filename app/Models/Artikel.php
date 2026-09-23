@@ -14,7 +14,7 @@ class Artikel extends Model
     protected $fillable = [
         'judul',
         'kategori',
-        'komoditas',
+        'komoditas_id',
         'ringkasan',
         'isi',
         'gambar',
@@ -45,5 +45,13 @@ class Artikel extends Model
         } while (self::whereKey($id)->exists());
 
         return $id;
+    }
+
+    /**
+     * Relationship to Komoditas
+     */
+    public function komoditas()
+    {
+        return $this->belongsTo(Komoditas::class, 'komoditas_id', 'id_komoditas');
     }
 }

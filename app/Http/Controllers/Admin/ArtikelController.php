@@ -31,7 +31,9 @@ class ArtikelController extends Controller
             $query->where(function ($q) use ($search, $operator) {
                 $q->where('judul', $operator, "%{$search}%")
                     ->orWhere('kategori', $operator, "%{$search}%")
-                    ->orWhere('komoditas', $operator, "%{$search}%");
+                    ->orWhereHas('komoditas', function ($kq) use ($search, $operator) {
+                        $kq->where('nama_komoditas', $operator, "%{$search}%");
+                    });
             });
         }
 
@@ -137,14 +139,11 @@ class ArtikelController extends Controller
         return $request->validate([
             'judul' => ['required', 'string', 'max:255', $isUpdate ? Rule::unique('artikel', 'judul')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,judul'],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
-            'komoditas' => [
-                'required',
+            'komoditas_id' => [
+                'nullable',
                 'string',
-                function ($attribute, $value, $fail) {
-                    if ($value !== 'Semua Komoditas' && !Komoditas::where('nama_komoditas', $value)->exists()) {
-                        $fail('Komoditas sasaran harus dipilih dari daftar yang tersedia.');
-                    }
-                },
+                'max:20',
+                'exists:komoditas,id_komoditas',
             ],
             'ringkasan' => ['required', 'string', 'max:1000'],
             'isi' => ['required', 'string', $isUpdate ? Rule::unique('artikel', 'isi')->ignore($request->input('id_artikel'), 'id_artikel') : 'unique:artikel,isi'],

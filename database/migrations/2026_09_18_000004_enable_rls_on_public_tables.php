@@ -14,9 +14,20 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE kelompok_tani ENABLE ROW LEVEL SECURITY');
-        DB::statement('ALTER TABLE pengguna ENABLE ROW LEVEL SECURITY');
-        DB::statement('ALTER TABLE migrations ENABLE ROW LEVEL SECURITY');
+        $tables = [
+            'kelompok_tani',
+            'pengguna',
+            'migrations',
+            'anggota',
+            'artikel',
+            'panduan',
+            'tips',
+            'komoditas',
+        ];
+
+        foreach ($tables as $table) {
+            DB::statement("ALTER TABLE {$table} ENABLE ROW LEVEL SECURITY");
+        }
     }
 
     /**
@@ -28,8 +39,19 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE kelompok_tani DISABLE ROW LEVEL SECURITY');
-        DB::statement('ALTER TABLE pengguna DISABLE ROW LEVEL SECURITY');
-        DB::statement('ALTER TABLE migrations DISABLE ROW LEVEL SECURITY');
+        $tables = [
+            'kelompok_tani',
+            'pengguna',
+            'migrations',
+            'anggota',
+            'artikel',
+            'panduan',
+            'tips',
+            'komoditas',
+        ];
+
+        foreach ($tables as $table) {
+            DB::statement("ALTER TABLE {$table} DISABLE ROW LEVEL SECURITY");
+        }
     }
 };

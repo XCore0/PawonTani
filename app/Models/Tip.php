@@ -17,7 +17,7 @@ class Tip extends Model
     protected $fillable = [
         'judul',
         'kategori',
-        'komoditas',
+        'komoditas_id',
         'target',
         'ringkasan',
         'isi',
@@ -69,7 +69,15 @@ class Tip extends Model
      */
     public function getCommodityAttribute(): ?string
     {
-        return $this->komoditas;
+        return $this->komoditas?->nama_komoditas;
+    }
+
+    /**
+     * Relationship to Komoditas
+     */
+    public function komoditas()
+    {
+        return $this->belongsTo(Komoditas::class, 'komoditas_id', 'id_komoditas');
     }
 
     /**

@@ -89,7 +89,9 @@ class TipsController extends Controller
             $query->where(function ($q) use ($search, $operator) {
                 $q->where('judul', $operator, "%{$search}%")
                   ->orWhere('ringkasan', $operator, "%{$search}%")
-                  ->orWhere('komoditas', $operator, "%{$search}%")
+                  ->orWhereHas('komoditas', function ($kq) use ($search, $operator) {
+                      $kq->where('nama_komoditas', $operator, "%{$search}%");
+                  })
                   ->orWhere('kategori', $operator, "%{$search}%")
                   ->orWhere('target', $operator, "%{$search}%");
             });
@@ -140,14 +142,11 @@ class TipsController extends Controller
         $validated = Validator::make($request->all(), [
             'judul' => ['required', 'string', 'max:255', 'unique:tips,judul'],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
-            'komoditas' => [
-                'required',
+            'komoditas_id' => [
+                'nullable',
                 'string',
-                function ($attribute, $value, $fail) {
-                    if ($value !== 'Semua Komoditas' && !Komoditas::where('nama_komoditas', $value)->exists()) {
-                        $fail('Komoditas sasaran harus berupa tanaman budidaya yang valid.');
-                    }
-                },
+                'max:20',
+                'exists:komoditas,id_komoditas',
             ],
             'target' => 'nullable|string|max:150',
             'ringkasan' => 'required|string',
@@ -159,8 +158,7 @@ class TipsController extends Controller
             'judul.required' => 'Judul tips wajib diisi.',
             'judul.unique' => 'Judul tips sudah digunakan.',
             'kategori.required' => 'Kategori tips wajib dipilih.',
-            'komoditas.required' => 'Komoditas sasaran wajib dipilih.',
-            'komoditas.in' => 'Komoditas sasaran harus berupa tanaman budidaya yang valid.',
+            'komoditas_id.exists' => 'Komoditas sasaran harus dipilih dari daftar yang tersedia.',
             'ringkasan.required' => 'Ringkasan / inti tips wajib diisi.',
             'isi.required' => 'Isi tips wajib diisi.',
             'isi.unique' => 'Isi tips sudah digunakan.',
@@ -186,7 +184,7 @@ class TipsController extends Controller
         $tip = Tip::create([
             'judul' => $validated['judul'],
             'kategori' => $validated['kategori'],
-            'komoditas' => !empty($validated['komoditas']) ? $validated['komoditas'] : 'Semua Komoditas',
+            'komoditas_id' => $validated['komoditas_id'] ?? null,
             'target' => 'Semua Kelompok',
             'ringkasan' => $validated['ringkasan'],
             'isi' => $validated['isi'] ?? null,
@@ -217,14 +215,11 @@ class TipsController extends Controller
         $validated = Validator::make($request->all(), [
             'judul' => ['required', 'string', 'max:255', Rule::unique('tips', 'judul')->ignore($tip->id_tips, 'id_tips')],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
-            'komoditas' => [
-                'required',
+            'komoditas_id' => [
+                'nullable',
                 'string',
-                function ($attribute, $value, $fail) {
-                    if ($value !== 'Semua Komoditas' && !Komoditas::where('nama_komoditas', $value)->exists()) {
-                        $fail('Komoditas sasaran harus berupa tanaman budidaya yang valid.');
-                    }
-                },
+                'max:20',
+                'exists:komoditas,id_komoditas',
             ],
             'target' => 'nullable|string|max:150',
             'ringkasan' => 'required|string',
@@ -236,8 +231,7 @@ class TipsController extends Controller
             'judul.required' => 'Judul tips wajib diisi.',
             'judul.unique' => 'Judul tips sudah digunakan.',
             'kategori.required' => 'Kategori tips wajib dipilih.',
-            'komoditas.required' => 'Komoditas sasaran wajib dipilih.',
-            'komoditas.in' => 'Komoditas sasaran harus berupa tanaman budidaya yang valid.',
+            'komoditas_id.exists' => 'Komoditas sasaran harus dipilih dari daftar yang tersedia.',
             'ringkasan.required' => 'Ringkasan / inti tips wajib diisi.',
             'isi.required' => 'Isi tips wajib diisi.',
             'isi.unique' => 'Isi tips sudah digunakan.',
@@ -271,7 +265,7 @@ class TipsController extends Controller
         $tip->update([
             'judul' => $validated['judul'],
             'kategori' => $validated['kategori'],
-            'komoditas' => !empty($validated['komoditas']) ? $validated['komoditas'] : 'Semua Komoditas',
+            'komoditas_id' => $validated['komoditas_id'] ?? null,
             'target' => 'Semua Kelompok',
             'ringkasan' => $validated['ringkasan'],
             'isi' => $validated['isi'] ?? null,

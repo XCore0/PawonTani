@@ -18,11 +18,7 @@ class StorePanduanRequest extends FormRequest
         return [
             'judul' => ['required', 'string', 'max:255', 'unique:panduan,judul'],
             'kategori' => ['required', 'string', 'in:' . implode(',', self::CATEGORIES)],
-            'komoditas' => ['required', 'string', function ($attribute, $value, $fail) {
-                if ($value !== 'Semua Komoditas' && !\App\Models\Komoditas::where('nama_komoditas', $value)->exists()) {
-                    $fail('Komoditas sasaran harus dipilih dari daftar yang tersedia.');
-                }
-            }],
+            'komoditas_id' => ['nullable', 'string', 'max:20', 'exists:komoditas,id_komoditas'],
             'ringkasan' => ['required', 'string'],
             'isi' => ['required', 'string', 'unique:panduan,isi'],
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],

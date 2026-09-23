@@ -19,7 +19,7 @@ class Panduan extends Model
         'judul',
         'slug',
         'kategori',
-        'komoditas',
+        'komoditas_id',
         'ringkasan',
         'isi',
         'gambar',
@@ -58,6 +58,14 @@ class Panduan extends Model
         return $this->belongsTo(Pengguna::class, 'created_by', 'id_pengguna');
     }
 
+    /**
+     * Relationship to Komoditas
+     */
+    public function komoditas()
+    {
+        return $this->belongsTo(Komoditas::class, 'komoditas_id', 'id_komoditas');
+    }
+
     public function scopePublik(Builder $query): Builder
     {
         return $query->where('status', 'Publik');
@@ -79,7 +87,9 @@ class Panduan extends Model
         return $query->where(function (Builder $q) use ($term) {
             $q->whereRaw('LOWER(judul) LIKE ?', [$term])
                 ->orWhereRaw('LOWER(kategori) LIKE ?', [$term])
-                ->orWhereRaw('LOWER(COALESCE(komoditas, \'\')) LIKE ?', [$term]);
+                ->orWhereHas('komoditas', function (Builder $kq) use ($term) {
+                    $kq->whereRaw('LOWER(nama_komoditas) LIKE ?', [$term]);
+                });
         });
     }
 }
