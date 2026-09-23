@@ -62,16 +62,18 @@
     <div class="rounded-2xl overflow-hidden border border-[#E4F0D6] shadow-sm konten-card" data-type="{{ $item['type'] }}" data-title="{{ strtolower($item['judul']) }}" data-kategori="{{ strtolower($item['kategori'] ?? '') }}">
       <!-- Colored Header / Gambar -->
       @if(!empty($item['gambar']))
+        @php $fallbackBg = addslashes($headerColor[$item['type']]); @endphp
         <div class="h-36 overflow-hidden">
           <img
             src="{{ Str::startsWith($item['gambar'], ['http://', 'https://']) ? $item['gambar'] : asset('storage/' . $item['gambar']) }}"
             alt="{{ $item['judul'] }}"
             class="w-full h-full object-cover"
-            onerror="this.parentElement.innerHTML='<div class=\'h-full flex items-center justify-center\' style=\'background: {{ addslashes($headerColor[$item['type']]) }}\'><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' class=\'opacity-30\'><path d=\'M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z\'/><circle cx=\'12\' cy=\'13\' r=\'3\'/></svg></div>'"
+            onerror="this.parentElement.innerHTML='<div class=\'h-full flex items-center justify-center\' style=\'background: {{ $fallbackBg }}\'><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' class=\'opacity-30\'><path d=\'M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z\'/><circle cx=\'12\' cy=\'13\' r=\'3\'/></svg></div>'"
           >
         </div>
       @else
-        <div class="h-36 flex items-center justify-center" style="background: {{ $headerColor[$item['type']] }};">
+        @php $bgColor = $headerColor[$item['type']]; @endphp
+        <div class="h-36 flex items-center justify-center" @style(["background: $bgColor"])>
           @if($item['type'] === 'Artikel')
             <i data-lucide="newspaper" class="w-10 h-10 text-[#4D9830]/40"></i>
           @elseif($item['type'] === 'Tips')

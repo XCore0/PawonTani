@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="icon" type="image/png" href="{{ asset('images/Logo2.png') }}">
+  <link rel="icon" type="image/png" href="{{ asset('images/Logo.png') }}">
   <title>PawonTani - Sistem Informasi untuk Kelompok Tani</title>
   <meta name="description"
     content="PawonTani merupakan sistem informasi untuk kelompok tani yang membantu mengelola anggota, lahan, aktivitas pertanian, panen, hingga penjualan dalam satu platform digital.">
