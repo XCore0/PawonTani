@@ -88,9 +88,11 @@ class PengurusController extends Controller
     public function store(Request $request)
     {
         $namaRegex = '/^[\pL\s.-]+$/u';
-
-        // Lowercase username before validation for case-insensitive unique check
-        $request->merge(['username' => strtolower($request->input('username', ''))]);
+        // Lowercase username and email before validation
+        $request->merge([
+            'username' => strtolower(trim($request->input('username', ''))),
+            'email' => $request->filled('email') ? strtolower(trim($request->input('email', ''))) : null,
+        ]);
 
         $validated = $request->validate([
             'nama' => [
@@ -117,9 +119,30 @@ class PengurusController extends Controller
             ],
             'id_kelompok' => 'required|string|exists:kelompok_tani,id_kelompok',
             'nik' => ['required', 'digits:16', 'unique:pengguna,nik'],
-            'username' => 'required|string|max:50|alpha_dash|unique:pengguna,username',
+            'username' => [
+                'required',
+                'string',
+                'max:50',
+                'alpha_dash',
+                function ($attribute, $value, $fail) {
+                    $clean = strtolower(trim($value));
+                    if (Pengguna::whereRaw('LOWER(username) = ?', [$clean])->exists()) {
+                        $fail('Username ini sudah digunakan, silakan pilih username lain.');
+                    }
+                },
+            ],
             'password' => 'required|string|min:6',
-            'email' => 'nullable|email|max:255|unique:pengguna,email',
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    $clean = strtolower(trim($value));
+                    if (Pengguna::whereRaw('LOWER(email) = ?', [$clean])->exists()) {
+                        $fail('Alamat email ini sudah terdaftar.');
+                    }
+                },
+            ],
             'no_telepon' => ['required', 'digits_between:11,15', 'unique:pengguna,no_telepon'],
             'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
@@ -200,8 +223,11 @@ class PengurusController extends Controller
 
         $namaRegex = '/^[\pL\s.-]+$/u';
 
-        // Lowercase username before validation for case-insensitive unique check
-        $request->merge(['username' => strtolower($request->input('username', ''))]);
+        // Lowercase username and email before validation
+        $request->merge([
+            'username' => strtolower(trim($request->input('username', ''))),
+            'email' => $request->filled('email') ? strtolower(trim($request->input('email', ''))) : null,
+        ]);
 
         $validated = $request->validate([
             'nama' => [
@@ -243,14 +269,28 @@ class PengurusController extends Controller
                 'string',
                 'max:50',
                 'alpha_dash',
-                Rule::unique('pengguna', 'username')->ignore($pengurus->id_pengguna, 'id_pengguna'),
+                function ($attribute, $value, $fail) use ($pengurus) {
+                    $clean = strtolower(trim($value));
+                    if (Pengguna::whereRaw('LOWER(username) = ?', [$clean])
+                        ->where('id_pengguna', '!=', $pengurus->id_pengguna)
+                        ->exists()) {
+                        $fail('Username sudah digunakan oleh pengguna lain.');
+                    }
+                },
             ],
             'password' => 'nullable|string|min:6',
             'email' => [
                 'nullable',
                 'email',
                 'max:255',
-                Rule::unique('pengguna', 'email')->ignore($pengurus->id_pengguna, 'id_pengguna'),
+                function ($attribute, $value, $fail) use ($pengurus) {
+                    $clean = strtolower(trim($value));
+                    if (Pengguna::whereRaw('LOWER(email) = ?', [$clean])
+                        ->where('id_pengguna', '!=', $pengurus->id_pengguna)
+                        ->exists()) {
+                        $fail('Email ini sudah digunakan oleh pengguna lain.');
+                    }
+                },
             ],
             'no_telepon' => [
                 'required',
@@ -362,14 +402,14 @@ class PengurusController extends Controller
      */
     public function checkUsername(Request $request)
     {
-        $username = strtolower($request->query('username', ''));
+        $username = strtolower(trim($request->query('username', '')));
         $excludeId = $request->query('exclude_id');
 
         if ($username === '') {
             return response()->json(['available' => true]);
         }
 
-        $query = Pengguna::where('username', $username);
+        $query = Pengguna::whereRaw('LOWER(username) = ?', [$username]);
 
         if ($excludeId) {
             $query->where('id_pengguna', '!=', $excludeId);

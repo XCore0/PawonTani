@@ -64,14 +64,18 @@ class KelompokTaniController extends Controller
                 'string',
                 'max:150',
                 'regex:/^[\pL\s]+$/u',
-                Rule::unique('kelompok_tani', 'nama_kelompok'),
+                function ($attribute, $value, $fail) {
+                    $cleaned = trim(preg_replace('/\s+/', ' ', $value));
+                    if (KelompokTani::whereRaw('LOWER(TRIM(nama_kelompok)) = ?', [mb_strtolower($cleaned)])->exists()) {
+                        $fail('Nama kelompok tani sudah terdaftar.');
+                    }
+                },
             ],
             'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
         ], [
             'nama_kelompok.required' => 'Nama kelompok tani wajib diisi.',
             'nama_kelompok.regex' => 'Nama kelompok tani hanya boleh berisi huruf dan spasi.',
-            'nama_kelompok.unique' => 'Nama kelompok tani sudah terdaftar.',
             'alamat.required' => 'Alamat kelompok tani wajib diisi.',
             'status.required' => 'Status kelompok tani wajib dipilih.',
             'status.in' => 'Status harus berupa Aktif atau Tidak Aktif.',
@@ -79,7 +83,7 @@ class KelompokTaniController extends Controller
 
         $kelompok = KelompokTani::create([
             'id_kelompok' => KelompokTani::generateIdKelompok(),
-            'nama_kelompok' => $validated['nama_kelompok'],
+            'nama_kelompok' => trim(preg_replace('/\s+/', ' ', $validated['nama_kelompok'])),
             'alamat' => $validated['alamat'],
             'status' => $validated['status'],
         ]);
@@ -109,19 +113,26 @@ class KelompokTaniController extends Controller
                 'string',
                 'max:150',
                 'regex:/^[\pL\s]+$/u',
-                Rule::unique('kelompok_tani', 'nama_kelompok')->ignore($id_kelompok, 'id_kelompok'),
+                function ($attribute, $value, $fail) use ($id_kelompok) {
+                    $cleaned = trim(preg_replace('/\s+/', ' ', $value));
+                    if (KelompokTani::whereRaw('LOWER(TRIM(nama_kelompok)) = ?', [mb_strtolower($cleaned)])
+                        ->where('id_kelompok', '!=', $id_kelompok)
+                        ->exists()) {
+                        $fail('Nama kelompok tani sudah terdaftar.');
+                    }
+                },
             ],
             'alamat' => 'required|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
         ], [
             'nama_kelompok.required' => 'Nama kelompok tani wajib diisi.',
             'nama_kelompok.regex' => 'Nama kelompok tani hanya boleh berisi huruf dan spasi.',
-            'nama_kelompok.unique' => 'Nama kelompok tani sudah terdaftar.',
             'alamat.required' => 'Alamat kelompok tani wajib diisi.',
             'status.required' => 'Status kelompok tani wajib dipilih.',
             'status.in' => 'Status harus berupa Aktif atau Tidak Aktif.',
         ]);
 
+        $validated['nama_kelompok'] = trim(preg_replace('/\s+/', ' ', $validated['nama_kelompok']));
         $kelompok->update($validated);
 
         if ($request->wantsJson() || $request->ajax()) {
