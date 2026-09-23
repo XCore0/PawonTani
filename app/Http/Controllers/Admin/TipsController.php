@@ -176,14 +176,8 @@ class TipsController extends Controller
 
         $gambarPath = $validated['gambar'] ?? 'tips-pertanian.jpg';
         if ($request->hasFile('gambar_file')) {
-            $file = $request->file('gambar_file');
-            $filename = 'tip_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $destination = public_path('uploads/tips');
-            if (!File::exists($destination)) {
-                File::makeDirectory($destination, 0755, true);
-            }
-            $file->move($destination, $filename);
-            $gambarPath = 'uploads/tips/' . $filename;
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            $gambarPath = $cloudinary->upload($request->file('gambar_file')->getRealPath(), 'pawontani/tips');
         }
 
         $isPublik = ($validated['status'] ?? 'Draft') === 'Publik';
@@ -257,20 +251,14 @@ class TipsController extends Controller
 
         $gambarPath = $tip->gambar;
         if ($request->hasFile('gambar_file')) {
-            $file = $request->file('gambar_file');
-            $filename = 'tip_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $destination = public_path('uploads/tips');
-            if (!File::exists($destination)) {
-                File::makeDirectory($destination, 0755, true);
-            }
-            $file->move($destination, $filename);
-
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            
             // Delete old uploaded image if exists
-            if ($tip->gambar && str_starts_with($tip->gambar, 'uploads/tips/') && File::exists(public_path($tip->gambar))) {
-                File::delete(public_path($tip->gambar));
+            if ($tip->gambar) {
+                $cloudinary->delete($tip->gambar);
             }
 
-            $gambarPath = 'uploads/tips/' . $filename;
+            $gambarPath = $cloudinary->upload($request->file('gambar_file')->getRealPath(), 'pawontani/tips');
         } elseif (!empty($validated['gambar'])) {
             $gambarPath = $validated['gambar'];
         }
@@ -311,8 +299,9 @@ class TipsController extends Controller
         $judul = $tip->judul;
 
         // Delete uploaded file if stored locally
-        if ($tip->gambar && str_starts_with($tip->gambar, 'uploads/tips/') && File::exists(public_path($tip->gambar))) {
-            File::delete(public_path($tip->gambar));
+        if ($tip->gambar) {
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            $cloudinary->delete($tip->gambar);
         }
 
         $tip->delete();

@@ -73,7 +73,7 @@ class AnggotaController extends Controller
         DB::transaction(function () use ($request, $validated, $pengurus) {
             $fotoPath = null;
             if ($request->hasFile('foto_profil')) {
-                $fotoPath = $request->file('foto_profil')->store('foto-profil', 'public');
+                $fotoPath = $this->storePhoto($request);
             }
 
             $pengguna = Pengguna::create([
@@ -156,6 +156,10 @@ class AnggotaController extends Controller
                 $anggota->password = Hash::make($validated['password']);
             }
             if ($request->hasFile('foto_profil')) {
+                if ($anggota->foto_profil) {
+                    $cloudinary = app(\App\Services\CloudinaryService::class);
+                    $cloudinary->delete($anggota->foto_profil);
+                }
                 $anggota->foto_profil = $this->storePhoto($request);
             }
             $anggota->save();
@@ -175,8 +179,9 @@ class AnggotaController extends Controller
         $anggota = $this->scopedAnggota($pengurus, $id_pengguna);
         $nama = $anggota->nama;
 
-        if ($anggota->foto_profil && file_exists(public_path($anggota->foto_profil))) {
-            @unlink(public_path($anggota->foto_profil));
+        if ($anggota->foto_profil) {
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            $cloudinary->delete($anggota->foto_profil);
         }
         $anggota->delete();
 
@@ -203,10 +208,7 @@ class AnggotaController extends Controller
 
     private function storePhoto(Request $request): string
     {
-        $file = $request->file('foto_profil');
-        $filename = 'profil_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-        $file->move(public_path('uploads/profil'), $filename);
-
-        return 'uploads/profil/' . $filename;
+        $cloudinary = app(\App\Services\CloudinaryService::class);
+        return $cloudinary->upload($request->file('foto_profil')->getRealPath(), 'pawontani/profil');
     }
 }

@@ -315,3 +315,18 @@ php artisan serve
 - **ID format:** `{PREFIX}-XXXX` dengan 4 digit random (contoh: `PGR-1234`, `PokTan-5678`)
 - **CSS custom class:** `.admin-shell-content` dan `.pengurus-shell-content` untuk margin sidebar
 - **File upload:** Disimpan di `public/uploads/profil/`
+
+---
+
+## 10. Rencana Pengembangan (Fitur Baru & UI/UX)
+
+### 10.1 Konsep Fitur Baru
+- **Marketplace / Penjualan Hasil Tani:** Memfasilitasi kelompok tani menjual hasil panen langsung ke pembeli.
+- **Smart Farming / IoT Integration:** Pemantauan sensor tanah, suhu, dan kelembapan secara real-time.
+- **Forum Diskusi:** Wadah interaksi dan tanya jawab antar sesama pengurus/anggota kelompok tani.
+- **Push Notification & Alert:** Notifikasi instan mengenai prediksi cuaca ekstrem atau jadwal panen.
+
+### 10.2 Pembaruan Struktur Warna UI
+- **Dark Mode Palette:** Menambahkan struktur warna khusus untuk mode gelap (Dark Mode) seperti `pawon-dark-800: #121A0C`.
+- **Semantic Colors:** Memperjelas penggunaan warna peringatan (*Danger/Error*, *Warning*, *Success*, *Info*).
+- **Secondary/Accent Colors:** Menambahkan warna sekunder (misal kuning tanah atau biru air) untuk melengkapi warna utama hijau (`pawon-100` hingga `pawon-900`).

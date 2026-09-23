@@ -145,20 +145,15 @@ class PanduanController extends Controller
 
     private function storeImage(Request $request): string
     {
-        $directory = public_path('uploads/panduan');
-        File::ensureDirectoryExists($directory);
-
-        $file = $request->file('gambar');
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-
-        return 'uploads/panduan/' . $filename;
+        $cloudinary = app(\App\Services\CloudinaryService::class);
+        return $cloudinary->upload($request->file('gambar')->getRealPath(), 'pawontani/panduan');
     }
 
     private function deleteImage(?string $path): void
     {
-        if ($path && File::exists(public_path($path))) {
-            File::delete(public_path($path));
+        if ($path) {
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            $cloudinary->delete($path);
         }
     }
 }

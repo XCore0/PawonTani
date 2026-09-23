@@ -175,28 +175,17 @@ class ArtikelController extends Controller
 
     private function storeImage(Request $request): string
     {
-        $directory = public_path('uploads/edukasi/artikel');
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
-        $file = $request->file('gambar');
-        $extension = strtolower($file->extension());
-        $filename = Str::uuid()->toString() . '.' . $extension;
-        $file->move($directory, $filename);
-
-        return 'uploads/edukasi/artikel/' . $filename;
+        $cloudinary = app(\App\Services\CloudinaryService::class);
+        return $cloudinary->upload($request->file('gambar')->getRealPath(), 'pawontani/artikel');
     }
 
     private function deleteImage(?string $path): void
     {
-        if (! $path || ! Str::startsWith($path, 'uploads/edukasi/artikel/')) {
+        if (! $path) {
             return;
         }
 
-        $fullPath = public_path($path);
-        if (is_file($fullPath)) {
-            @unlink($fullPath);
-        }
+        $cloudinary = app(\App\Services\CloudinaryService::class);
+        $cloudinary->delete($path);
     }
 }

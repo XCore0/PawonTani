@@ -177,10 +177,8 @@ class PengurusController extends Controller
         // Handle profile photo upload if provided
         $fotoPath = null;
         if ($request->hasFile('foto_profil')) {
-            $file = $request->file('foto_profil');
-            $filename = 'profil_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/profil'), $filename);
-            $fotoPath = 'uploads/profil/' . $filename;
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            $fotoPath = $cloudinary->upload($request->file('foto_profil')->getRealPath(), 'pawontani/profil');
         }
 
         // Auto-generate random ID: PGR-AngkaRandom
@@ -344,15 +342,14 @@ class PengurusController extends Controller
 
         // Handle profile photo upload
         if ($request->hasFile('foto_profil')) {
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            
             // Delete previous photo if exists
-            if ($pengurus->foto_profil && file_exists(public_path($pengurus->foto_profil))) {
-                @unlink(public_path($pengurus->foto_profil));
+            if ($pengurus->foto_profil) {
+                $cloudinary->delete($pengurus->foto_profil);
             }
 
-            $file = $request->file('foto_profil');
-            $filename = 'profil_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/profil'), $filename);
-            $dataToUpdate['foto_profil'] = 'uploads/profil/' . $filename;
+            $dataToUpdate['foto_profil'] = $cloudinary->upload($request->file('foto_profil')->getRealPath(), 'pawontani/profil');
         }
 
         $pengurus->update($dataToUpdate);
@@ -379,8 +376,9 @@ class PengurusController extends Controller
         $deletedId = $pengurus->id_pengguna;
 
         // Delete photo if exists
-        if ($pengurus->foto_profil && file_exists(public_path($pengurus->foto_profil))) {
-            @unlink(public_path($pengurus->foto_profil));
+        if ($pengurus->foto_profil) {
+            $cloudinary = app(\App\Services\CloudinaryService::class);
+            $cloudinary->delete($pengurus->foto_profil);
         }
 
         $pengurus->delete();
