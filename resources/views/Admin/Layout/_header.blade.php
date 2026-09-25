@@ -75,9 +75,13 @@
     <!-- Profile Dropdown -->
     <div class="relative" data-header-dropdown>
       <button type="button" data-dropdown-trigger="profile-dropdown" class="flex items-center gap-2.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border border-[#E4F0D6] hover:bg-[#F5F8F1] transition-colors cursor-pointer select-none">
-        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-[#4D9830] to-[#72BE4A] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
-          {{ strtoupper(substr(auth()->user()->nama ?? 'A', 0, 1)) }}
-        </div>
+        @if(auth()->user() && auth()->user()->foto_profil)
+          <img src="{{ asset(auth()->user()->foto_profil) }}" alt="{{ auth()->user()->nama }}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shadow-2xs shrink-0">
+        @else
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-[#4D9830] to-[#72BE4A] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
+            {{ strtoupper(substr(auth()->user()->nama ?? 'A', 0, 1)) }}
+          </div>
+        @endif
         <div class="hidden sm:flex flex-col text-left">
           <span class="text-xs font-bold text-[#1A2D10] leading-tight">
             {{ auth()->user()->nama ?? 'Admin' }}
