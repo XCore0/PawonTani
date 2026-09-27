@@ -48,8 +48,14 @@ class PanduanController extends Controller
         ];
 
         return view('Admin.Content.Panduan', compact(
-            'panduan', 'categories', 'commodities', 'counts',
-            'search', 'status', 'kategori', 'komoditas'
+            'panduan',
+            'categories',
+            'commodities',
+            'counts',
+            'search',
+            'status',
+            'kategori',
+            'komoditas'
         ));
     }
 
@@ -75,7 +81,8 @@ class PanduanController extends Controller
             ], 201);
         }
 
-        return redirect()->route('admin.edukasi.panduan')
+        return redirect()
+            ->route('admin.edukasi.panduan')
             ->with('success', 'Panduan berhasil ditambahkan.');
     }
 
@@ -89,7 +96,10 @@ class PanduanController extends Controller
             : null;
 
         if ($panduan->judul !== $data['judul']) {
-            $data['slug'] = $this->uniqueSlug($data['judul'], $panduan->id_panduan);
+            $data['slug'] = $this->uniqueSlug(
+                $data['judul'],
+                $panduan->id_panduan
+            );
         }
 
         if ($request->hasFile('gambar')) {
@@ -107,7 +117,8 @@ class PanduanController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.edukasi.panduan')
+        return redirect()
+            ->route('admin.edukasi.panduan')
             ->with('success', 'Panduan berhasil diperbarui.');
     }
 
@@ -115,6 +126,7 @@ class PanduanController extends Controller
     {
         $panduan = Panduan::findOrFail($id_panduan);
         $this->deleteImage($panduan->gambar);
+
         $panduan->delete();
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -124,7 +136,8 @@ class PanduanController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.edukasi.panduan')
+        return redirect()
+            ->route('admin.edukasi.panduan')
             ->with('success', 'Panduan berhasil dihapus.');
     }
 
@@ -134,9 +147,19 @@ class PanduanController extends Controller
         $slug = $base;
         $suffix = 2;
 
-        while (Panduan::query()->where('slug', $slug)
-            ->when($ignoreId, fn ($q) => $q->where('id_panduan', '<>', $ignoreId))
-            ->exists()) {
+        while (
+            Panduan::query()
+                ->where('slug', $slug)
+                ->when(
+                    $ignoreId,
+                    fn ($q) => $q->where(
+                        'id_panduan',
+                        '<>',
+                        $ignoreId
+                    )
+                )
+                ->exists()
+        ) {
             $slug = $base . '-' . $suffix++;
         }
 
