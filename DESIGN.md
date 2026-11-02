@@ -251,7 +251,10 @@ Setiap role (Admin/Pengurus) memiliki 3 file layout:
 |--------|-----|------------|---------|
 | GET | `/pengurus/dashboard` | `pengurus.dashboard` | View |
 | GET | `/pengurus/anggota` | `pengurus.anggota` | View |
-| GET | `/pengurus/lahan` | `pengurus.lahan` | Error page |
+| GET | `/pengurus/lahan` | `pengurus.lahan` | LahanController (Lihat [TECHNICAL_DESIGN_LAHAN.md](TECHNICAL_DESIGN_LAHAN.md)) |
+| GET | `/pengurus/lahan/{id}` | `pengurus.lahan.show` | LahanController (Detail & Verifikasi) |
+| POST | `/pengurus/lahan/{id}/verifikasi` | `pengurus.lahan.verifikasi` | LahanController (Setujui) |
+| POST | `/pengurus/lahan/{id}/minta-perbaikan` | `pengurus.lahan.mintaPerbaikan` | LahanController (Minta Perbaikan) |
 | GET | `/pengurus/monitoring` | `pengurus.monitoring` | Error page |
 | GET | `/pengurus/panen` | `pengurus.panen` | Error page |
 | GET | `/pengurus/penjualan` | `pengurus.penjualan` | Error page |

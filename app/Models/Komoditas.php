@@ -20,6 +20,14 @@ class Komoditas extends Model
         'kategori',
     ];
 
+    /**
+     * Relationship to Lahan planting this commodity
+     */
+    public function lahan()
+    {
+        return $this->hasMany(Lahan::class, 'id_komoditas', 'id_komoditas');
+    }
+
     protected static function boot()
     {
         parent::boot();

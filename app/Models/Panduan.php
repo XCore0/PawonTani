@@ -93,3 +93,4 @@ class Panduan extends Model
         });
     }
 }
+

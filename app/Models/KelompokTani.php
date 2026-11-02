@@ -30,6 +30,14 @@ class KelompokTani extends Model
     }
 
     /**
+     * Relationship to Lahan in this Kelompok Tani
+     */
+    public function lahan()
+    {
+        return $this->hasMany(Lahan::class, 'id_kelompok', 'id_kelompok');
+    }
+
+    /**
      * Auto-generate id_kelompok like PokTan-XXXX if not provided
      */
     protected static function boot()

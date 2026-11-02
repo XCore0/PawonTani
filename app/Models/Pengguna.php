@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Pengguna extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'pengguna';
     protected $primaryKey = 'id_pengguna';
@@ -49,6 +50,46 @@ class Pengguna extends Authenticatable
     public function anggota()
     {
         return $this->hasOne(Anggota::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Owned Lahan
+     */
+    public function lahan()
+    {
+        return $this->hasMany(Lahan::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Lahan verified by this user
+     */
+    public function lahanDiverifikasi()
+    {
+        return $this->hasMany(Lahan::class, 'verifikator_id', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Verification History logged by this user
+     */
+    public function riwayatVerifikasi()
+    {
+        return $this->hasMany(RiwayatVerifikasiLahan::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Notifications received by this user
+     */
+    public function notifikasiDiterima()
+    {
+        return $this->hasMany(Notifikasi::class, 'id_penerima', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Notifications sent by this user
+     */
+    public function notifikasiDikirim()
+    {
+        return $this->hasMany(Notifikasi::class, 'id_pengirim', 'id_pengguna');
     }
 
     protected $hidden = [
