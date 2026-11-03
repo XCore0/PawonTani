@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
+use App\Http\Controllers\Pengurus\LahanController;
 use App\Services\CommodityService;
 use App\Services\HarvestPredictionService;
 use App\Http\Controllers\Admin\KelompokTaniController;
@@ -65,12 +66,12 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     Route::put('/anggota/{id_pengguna}', [AnggotaController::class, 'update'])->name('anggota.update');
     Route::delete('/anggota/{id_pengguna}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
 
+    // Kelola Lahan
+    Route::get('/lahan', [LahanController::class, 'index'])->name('lahan');
+    Route::get('/lahan/{lahan}', [LahanController::class, 'show'])->name('lahan.show');
+    Route::post('/lahan/{lahan}/verifikasi', [LahanController::class, 'verifikasi'])->name('lahan.verifikasi');
+
     // Pages in development
-    Route::get('/lahan', fn () => $errorPage(
-        'Kelola Lahan',
-        'Kelola data lahan pertanian anggota kelompok tani.',
-        'Pengurus.Layout._layout'
-    ))->name('lahan');
 
     Route::get('/monitoring', fn () => $errorPage(
         'Monitoring Pertanian',

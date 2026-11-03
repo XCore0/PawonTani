@@ -42,8 +42,8 @@
 
           <!-- Kelola Lahan -->
           <a href="{{ route('pengurus.lahan') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group {{ request()->routeIs('pengurus.lahan') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : '' }}">
-            <i data-lucide="map" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('pengurus.lahan') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group {{ request()->routeIs('pengurus.lahan*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : '' }}">
+            <i data-lucide="map" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('pengurus.lahan*') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
             <span>Kelola Lahan</span>
           </a>
 
