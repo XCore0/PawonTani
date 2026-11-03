@@ -10,6 +10,18 @@ class PawonTaniTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function admin(): \App\Models\Pengguna
+    {
+        return \App\Models\Pengguna::create([
+            'nama' => 'Admin Test',
+            'username' => 'admin_' . uniqid(),
+            'password' => 'password',
+            'email' => uniqid() . '@test.local',
+            'role' => 'PPL',
+            'status' => 'Aktif',
+        ]);
+    }
+
     public function test_landing_page_renders_successfully(): void
     {
         $response = $this->get('/');
@@ -31,6 +43,29 @@ class PawonTaniTest extends TestCase
 
     public function test_admin_pengurus_renders_successfully(): void
     {
+        $this->actingAs($this->admin());
+
+        $poktan = KelompokTani::create([
+            'id_kelompok' => 'PokTan-9988',
+            'nama_kelompok' => 'Kelompok Tani Harapan Jaya',
+            'alamat' => 'Desa Sukamaju No. 1',
+            'status' => 'Aktif',
+        ]);
+
+        $pengurus = \App\Models\Pengguna::create([
+            'nama' => 'Ahmad Fauzi',
+            'jabatan' => 'Ketua',
+            'id_kelompok' => $poktan->id_kelompok,
+            'nik' => '3302181122330001',
+            'username' => 'ahmad_fauzi_' . uniqid(),
+            'password' => 'password123',
+            'email' => 'ahmad_fauzi_' . uniqid() . '@pawontani.id',
+            'no_telepon' => '081299887766',
+            'alamat' => 'Dusun Sukamaju No. 77',
+            'role' => 'Pengurus',
+            'status' => 'Aktif',
+        ]);
+
         $response = $this->get('/admin/pengurus');
 
         $response->assertStatus(200);
@@ -41,6 +76,8 @@ class PawonTaniTest extends TestCase
 
     public function test_admin_pengurus_store_creates_pengguna_with_random_id(): void
     {
+        $this->actingAs($this->admin());
+
         $poktan = KelompokTani::create([
             'id_kelompok' => 'PokTan-9988',
             'nama_kelompok' => 'Kelompok Tani Harapan Jaya',
@@ -50,7 +87,7 @@ class PawonTaniTest extends TestCase
 
         $uniqueUsername = 'pengurus_' . uniqid();
         $response = $this->post('/admin/pengurus', [
-            'nama' => 'Bpk. Hendra Kusuma, S.P.',
+            'nama' => 'Bpk. Hendra Kusuma S.P.',
             'jabatan' => 'Ketua',
             'id_kelompok' => $poktan->id_kelompok,
             'nik' => '3302181122330001',
@@ -68,7 +105,7 @@ class PawonTaniTest extends TestCase
         $pengurus = \App\Models\Pengguna::where('username', $uniqueUsername)->first();
         $this->assertNotNull($pengurus);
         $this->assertStringStartsWith('PGR-', $pengurus->id_pengguna);
-        $this->assertEquals('Bpk. Hendra Kusuma, S.P.', $pengurus->nama);
+        $this->assertEquals('Bpk. Hendra Kusuma S.P.', $pengurus->nama);
         $this->assertEquals('Ketua', $pengurus->jabatan);
         $this->assertEquals('PokTan-9988', $pengurus->id_kelompok);
         $this->assertEquals('Pengurus', $pengurus->role);
@@ -78,11 +115,13 @@ class PawonTaniTest extends TestCase
         $indexResponse = $this->get('/admin/pengurus');
         $indexResponse->assertStatus(200);
         $indexResponse->assertSee($pengurus->id_pengguna);
-        $indexResponse->assertSee('Bpk. Hendra Kusuma, S.P.');
+        $indexResponse->assertSee('Bpk. Hendra Kusuma S.P.');
     }
 
     public function test_admin_pengurus_update_and_delete(): void
     {
+        $this->actingAs($this->admin());
+
         $poktan = KelompokTani::create([
             'id_kelompok' => 'PokTan-7766',
             'nama_kelompok' => 'Kelompok Tani Subur Makmur',
@@ -92,7 +131,7 @@ class PawonTaniTest extends TestCase
 
         $username = 'pengurus_edit_' . uniqid();
         $pengurus = \App\Models\Pengguna::create([
-            'nama' => 'H. Ahmad Basuki',
+            'nama' => 'H. Ahmad Basuki M.P.',
             'jabatan' => 'Sekretaris',
             'id_kelompok' => $poktan->id_kelompok,
             'nik' => '3302189999990002',
@@ -107,7 +146,7 @@ class PawonTaniTest extends TestCase
 
         // 1. Update Pengurus
         $updateResponse = $this->put('/admin/pengurus/' . $pengurus->id_pengguna, [
-            'nama' => 'H. Ahmad Basuki, M.P.',
+            'nama' => 'H. Ahmad Basuki M.P.',
             'jabatan' => 'Ketua',
             'id_kelompok' => $poktan->id_kelompok,
             'nik' => '3302189999990002',
@@ -122,7 +161,7 @@ class PawonTaniTest extends TestCase
         $updateResponse->assertSessionHas('success');
 
         $pengurus->refresh();
-        $this->assertEquals('H. Ahmad Basuki, M.P.', $pengurus->nama);
+        $this->assertEquals('H. Ahmad Basuki M.P.', $pengurus->nama);
         $this->assertEquals('Ketua', $pengurus->jabatan);
         $this->assertEquals($username . '_updated', $pengurus->username);
         $this->assertEquals('Tidak Aktif', $pengurus->status);
@@ -137,6 +176,8 @@ class PawonTaniTest extends TestCase
 
     public function test_admin_kelompok_renders_successfully(): void
     {
+        $this->actingAs($this->admin());
+
         KelompokTani::create([
             'id_kelompok' => 'PokTan-1042',
             'nama_kelompok' => 'Kelompok Tani Maju Bersama',
@@ -157,8 +198,10 @@ class PawonTaniTest extends TestCase
 
     public function test_admin_kelompok_crud_lifecycle(): void
     {
+        $this->actingAs($this->admin());
+
         // 1. Create (Store)
-        $uniqueName = 'Poktan Test ' . uniqid();
+        $uniqueName = 'Poktan Test ' . preg_replace('/[0-9]/', '', uniqid());
         $storeResponse = $this->post('/admin/kelompok', [
             'nama_kelompok' => $uniqueName,
             'alamat' => 'Desa Percobaan No. 123',

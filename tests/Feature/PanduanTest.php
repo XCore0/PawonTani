@@ -28,21 +28,21 @@ class PanduanTest extends TestCase
         Panduan::create([
             'judul' => 'Panduan Publik',
             'slug' => 'panduan-publik',
-            'kategori' => 'Budidaya',
+            'kategori' => 'Budidaya Tanaman',
             'ringkasan' => 'Ringkasan publik',
             'isi' => 'Isi publik',
             'tanggal' => '2026-09-20',
-            'status' => 'publik',
+            'status' => 'Publik',
         ]);
 
         Panduan::create([
             'judul' => 'Panduan Draft',
             'slug' => 'panduan-draft',
-            'kategori' => 'Budidaya',
+            'kategori' => 'Budidaya Tanaman',
             'ringkasan' => 'Ringkasan draft',
             'isi' => 'Isi draft',
             'tanggal' => '2026-09-20',
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->get(route('edukasi.panduan'));
@@ -57,14 +57,24 @@ class PanduanTest extends TestCase
         $admin = $this->admin();
         $this->actingAs($admin);
 
+        $komoditas = \App\Models\Komoditas::create([
+            'id_komoditas' => 'KOM-JAGUNG',
+            'nama_komoditas' => 'Jagung',
+            'kategori' => 'Budidaya Tanaman',
+            'satuan' => 'kg',
+            'harga_bawah' => 3000,
+            'harga_atas' => 6000,
+            'status' => 'Aktif',
+        ]);
+
         $response = $this->post(route('admin.edukasi.panduan.store'), [
             'judul' => 'Panduan Budidaya Jagung',
-            'kategori' => 'Budidaya',
-            'komoditas' => 'Jagung',
-            'ringkasan' => 'Panduan ringkas budidaya jagung.',
-            'isi' => 'Langkah lengkap budidaya jagung.',
+            'kategori' => 'Budidaya Tanaman',
+            'komoditas_id' => $komoditas->id_komoditas,
+            'ringkasan' => 'Panduan ringkas budidaya jagung di lahan kering.',
+            'isi' => 'Langkah lengkap budidaya jagung mulai dari persiapan lahan hingga panen.',
             'tanggal' => '2026-09-20',
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response->assertRedirect(route('admin.edukasi.panduan'));
@@ -76,18 +86,18 @@ class PanduanTest extends TestCase
 
         $response = $this->put(route('admin.edukasi.panduan.update', $panduan), [
             'judul' => 'Panduan Budidaya Jagung Hibrida',
-            'kategori' => 'Budidaya',
-            'komoditas' => 'Jagung',
-            'ringkasan' => 'Ringkasan diperbarui.',
-            'isi' => 'Isi diperbarui.',
+            'kategori' => 'Budidaya Tanaman',
+            'komoditas_id' => $komoditas->id_komoditas,
+            'ringkasan' => 'Ringkasan diperbarui untuk varietas hibrida.',
+            'isi' => 'Isi diperbarui untuk varietas hibrida yang lebih tahan hama.',
             'tanggal' => '2026-09-20',
-            'status' => 'publik',
+            'status' => 'Publik',
         ]);
 
         $response->assertRedirect(route('admin.edukasi.panduan'));
         $panduan->refresh();
         $this->assertSame('panduan-budidaya-jagung-hibrida', $panduan->slug);
-        $this->assertSame('publik', $panduan->status);
+        $this->assertSame('Publik', $panduan->status);
 
         $response = $this->delete(route('admin.edukasi.panduan.destroy', $panduan));
         $response->assertRedirect(route('admin.edukasi.panduan'));
@@ -102,28 +112,26 @@ class PanduanTest extends TestCase
         Panduan::create([
             'judul' => 'Panduan Padi Sawah',
             'slug' => 'panduan-padi-sawah',
-            'kategori' => 'Budidaya',
-            'komoditas' => 'Padi',
+            'kategori' => 'Budidaya Tanaman',
             'ringkasan' => 'Padi',
             'isi' => 'Isi',
             'tanggal' => '2026-09-20',
-            'status' => 'publik',
+            'status' => 'Publik',
         ]);
 
         Panduan::create([
             'judul' => 'Panduan Jagung',
             'slug' => 'panduan-jagung',
-            'kategori' => 'Budidaya',
-            'komoditas' => 'Jagung',
+            'kategori' => 'Budidaya Tanaman',
             'ringkasan' => 'Jagung',
             'isi' => 'Isi',
             'tanggal' => '2026-09-19',
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->get(route('admin.edukasi.panduan', [
             'search' => 'padi',
-            'status' => 'publik',
+            'status' => 'Publik',
         ]));
 
         $response->assertOk();

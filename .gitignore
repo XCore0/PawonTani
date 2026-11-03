@@ -36,3 +36,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /supabase
+
+# Hermes AI
+/hermes-mcp
+/AGENTS.md
+/Live_Report_Progress.html
+
