@@ -30,7 +30,15 @@ class LahanController extends Controller
     {
         $user = $request->user();
 
-        // 1. Query Scoping berbasis konteks aktor (hanya lahan milik anggota aktif yang bersangkutan)
+        // 1. Validasi otorisasi: API Mobile Lahan hanya diperuntukkan bagi Anggota aktif
+        if (!$user || $user->status !== 'Aktif' || $user->role !== 'Anggota') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Layanan ini hanya diperuntukkan bagi Anggota aktif.',
+            ], 403);
+        }
+
+        // 2. Query Scoping berbasis konteks aktor (hanya lahan milik anggota aktif yang bersangkutan)
         $query = $this->lahanService->getLahanQueryForUser($user)
             ->with([
                 'komoditas:id_komoditas,nama_komoditas,kategori,gambar',
@@ -90,8 +98,18 @@ class LahanController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
+        $user = $request->user();
+
+        // 1. Validasi otorisasi: API Mobile Lahan hanya diperuntukkan bagi Anggota aktif
+        if (!$user || $user->status !== 'Aktif' || $user->role !== 'Anggota') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Layanan ini hanya diperuntukkan bagi Anggota aktif.',
+            ], 403);
+        }
+
         try {
-            $lahan = $this->lahanService->findLahanForUser($request->user(), $id)
+            $lahan = $this->lahanService->findLahanForUser($user, $id)
                 ->load([
                     'komoditas',
                     'kelompokTani:id_kelompok,nama_kelompok',
