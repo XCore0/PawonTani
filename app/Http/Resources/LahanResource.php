@@ -20,11 +20,12 @@ class LahanResource extends JsonResource
             'id_lahan' => $this->id_lahan,
             'nama' => $this->nama_lahan,
             'nama_lahan' => $this->nama_lahan,
+            'lokasi' => $this->alamat_lahan,
             'luas' => (float) $this->luas,
             'luas_formatted' => number_format((float) $this->luas, 2, ',', '.') . ' ha',
 
-            // Data Lokasi
-            'lokasi' => [
+            // Data Lokasi Terstruktur
+            'detail_lokasi' => [
                 'provinsi_id' => $this->provinsi_id,
                 'kabupaten_id' => $this->kabupaten_id,
                 'kecamatan_id' => $this->kecamatan_id,
@@ -33,6 +34,29 @@ class LahanResource extends JsonResource
                 'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
                 'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
             ],
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
+
+            // Komoditas
+            'komoditas' => $this->whenLoaded('komoditas', function () {
+                return $this->komoditas?->nama_komoditas;
+            }),
+            'detail_komoditas' => $this->whenLoaded('komoditas', function () {
+                return [
+                    'id_komoditas' => $this->komoditas?->id_komoditas,
+                    'nama_komoditas' => $this->komoditas?->nama_komoditas,
+                    'kategori' => $this->komoditas?->kategori,
+                    'gambar' => $this->komoditas?->gambar,
+                ];
+            }),
+
+            // Status
+            'status' => match (strtolower($this->status_operasional ?? 'aktif')) {
+                'aktif' => 'aktif',
+                'istirahat' => 'istirahat',
+                'persiapan' => 'persiapan',
+                default => strtolower($this->status_operasional ?? 'aktif'),
+            },
 
             // Atribut Operasional & Dokumen (Read-Only)
             'musim_tanam' => $this->musim_tanam,
@@ -49,12 +73,10 @@ class LahanResource extends JsonResource
             'is_can_delete' => $request->user()?->can('delete', $this->resource) ?? false,
 
             // Relasi Terkondisi (whenLoaded)
-            'komoditas' => $this->whenLoaded('komoditas', function () {
+            'kelompok_tani' => $this->whenLoaded('kelompokTani', function () {
                 return [
-                    'id_komoditas' => $this->komoditas?->id_komoditas,
-                    'nama_komoditas' => $this->komoditas?->nama_komoditas,
-                    'kategori' => $this->komoditas?->kategori,
-                    'gambar' => $this->komoditas?->gambar,
+                    'id_kelompok' => $this->kelompokTani?->id_kelompok,
+                    'nama_kelompok' => $this->kelompokTani?->nama_kelompok,
                 ];
             }),
             'verifikator' => $this->whenLoaded('verifikator', function () {
@@ -62,12 +84,6 @@ class LahanResource extends JsonResource
                     'id_pengguna' => $this->verifikator?->id_pengguna,
                     'nama' => $this->verifikator?->nama,
                     'jabatan' => $this->verifikator?->jabatan,
-                ];
-            }),
-            'kelompok_tani' => $this->whenLoaded('kelompokTani', function () {
-                return [
-                    'id_kelompok' => $this->kelompokTani?->id_kelompok,
-                    'nama_kelompok' => $this->kelompokTani?->nama_kelompok,
                 ];
             }),
             'riwayat_verifikasi' => RiwayatVerifikasiLahanResource::collection(
@@ -79,4 +95,3 @@ class LahanResource extends JsonResource
         ];
     }
 }
-

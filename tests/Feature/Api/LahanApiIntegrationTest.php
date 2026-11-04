@@ -485,7 +485,13 @@ class LahanApiIntegrationTest extends TestCase
 
         $data = $response->json('data');
         $this->assertArrayHasKey('komoditas', $data);
-        $this->assertEquals('Padi Ciherang', $data['komoditas']['nama_komoditas']);
+        $this->assertEquals('Padi Ciherang', $data['komoditas']);
+        $this->assertEquals('Dusun Krajan RT 01', $data['lokasi']);
+        $this->assertEquals('persiapan', $data['status']);
+        $this->assertArrayHasKey('detail_komoditas', $data);
+        $this->assertEquals('Padi Ciherang', $data['detail_komoditas']['nama_komoditas']);
+        $this->assertArrayHasKey('detail_lokasi', $data);
+        $this->assertEquals('Dusun Krajan RT 01', $data['detail_lokasi']['alamat_lahan']);
         $this->assertArrayHasKey('riwayat_verifikasi', $data);
         $this->assertCount(1, $data['riwayat_verifikasi']);
     }
@@ -934,9 +940,12 @@ class LahanApiIntegrationTest extends TestCase
             ->with($uploadedUrl)
             ->andReturn(true);
 
-        // Pasang event listener sementara agar save Lahan melempar exception di dalam transaksi DB
-        Lahan::saving(function () {
-            throw new Exception('Simulasi kegagalan database saat transaksi');
+        // Pasang event listener terkontrol agar save Lahan melempar exception di dalam transaksi DB
+        $failDatabase = true;
+        Lahan::saving(function () use (&$failDatabase) {
+            if ($failDatabase) {
+                throw new Exception('Simulasi kegagalan database saat transaksi');
+            }
         });
 
         $photo = UploadedFile::fake()->image('kompensasi.jpg');
@@ -949,8 +958,8 @@ class LahanApiIntegrationTest extends TestCase
                 'foto_lahan' => $photo,
             ]);
         } finally {
-            // Bersihkan listener agar tidak memengaruhi test lain
-            Lahan::flushEventListeners();
+            // Matikan trigger kegagalan tanpa menghapus listener boot model lainnya
+            $failDatabase = false;
         }
 
         // Pastikan tidak ada data tersimpan di database

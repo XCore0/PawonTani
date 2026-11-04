@@ -170,10 +170,13 @@ assertTest($lahanResourceUnloaded['nama_lahan'] === 'Petak Sawah Barat', "Field 
 assertTest(is_float($lahanResourceUnloaded['luas']) && $lahanResourceUnloaded['luas'] === 1.25, "Luas dikonversi menjadi numeric/float (1.25)");
 assertTest($lahanResourceUnloaded['luas_formatted'] === '1,25 ha', "Format teks luas_formatted rapi ('1,25 ha')");
 
-assertTest(is_array($lahanResourceUnloaded['lokasi']), "Struktur lokasi berupa objek terstruktur");
-assertTest($lahanResourceUnloaded['lokasi']['alamat_lahan'] === 'Jl. Sawah Indah No. 12', "Alamat lahan sesuai");
-assertTest(is_float($lahanResourceUnloaded['lokasi']['latitude']), "Latitude berupa float");
-assertTest(is_float($lahanResourceUnloaded['lokasi']['longitude']), "Longitude berupa float");
+assertTest(is_string($lahanResourceUnloaded['lokasi']) && $lahanResourceUnloaded['lokasi'] === 'Jl. Sawah Indah No. 12', "Alias Flutter 'lokasi' berupa string alamat");
+assertTest(is_array($lahanResourceUnloaded['detail_lokasi']), "Struktur detail_lokasi berupa objek terstruktur");
+assertTest($lahanResourceUnloaded['detail_lokasi']['alamat_lahan'] === 'Jl. Sawah Indah No. 12', "Alamat lahan sesuai pada detail_lokasi");
+assertTest(is_float($lahanResourceUnloaded['detail_lokasi']['latitude']), "Latitude berupa float pada detail_lokasi");
+assertTest(is_float($lahanResourceUnloaded['detail_lokasi']['longitude']), "Longitude berupa float pada detail_lokasi");
+assertTest(is_float($lahanResourceUnloaded['latitude']) && is_float($lahanResourceUnloaded['longitude']), "Top-level latitude dan longitude berupa float");
+assertTest($lahanResourceUnloaded['status'] === 'persiapan', "Alias Flutter 'status' operasional string sesuai");
 
 assertTest($lahanResourceUnloaded['status_operasional'] === 'persiapan', "Status operasional read-only tersedia");
 assertTest($lahanResourceUnloaded['status_verifikasi'] === 'menunggu_verifikasi', "Status verifikasi read-only tersedia");
@@ -189,8 +192,8 @@ assertTest(!array_key_exists('riwayat_verifikasi', $lahanResourceUnloaded), "Rel
 $lahanWithRelations = Lahan::with(['komoditas', 'kelompokTani', 'riwayatVerifikasi.pengguna'])->find($lahanDraft->id_lahan);
 $lahanResourceLoaded = (new LahanResource($lahanWithRelations))->resolve($reqAnggota);
 
-assertTest(isset($lahanResourceLoaded['komoditas']), "Relasi komoditas muncul saat dimuat");
-assertTest($lahanResourceLoaded['komoditas']['nama_komoditas'] === 'Padi Ciherang', "Nama komoditas terpetakan benar");
+assertTest(isset($lahanResourceLoaded['komoditas']) && $lahanResourceLoaded['komoditas'] === 'Padi Ciherang', "Alias Flutter 'komoditas' berupa string nama komoditas");
+assertTest(isset($lahanResourceLoaded['detail_komoditas']) && $lahanResourceLoaded['detail_komoditas']['nama_komoditas'] === 'Padi Ciherang', "Detail komoditas berupa objek terstruktur terpetakan benar");
 assertTest(isset($lahanResourceLoaded['kelompok_tani']), "Relasi kelompok_tani muncul saat dimuat");
 assertTest(isset($lahanResourceLoaded['riwayat_verifikasi']), "Relasi riwayat_verifikasi muncul saat dimuat");
 assertTest(count($lahanResourceLoaded['riwayat_verifikasi']) === 1, "Koleksi riwayat verifikasi terisi");
