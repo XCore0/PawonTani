@@ -496,6 +496,32 @@ class LahanApiIntegrationTest extends TestCase
         $this->assertCount(1, $data['riwayat_verifikasi']);
     }
 
+    public function test_anggota_view_lahan_without_komoditas_returns_null_fields(): void
+    {
+        Sanctum::actingAs($this->anggota1, ['*']);
+
+        $lahanNoKmd = Lahan::create([
+            'id_lahan' => 'LHN-TEST-NOKMD',
+            'id_pengguna' => $this->anggota1->id_pengguna,
+            'id_kelompok' => $this->poktan1->id_kelompok,
+            'id_komoditas' => null,
+            'nama_lahan' => 'Lahan Kosong Tanpa Komoditas',
+            'luas' => 1.0,
+            'alamat_lahan' => 'Alamat Kosong',
+            'status_verifikasi' => 'menunggu_verifikasi',
+            'status_operasional' => 'persiapan',
+        ]);
+
+        $response = $this->getJson("/api/v1/lahan/{$lahanNoKmd->id_lahan}");
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        $this->assertArrayHasKey('komoditas', $data);
+        $this->assertNull($data['komoditas']);
+        $this->assertArrayHasKey('detail_komoditas', $data);
+        $this->assertNull($data['detail_komoditas']);
+    }
+
     public function test_anggota_cannot_view_other_anggota_lahan_returns_404(): void
     {
         Sanctum::actingAs($this->anggota1, ['*']);

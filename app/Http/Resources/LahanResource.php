@@ -42,12 +42,12 @@ class LahanResource extends JsonResource
                 return $this->komoditas?->nama_komoditas;
             }),
             'detail_komoditas' => $this->whenLoaded('komoditas', function () {
-                return [
-                    'id_komoditas' => $this->komoditas?->id_komoditas,
-                    'nama_komoditas' => $this->komoditas?->nama_komoditas,
-                    'kategori' => $this->komoditas?->kategori,
-                    'gambar' => $this->komoditas?->gambar,
-                ];
+                return $this->komoditas ? [
+                    'id_komoditas' => $this->komoditas->id_komoditas,
+                    'nama_komoditas' => $this->komoditas->nama_komoditas,
+                    'kategori' => $this->komoditas->kategori,
+                    'gambar' => $this->komoditas->gambar,
+                ] : null;
             }),
 
             // Status

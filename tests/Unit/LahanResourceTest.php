@@ -198,6 +198,24 @@ assertTest(isset($lahanResourceLoaded['kelompok_tani']), "Relasi kelompok_tani m
 assertTest(isset($lahanResourceLoaded['riwayat_verifikasi']), "Relasi riwayat_verifikasi muncul saat dimuat");
 assertTest(count($lahanResourceLoaded['riwayat_verifikasi']) === 1, "Koleksi riwayat verifikasi terisi");
 
+// Lahan dengan eager loading tetapi relasi komoditas bernilai null (tanpa komoditas / id_komoditas null)
+$lahanTanpaKomoditas = Lahan::create([
+    'id_lahan' => 'LHN-20261103-NOKMD',
+    'id_pengguna' => 'USR-001',
+    'id_kelompok' => 'KT-001',
+    'id_komoditas' => null,
+    'nama_lahan' => 'Petak Belum Ditanami',
+    'luas' => 0.5,
+    'alamat_lahan' => 'Jl. Kebun Kosong No. 1',
+    'status_operasional' => 'persiapan',
+    'status_verifikasi' => 'menunggu_verifikasi',
+]);
+$lahanLoadedNullKmd = Lahan::with(['komoditas'])->find($lahanTanpaKomoditas->id_lahan);
+$resNullKmd = (new LahanResource($lahanLoadedNullKmd))->resolve($reqAnggota);
+
+assertTest(array_key_exists('komoditas', $resNullKmd) && $resNullKmd['komoditas'] === null, "Relasi komoditas bernilai null menghasilkan field 'komoditas' = null (tidak mengasumsikan fallback)");
+assertTest(array_key_exists('detail_komoditas', $resNullKmd) && $resNullKmd['detail_komoditas'] === null, "Relasi komoditas bernilai null menghasilkan 'detail_komoditas' = null");
+
 echo "\n--- 4. Testing Policy Delegation pada is_can_edit dan is_can_delete ---\n";
 // Skenario A: Anggota Pemilik pada Lahan Menunggu Verifikasi (Draft)
 $resOwnerDraft = (new LahanResource($lahanDraft))->resolve($reqAnggota);
