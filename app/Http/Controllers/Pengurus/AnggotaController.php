@@ -188,14 +188,19 @@ class AnggotaController extends Controller
         return redirect()->route('pengurus.anggota')->with('success', "Anggota {$nama} berhasil dihapus.");
     }
 
-    private function currentPengurus(): ?Pengguna
+    private function currentPengurus(): Pengguna
     {
-        $idPengguna = session('pengurus_id') ?? Auth::user()?->id_pengguna;
-        $query = Pengguna::where('role', 'Pengurus');
+        $pengurus = Auth::user();
 
-        return $idPengguna
-            ? $query->where('id_pengguna', $idPengguna)->first()
-            : $query->orderBy('created_at')->first();
+        abort_unless(
+            $pengurus instanceof Pengguna
+                && $pengurus->role === 'Pengurus'
+                && $pengurus->status === 'Aktif',
+            403,
+            'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.'
+        );
+
+        return $pengurus;
     }
 
     private function scopedAnggota(Pengguna $pengurus, string $idPengguna): Pengguna
