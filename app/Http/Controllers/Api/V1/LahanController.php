@@ -41,7 +41,7 @@ class LahanController extends Controller
         // 2. Query Scoping berbasis konteks aktor (hanya lahan milik anggota aktif yang bersangkutan)
         $query = $this->lahanService->getLahanQueryForUser($user)
             ->with([
-                'komoditas:id_komoditas,nama_komoditas,kategori,gambar',
+                'komoditas:id_komoditas,nama_komoditas,kategori',
                 'verifikator:id_pengguna,nama,jabatan',
             ]);
 

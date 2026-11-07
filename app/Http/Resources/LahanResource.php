@@ -46,7 +46,7 @@ class LahanResource extends JsonResource
                     'id_komoditas' => $this->komoditas->id_komoditas,
                     'nama_komoditas' => $this->komoditas->nama_komoditas,
                     'kategori' => $this->komoditas->kategori,
-                    'gambar' => $this->komoditas->gambar,
+                    'gambar' => $this->komoditas->gambar ?? null,
                 ] : null;
             }),
 

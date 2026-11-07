@@ -12,10 +12,23 @@ class AuthController extends Controller
     /**
      * Tampilkan halaman login.
      */
-    public function showLogin()
+    public function showLogin(Request $request)
     {
         if (Auth::check()) {
-            return $this->redirectByRole(Auth::user());
+            $user = Auth::user();
+            if (!in_array($user->role, ['PPL', 'Pengurus'], true)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return view('Auth.Login')->withErrors([
+                    'login' => $user->role === 'Anggota'
+                        ? 'Akun Anggota hanya dapat digunakan pada aplikasi mobile PawonTani.'
+                        : 'Role akun Anda tidak memiliki akses ke sistem web.',
+                ]);
+            }
+
+            return $this->redirectByRole($user);
         }
 
         return view('Auth.Login');
@@ -49,6 +62,16 @@ class AuthController extends Controller
             return back()
                 ->withInput($request->only('login', 'remember'))
                 ->withErrors(['login' => 'Akun Anda tidak aktif. Hubungi administrator.']);
+        }
+
+        if (!in_array($pengguna->role, ['PPL', 'Pengurus'], true)) {
+            return back()
+                ->withInput($request->only('login', 'remember'))
+                ->withErrors([
+                    'login' => $pengguna->role === 'Anggota'
+                        ? 'Akun Anggota hanya dapat digunakan pada aplikasi mobile PawonTani.'
+                        : 'Role akun Anda tidak memiliki akses ke sistem web.',
+                ]);
         }
 
         Auth::login($pengguna, $request->boolean('remember'));

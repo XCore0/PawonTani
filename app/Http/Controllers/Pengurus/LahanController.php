@@ -49,7 +49,7 @@ class LahanController extends Controller
         // 3. Eager load relasi yang diperlukan untuk efisiensi tabel (anti N+1 query)
         $query->with([
             'pengguna:id_pengguna,nama,no_telepon',
-            'komoditas:id_komoditas,nama_komoditas,kategori,gambar',
+            'komoditas:id_komoditas,nama_komoditas,kategori',
             'kelompokTani:id_kelompok,nama_kelompok',
         ]);
 
