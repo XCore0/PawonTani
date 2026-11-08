@@ -178,7 +178,6 @@
         <thead>
           <tr class="bg-[#F5F8F1] border-b border-[#E4F0D6] text-[#1A2D10] font-bold tracking-wider uppercase text-[11px]">
             <th class="py-3.5 px-4 text-center w-12">No</th>
-            <th class="py-3.5 px-4">ID Lahan</th>
             <th class="py-3.5 px-4">Nama Lahan</th>
             <th class="py-3.5 px-4">Nama Anggota</th>
             <th class="py-3.5 px-4">Komoditas</th>
@@ -196,13 +195,6 @@
             <tr class="hover:bg-[#F5F8F1]/50 transition-colors">
               <td class="py-3.5 px-4 text-center text-[#9AB880] font-medium">
                 {{ ($lahans->currentPage() - 1) * $lahans->perPage() + $loop->iteration }}
-              </td>
-
-              <!-- ID Lahan -->
-              <td class="py-3.5 px-4">
-                <span class="font-mono text-[11px] font-semibold text-[#4A6030] bg-[#F5F8F1] px-2 py-0.5 rounded-md border border-[#E4F0D6]">
-                  {{ $item->id_lahan }}
-                </span>
               </td>
 
               <!-- Nama Lahan & Lokasi -->
@@ -286,7 +278,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="10" class="py-14 text-center">
+              <td colspan="9" class="py-14 text-center">
                 <div class="flex flex-col items-center justify-center space-y-3">
                   <div class="w-14 h-14 rounded-2xl bg-[#F5F8F1] border border-[#E4F0D6] flex items-center justify-center text-[#9AB880]">
                     <i data-lucide="map-off" class="w-7 h-7"></i>

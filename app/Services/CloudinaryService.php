@@ -4,30 +4,42 @@ namespace App\Services;
 
 use Cloudinary;
 use Cloudinary\Uploader;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
 class CloudinaryService
 {
+    protected ?string $cloudinaryUrl;
+
     public function __construct()
     {
         // Konfigurasi Cloudinary versi 1.x
-        $cloudinaryUrl = env('CLOUDINARY_URL');
-        if (!empty($cloudinaryUrl)) {
-            Cloudinary::config_from_url($cloudinaryUrl);
+        $this->cloudinaryUrl = config('services.cloudinary.url') ?? env('CLOUDINARY_URL');
+        if (!empty($this->cloudinaryUrl) && !str_contains($this->cloudinaryUrl, '<your_api_key>')) {
+            Cloudinary::config_from_url($this->cloudinaryUrl);
         }
     }
 
     /**
-     * Mengunggah file ke Cloudinary.
+     * Mengunggah file ke Cloudinary, atau fallback ke public storage lokal jika kredensial Cloudinary belum diatur.
      *
      * @param string $filePath Path fisik file (misal: $request->file('...')->getRealPath())
-     * @param string $folder   Nama folder di Cloudinary
-     * @return string|null URL gambar yang aman (HTTPS)
+     * @param string $folder   Nama folder penyimpanan
+     * @return string|null URL gambar yang aman (HTTPS / URL publik)
      */
     public function upload($filePath, $folder = 'pawontani')
     {
+        // Fallback aman jika kredensial Cloudinary belum dikonfigurasi di environment
+        if (empty($this->cloudinaryUrl) || str_contains($this->cloudinaryUrl, '<your_api_key>')) {
+            $file = new File($filePath);
+            $path = Storage::disk('public')->putFile($folder, $file);
+            return url('storage/' . $path);
+        }
+
         $response = Uploader::upload($filePath, [
             'folder' => $folder,
         ]);
@@ -36,7 +48,7 @@ class CloudinaryService
     }
 
     /**
-     * Menghapus file dari Cloudinary berdasarkan URL atau public_id-nya.
+     * Menghapus file dari Cloudinary atau public storage lokal berdasarkan URL atau public_id-nya.
      *
      * - Idempoten: status 'ok' dan 'not found' dianggap sukses.
      * - Tidak menelan exception: kegagalan API/jaringan dilempar kembali (rethrow)
@@ -49,6 +61,20 @@ class CloudinaryService
     public function delete($url): bool
     {
         if (empty($url)) {
+            return true;
+        }
+
+        // Cek jika aset tersimpan di public disk lokal
+        if (str_contains($url, '/storage/')) {
+            $relativePath = Str::after($url, '/storage/');
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            }
+            return true;
+        }
+
+        // Jika kredensial Cloudinary tidak aktif, anggap selesai
+        if (empty($this->cloudinaryUrl) || str_contains($this->cloudinaryUrl, '<your_api_key>')) {
             return true;
         }
 

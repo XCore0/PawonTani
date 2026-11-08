@@ -49,9 +49,6 @@
         <h1 class="text-2xl sm:text-[28px] font-extrabold text-[#1A2D10] tracking-tight">
           {{ $lahan->nama_lahan }}
         </h1>
-        <span class="font-mono text-xs font-bold text-[#4A6030] bg-[#F5F8F1] px-2.5 py-1 rounded-lg border border-[#C5DFB0]">
-          {{ $lahan->id_lahan }}
-        </span>
       </div>
       <p class="text-xs sm:text-sm text-[#9AB880] mt-1 font-medium">
         Lahan milik anggota <strong class="text-[#1A2D10]">{{ $lahan->pengguna?->nama ?? '-' }}</strong> di {{ $lahan->kelompokTani?->nama_kelompok ?? 'Kelompok Tani' }}
