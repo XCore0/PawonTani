@@ -37,8 +37,10 @@ Homestead.yaml
 Thumbs.db
 /supabase
 
-# Hermes AI
+# Hermes AI & Documentation
 /hermes-mcp
 /AGENTS.md
 /Live_Report_Progress.html
+*.md
+!README.md
 

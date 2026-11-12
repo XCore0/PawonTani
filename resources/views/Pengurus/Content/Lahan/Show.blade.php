@@ -115,6 +115,8 @@
           <!-- Foto Lahan Display -->
           @php
             $hasValidPhotoUrl = !empty($lahan->foto_lahan) && \Illuminate\Support\Str::startsWith($lahan->foto_lahan, ['http://', 'https://']);
+            // Kumpulkan foto dari aktivitas untuk galeri timeline
+            $fotoAktivitas = $lahan->aktivitas ? $lahan->aktivitas->filter(fn($a) => !empty($a->foto_aktivitas)) : collect();
           @endphp
           @if(!empty($lahan->foto_lahan))
             <div class="relative w-full rounded-2xl overflow-hidden border border-[#E4F0D6] bg-slate-900/5 aspect-video group">
@@ -134,8 +136,34 @@
               <div class="w-12 h-12 rounded-2xl bg-white border border-[#E4F0D6] flex items-center justify-center text-[#9AB880]">
                 <i data-lucide="camera-off" class="w-6 h-6"></i>
               </div>
-              <p class="text-xs font-semibold text-[#6B7F5B]">Tidak ada foto lahan yang diunggah</p>
-              <p class="text-[11px] text-[#9AB880]">Anggota belum menyertakan foto dokumentasi fisik lahan.</p>
+              <p class="text-xs font-semibold text-[#6B7F5B]">Tidak ada foto profil utama lahan</p>
+              <p class="text-[11px] text-[#9AB880]">Foto perkembangan dapat dilihat pada riwayat aktivitas di bawah.</p>
+            </div>
+          @endif
+
+          <!-- Galeri Foto Aktivitas Perkembangan Lahan -->
+          @if($fotoAktivitas->isNotEmpty())
+            <div class="pt-3">
+              <span class="text-xs font-bold text-[#1A2D10] flex items-center gap-1.5 mb-2.5">
+                <i data-lucide="images" class="w-4 h-4 text-[#4D9830]"></i>
+                <span>Foto Kegiatan & Perawatan Terkini ({{ $fotoAktivitas->count() }})</span>
+              </span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                @foreach($fotoAktivitas as $aktFoto)
+                  @php
+                    $urlFoto = str_starts_with($aktFoto->foto_aktivitas, 'http')
+                        ? $aktFoto->foto_aktivitas
+                        : url('media/' . str_replace(['storage/', 'media/'], '', $aktFoto->foto_aktivitas));
+                  @endphp
+                  <a href="{{ $urlFoto }}" target="_blank" class="group relative rounded-xl overflow-hidden border border-[#E4F0D6] aspect-square bg-[#F5F8F1]">
+                    <img src="{{ $urlFoto }}" alt="{{ $aktFoto->judul }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-2 text-white">
+                      <span class="text-[10px] font-bold truncate leading-tight">{{ $aktFoto->judul }}</span>
+                      <span class="text-[9px] text-white/70">{{ $aktFoto->tanggal ? \Carbon\Carbon::parse($aktFoto->tanggal)->translatedFormat('d M Y') : '' }}</span>
+                    </div>
+                  </a>
+                @endforeach
+              </div>
             </div>
           @endif
 
@@ -241,6 +269,74 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Card Catatan Aktivitas & Monitoring Lahan -->
+      <div class="rounded-[22px] bg-white border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 border-b border-[#E4F0D6] flex items-center justify-between bg-[#F5F8F1]/40">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center">
+              <i data-lucide="leaf" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-sm sm:text-base font-bold text-[#1A2D10]">Catatan Aktivitas Pertanian</h2>
+              <p class="text-[11px] text-[#9AB880]">Laporan pemupukan, penyemprotan, dan kondisi tanaman dari petani</p>
+            </div>
+          </div>
+          <span class="font-mono text-xs font-bold text-[#4D9830] bg-[#EBF6E0] px-2.5 py-1 rounded-lg border border-[#C5DFB0]">
+            {{ $lahan->aktivitas ? $lahan->aktivitas->count() : 0 }} Aktivitas
+          </span>
+        </div>
+
+        <div class="p-5 sm:p-6">
+          @if($lahan->aktivitas && $lahan->aktivitas->isNotEmpty())
+            <div class="space-y-3">
+              @foreach($lahan->aktivitas as $akt)
+                <div class="p-4 rounded-xl bg-[#F5F8F1]/50 border border-[#E4F0D6] flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF6E0] text-[#4D9830] border border-[#C5DFB0]">
+                        {{ ucfirst($akt->kategori) }}
+                      </span>
+                      <span class="text-xs font-bold text-[#1A2D10]">{{ $akt->judul ?? ucfirst($akt->kategori) }}</span>
+                      @if(in_array(strtolower($akt->kondisi_tanaman), ['sehat']))
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">✔ Sehat</span>
+                      @elseif(in_array(strtolower($akt->kondisi_tanaman), ['perluperhatian', 'perlu_perhatian']))
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">▲ Perlu Perhatian</span>
+                      @else
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">⚠ Hama/Penyakit</span>
+                      @endif
+                    </div>
+                    @if($akt->catatan)
+                      <p class="text-xs text-[#4A6030] italic mt-1">"{{ $akt->catatan }}"</p>
+                    @endif
+                    <div class="text-[11px] text-[#9AB880] flex items-center gap-2 mt-1">
+                      <span>Dicatat oleh: <strong>{{ $akt->pengguna?->nama ?? 'Petani' }}</strong></span>
+                      <span>•</span>
+                      <span>{{ $akt->tanggal ? \Carbon\Carbon::parse($akt->tanggal)->translatedFormat('d M Y') : '-' }} ({{ $akt->waktu ?? '-' }})</span>
+                      @if($akt->hari_setelah_tanam)
+                        <span>•</span>
+                        <span>{{ $akt->hari_setelah_tanam }} HST</span>
+                      @endif
+                    </div>
+                  </div>
+                  @if(!empty($akt->foto_aktivitas))
+                    @php
+                      $aktFoto = str_starts_with($akt->foto_aktivitas, 'http') ? $akt->foto_aktivitas : asset('storage/' . $akt->foto_aktivitas);
+                    @endphp
+                    <a href="{{ $aktFoto }}" target="_blank" class="shrink-0 group">
+                      <img src="{{ $aktFoto }}" alt="Dokumentasi" class="w-16 h-16 rounded-lg object-cover border border-[#E4F0D6] group-hover:opacity-80 transition-opacity">
+                    </a>
+                  @endif
+                </div>
+              @endforeach
+            </div>
+          @else
+            <div class="py-8 text-center text-xs text-[#9AB880]">
+              Belum ada catatan aktivitas untuk lahan ini. Anggota petani dapat mencatat aktivitas melalui aplikasi mobile.
+            </div>
+          @endif
         </div>
       </div>
 

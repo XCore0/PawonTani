@@ -112,6 +112,7 @@ class LahanController extends Controller
                 'kelompokTani',
                 'verifikator:id_pengguna,nama,jabatan',
                 'riwayatVerifikasi.pengguna:id_pengguna,nama,role,jabatan',
+                'aktivitas.pengguna:id_pengguna,nama,foto_profil',
             ]);
 
         // Evaluasi kewenangan Ketua aktif

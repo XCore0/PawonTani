@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
 use App\Http\Controllers\Pengurus\LahanController;
+use App\Http\Controllers\Pengurus\MonitoringController;
 use App\Services\CommodityService;
 use App\Services\HarvestPredictionService;
 use App\Http\Controllers\Admin\KelompokTaniController;
@@ -73,11 +74,8 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
 
     // Pages in development
 
-    Route::get('/monitoring', fn () => $errorPage(
-        'Monitoring Pertanian',
-        'Pantau kondisi dan perkembangan pertanian secara real-time.',
-        'Pengurus.Layout._layout'
-    ))->name('monitoring');
+    // Monitoring Pertanian & Aktivitas
+    Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring');
 
     Route::get('/panen', fn () => $errorPage(
         'Panen',
@@ -429,3 +427,27 @@ Route::middleware(['auth'])->group(function () {
         return response()->json(['success' => true, 'lokasi' => $user->lokasi_nama, 'lat' => $lat, 'lon' => $lon]);
     })->name('api.lokasi.simpan');
 });
+
+/* ============================================================
+   CORS-ENABLED PUBLIC MEDIA STREAMING ROUTE
+   Memastikan foto lahan dan aktivitas dapat dimuat tanpa terblokir
+   CORS baik di Flutter Web, Emulator, maupun HP Fisik.
+   ============================================================ */
+Route::get('/media/{path}', function (string $path) {
+    $cleanPath = str_replace(['..', '\\'], ['', '/'], $path);
+    $fullPath = storage_path('app/public/' . $cleanPath);
+
+    if (!file_exists($fullPath) || !is_file($fullPath)) {
+        abort(404, 'File media tidak ditemukan.');
+    }
+
+    $mime = mime_content_type($fullPath) ?: 'image/jpeg';
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers' => '*',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*')->name('media.serve');

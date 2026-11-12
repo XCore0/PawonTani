@@ -163,4 +163,12 @@ class Lahan extends Model
     {
         return $this->hasMany(Notifikasi::class, 'id_lahan', 'id_lahan');
     }
+
+    /**
+     * Relationship to Aktivitas Tanam
+     */
+    public function aktivitas(): HasMany
+    {
+        return $this->hasMany(AktivitasTanam::class, 'id_lahan', 'id_lahan')->orderByDesc('tanggal')->orderByDesc('created_at');
+    }
 }

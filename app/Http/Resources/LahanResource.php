@@ -14,6 +14,22 @@ class LahanResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Normalisasi URL foto agar selalu mengarah ke endpoint media dengan header CORS
+        $fotoLahanUrl = null;
+        if (!empty($this->foto_lahan)) {
+            $rawFoto = $this->foto_lahan;
+            if (str_contains($rawFoto, 'res.cloudinary.com') || str_contains($rawFoto, 'images.unsplash.com')) {
+                $fotoLahanUrl = $rawFoto;
+            } else {
+                if (preg_match('#(?:storage|media)[/\\\\](.*)$#i', $rawFoto, $matches)) {
+                    $rel = str_replace('\\', '/', $matches[1]);
+                } else {
+                    $rel = str_replace('\\', '/', ltrim($rawFoto, '/'));
+                }
+                $fotoLahanUrl = url('media/' . $rel);
+            }
+        }
+
         return [
             // Identitas & Alias Kompatibilitas Flutter
             'id' => $this->id_lahan,
@@ -60,7 +76,7 @@ class LahanResource extends JsonResource
 
             // Atribut Operasional & Dokumen (Read-Only)
             'musim_tanam' => $this->musim_tanam,
-            'foto_lahan' => $this->foto_lahan,
+            'foto_lahan' => $fotoLahanUrl,
             'keterangan' => $this->keterangan,
             'status_operasional' => $this->status_operasional,
             'status_verifikasi' => $this->status_verifikasi,

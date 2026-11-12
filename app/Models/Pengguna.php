@@ -92,6 +92,14 @@ class Pengguna extends Authenticatable
         return $this->hasMany(Notifikasi::class, 'id_pengirim', 'id_pengguna');
     }
 
+    /**
+     * Relationship to Plant Activities
+     */
+    public function aktivitas()
+    {
+        return $this->hasMany(AktivitasTanam::class, 'id_pengguna', 'id_pengguna');
+    }
+
     protected $hidden = [
         'password',
     ];
