@@ -25,7 +25,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/', function () {
-    return view('home');
+    $panduanTerbaru = Panduan::with('komoditas')
+        ->where('status', 'Publik')
+        ->latest('tanggal')
+        ->first();
+
+    return view('home', compact('panduanTerbaru'));
 })->name('home');
 
 /* ============================================================

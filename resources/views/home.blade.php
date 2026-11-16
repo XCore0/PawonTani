@@ -1252,41 +1252,48 @@
           </article>
 
           <!-- Card 2: Panduan -->
-          <article
-            class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
-            <div>
-              <div class="relative h-48 overflow-hidden bg-slate-100">
-                <img src="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80"
-                  alt="Panduan Pembuatan Pupuk Organik"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy">
-                <div class="absolute top-3.5 left-3.5">
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
-                    Panduan
-                  </span>
-                </div>
-              </div>
-              <div class="p-6">
-                <h3
-                  class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
-                  Panduan Pembuatan Pupuk Organik Cair Mandiri bagi Kelompok Tani
-                </h3>
-                <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">
-                  Cara praktis memfermentasi limbah pertanian lokal menjadi Pupuk Organik Cair (POC) bernutrisi tinggi untuk menunjang kesuburan tanah anggota.
-                </p>
-              </div>
-            </div>
-            <div class="px-6 pb-6 pt-0">
-              <a href="#"
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
-                <span>Baca Selengkapnya</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          </article>
+          @if($panduanTerbaru)
+<article
+  class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+  <div>
+    <div class="relative h-48 overflow-hidden bg-slate-100">
+      <img src="{{ $panduanTerbaru->gambar ?: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80' }}"
+        alt="{{ $panduanTerbaru->judul }}"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        loading="lazy">
+      <div class="absolute top-3.5 left-3.5">
+        <span
+          class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
+          Panduan
+        </span>
+      </div>
+    </div>
+    <div class="p-6">
+      <h3
+        class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
+        {{ $panduanTerbaru->judul }}
+      </h3>
+      <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">
+        {{ $panduanTerbaru->ringkasan }}
+      </p>
+    </div>
+  </div>
+  <div class="px-6 pb-6 pt-0">
+    <a href="/panduan/{{ $panduanTerbaru->slug }}"
+      class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
+      <span>Baca Selengkapnya</span>
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </a>
+  </div>
+</article>
+@else
+<article
+  class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs flex flex-col items-center justify-center text-center p-6 text-slate-400">
+  <p class="text-sm">Belum ada panduan yang dipublikasikan.</p>
+</article>
+@endif
 
           <!-- Card 3: Artikel -->
           <article
