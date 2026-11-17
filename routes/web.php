@@ -55,18 +55,10 @@ Route::get('/panduan/{slug}', [PublicEdukasiController::class, 'showPanduan'])->
    PUBLIC EDUCATION ROUTES
    ============================================================ */
 Route::prefix('edukasi')->name('edukasi.')->group(function () {
-    Route::get('/panduan', function () {
-        $tips = collect();
-        $artikels = collect();
-        $panduans = Panduan::with('komoditas')->where('status', 'Publik')->latest('tanggal')->get();
-        $stats = [
-            'tips' => ['total' => 0],
-            'artikel' => ['total' => 0],
-            'panduan' => ['total' => $panduans->count()],
-        ];
-
-        return view('Pengurus.Content.Konten', compact('tips', 'artikels', 'panduans', 'stats'));
-    })->name('panduan');
+    Route::get('/semua', [PublicEdukasiController::class, 'indexSemua'])->name('semua');
+    Route::get('/tips', [PublicEdukasiController::class, 'indexTips'])->name('tips');
+    Route::get('/artikel', [PublicEdukasiController::class, 'indexArtikel'])->name('artikel');
+    Route::get('/panduan', [PublicEdukasiController::class, 'indexPanduan'])->name('panduan');
 });
 
 /* ============================================================

@@ -1196,19 +1196,15 @@
     <section id="edukasi" class="py-10 bg-white relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Two Column Header -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-          <div class="space-y-3 max-w-xl">
-            <span class="badge-pill">Pusat Edukasi</span>
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Edukasi Pertanian
-            </h2>
-          </div>
-          <div class="max-w-md">
-            <p class="text-base text-slate-600 leading-relaxed">
-              Tingkatkan wawasan dan keterampilan bertani anggota serta pengurus kelompok tani dengan panduan, artikel, dan tips aplikatif.
-            </p>
-          </div>
+        <!-- Header Edukasi: disamakan dengan gaya heading section Target Pengguna -->
+        <div class="text-center max-w-3xl mx-auto mb-14 space-y-3">
+          <span class="badge-pill">Pusat Edukasi</span>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Edukasi Pertanian
+          </h2>
+          <p class="text-base text-slate-600 leading-relaxed">
+            Tingkatkan wawasan dan keterampilan bertani anggota serta pengurus kelompok tani dengan panduan, artikel, dan tips aplikatif.
+          </p>
         </div>
 
         <!-- 3 Blog/Article Cards (Tips, Panduan, Artikel) -->
@@ -1231,7 +1227,7 @@
               : route('tips.show', 'contoh-irigasi-air-kelompok-tani');
           @endphp
           <article
-            class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+            class="h-full bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
             <div>
               <div class="relative h-48 overflow-hidden bg-slate-100">
                 <img src="{{ $tipsImageUrl }}"
@@ -1253,14 +1249,19 @@
                 </p>
               </div>
             </div>
-            <div class="px-6 pb-6 pt-0">
-              <a href="{{ $tipsUrl }}"
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
-                <span>Baca Selengkapnya</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
+            <div class="mt-auto px-6 pb-6 pt-2">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                <a href="{{ $tipsUrl }}"
+                  class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
+                  <span>Baca Selengkapnya</span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+                <a href="{{ route('edukasi.tips') }}" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[11px] font-extrabold text-pawon-700 transition-all hover:border-emerald-300 hover:bg-emerald-100 hover:text-pawon-800">
+                  Lihat semua tips <span aria-hidden="true">→</span>
+                </a>
+              </div>
             </div>
           </article>
 
@@ -1277,7 +1278,7 @@
                 : 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80';
             @endphp
             <article
-              class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+              class="h-full bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
               <div>
                 <div class="relative h-48 overflow-hidden bg-slate-100">
                   <img src="{{ $panduanImageUrl }}"
@@ -1299,19 +1300,27 @@
                   </p>
                 </div>
               </div>
-              <div class="px-6 pb-6 pt-0">
-                <a href="{{ route('panduan.show', $panduanTerbaru->slug) }}"
-                  class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
-                  <span>Baca Selengkapnya</span>
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </a>
+              <div class="mt-auto px-6 pb-6 pt-2">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                  <a href="{{ route('panduan.show', $panduanTerbaru->slug) }}"
+                    class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
+                    <span>Baca Selengkapnya</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </a>
+                  <a href="{{ route('edukasi.panduan') }}" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[11px] font-extrabold text-pawon-700 transition-all hover:border-emerald-300 hover:bg-emerald-100 hover:text-pawon-800">
+                    Lihat semua panduan <span aria-hidden="true">→</span>
+                  </a>
+                </div>
               </div>
             </article>
           @else
             <article class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs flex flex-col items-center justify-center text-center p-6 text-slate-400">
               <p class="text-sm">Belum ada panduan yang dipublikasikan.</p>
+              <a href="{{ route('edukasi.panduan') }}" class="mt-4 text-xs font-bold text-pawon-700 hover:text-pawon-800">
+                Lihat daftar panduan
+              </a>
             </article>
           @endif
 
@@ -1332,7 +1341,7 @@
               : route('artikel.show', 'contoh-pemantauan-rutin-tanaman');
           @endphp
           <article
-            class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+            class="h-full bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
             <div>
               <div class="relative h-48 overflow-hidden bg-slate-100">
                 <img src="{{ $artikelImageUrl }}"
@@ -1354,14 +1363,19 @@
                 </p>
               </div>
             </div>
-            <div class="px-6 pb-6 pt-0">
-              <a href="{{ $artikelUrl }}"
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
-                <span>Baca Selengkapnya</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
+            <div class="mt-auto px-6 pb-6 pt-2">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                <a href="{{ $artikelUrl }}"
+                  class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
+                  <span>Baca Selengkapnya</span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+                <a href="{{ route('edukasi.artikel') }}" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[11px] font-extrabold text-pawon-700 transition-all hover:border-emerald-300 hover:bg-emerald-100 hover:text-pawon-800">
+                  Lihat semua artikel <span aria-hidden="true">→</span>
+                </a>
+              </div>
             </div>
           </article>
         </div>

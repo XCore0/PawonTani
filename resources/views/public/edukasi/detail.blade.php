@@ -2,6 +2,11 @@
     // Mendukung dua bentuk controller: $item/$type atau $konten/$jenis.
     $detailItem = $item ?? $konten;
     $detailType = $type ?? $jenis;
+    $detailListUrl = match ($detailType) {
+        'Tips' => route('edukasi.tips'),
+        'Artikel' => route('edukasi.artikel'),
+        default => route('edukasi.panduan'),
+    };
 
     // Jika controller telah menyiapkan URL gambar, gunakan URL tersebut.
     // Jika belum, siapkan URL dari nilai kolom gambar.
@@ -210,40 +215,40 @@
             margin-bottom: 1rem;
         }
 
-        /* Tombol dibuat dengan CSS sendiri agar warna hijau tetap tampil,
-           meskipun utility Tailwind belum ter-build di browser. */
-        .back-to-education {
+        /* Tombol kembali memakai gaya yang sama dengan tombol di halaman daftar edukasi. */
+        .education-return-button {
             display: inline-flex;
             width: 100%;
-            min-height: 58px;
+            min-height: 48px;
             align-items: center;
             justify-content: center;
             gap: .75rem;
-            padding: .95rem 1.5rem;
-            border: 1px solid #166534;
-            border-radius: .9rem;
-            background-color: #15803d !important;
-            color: #ffffff !important;
-            font-size: .95rem;
+            padding: .7rem 1.15rem .7rem .8rem;
+            border: 1px solid #bbf7d0;
+            border-radius: 9999px;
+            background: #ffffff;
+            color: #166534;
+            font-size: .84rem;
             font-weight: 800;
             text-decoration: none !important;
-            box-shadow: 0 10px 22px rgba(21, 128, 61, .22);
-            transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, .045);
+            transition: all .2s ease;
         }
 
-        .back-to-education:hover {
-            background-color: #166534 !important;
-            color: #ffffff !important;
+        .education-return-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 26px rgba(21, 128, 61, .28);
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #14532d;
+            box-shadow: 0 10px 22px rgba(21, 128, 61, .10);
         }
 
-        .back-to-education:focus-visible {
-            outline: 4px solid #bbf7d0;
+        .education-return-button:focus-visible {
+            outline: 3px solid #bbf7d0;
             outline-offset: 3px;
         }
 
-        .back-to-education .back-icon {
+        .education-return-icon {
             display: inline-flex;
             width: 30px;
             height: 30px;
@@ -251,17 +256,71 @@
             align-items: center;
             justify-content: center;
             border-radius: 9999px;
-            background-color: rgba(255, 255, 255, .2);
-            color: #ffffff;
+            background: #dcfce7;
+            color: #15803d;
         }
 
-        .back-to-education svg {
-            color: #ffffff;
+        .education-return-button > svg {
+            color: #166534;
+        }
+
+        .share-content-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            min-height: 42px;
+            padding: .65rem 1rem;
+            border: 1px solid #bbf7d0;
+            border-radius: 9999px;
+            background: #f0fdf4;
+            color: #166534;
+            font-size: .82rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+        }
+
+        .share-content-button:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+            transform: translateY(-1px);
+        }
+
+        .share-content-button:focus-visible {
+            outline: 3px solid #bbf7d0;
+            outline-offset: 3px;
+        }
+
+        .share-action-group {
+            position: relative;
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .share-feedback {
+            position: absolute;
+            top: calc(100% + .3rem);
+            right: 0;
+            min-height: 0;
+            color: #15803d;
+            font-size: .75rem;
+            font-weight: 700;
+            line-height: 1.35;
+            white-space: nowrap;
         }
 
         @media (min-width: 640px) {
-            .back-to-education {
+            .education-return-button {
                 width: auto;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .share-feedback {
+                font-size: .68rem;
             }
         }
     </style>
@@ -346,7 +405,9 @@
                 <span aria-hidden="true">/</span>
                 <a href="{{ route('home') }}#edukasi" class="transition hover:text-green-700">Edukasi Pertanian</a>
                 <span aria-hidden="true">/</span>
-                <span class="text-green-700">{{ $detailType }}</span>
+                <a href="{{ $detailListUrl }}" class="transition hover:text-green-700">Daftar {{ $detailType }}</a>
+                <span aria-hidden="true">/</span>
+                <span class="text-green-700">Detail</span>
             </nav>
 
             <article class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
@@ -399,9 +460,25 @@
                 <!-- Judul dan isi panduan/tips/artikel berada di bawah bagian gambar + informasi -->
                 <div class="detail-body-content">
 
-                    <h1 class="detail-title mb-6 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
+                    <h1 class="detail-title mb-5 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
                         {{ $detailItem->judul }}
                     </h1>
+
+                    <div class="mb-7 flex flex-wrap items-center justify-between gap-3 sm:gap-5">
+                        <p class="text-xs leading-relaxed text-slate-500 sm:text-sm">Bagikan {{ strtolower($detailType) }} ini kepada orang lain.</p>
+                        <div class="share-action-group">
+                            <button type="button" id="share-content-btn" class="share-content-button" aria-label="Bagikan {{ $detailType }} ini">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                    <circle cx="18" cy="5" r="3" />
+                                    <circle cx="6" cy="12" r="3" />
+                                    <circle cx="18" cy="19" r="3" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.7 10.7 6.6-4.4m-6.6 9.4 6.6 2.6" />
+                                </svg>
+                                <span>Bagikan</span>
+                            </button>
+                            <span id="share-feedback" class="share-feedback" role="status" aria-live="polite"></span>
+                        </div>
+                    </div>
 
                     @if($detailItem->ringkasan)
                         <div class="mb-8 rounded-2xl border-l-4 border-green-600 bg-green-50/80 px-5 py-5 sm:px-6 sm:py-6">
@@ -424,25 +501,26 @@
                         </div>
                     </div>
 
-                    <!-- Tombol kembali tetap seperti versi sebelumnya -->
+                    <!-- Navigasi kembali ke daftar sesuai kategori konten -->
                     <div class="mt-14 border-t border-slate-200 pt-8 sm:mt-16 sm:pt-9">
                         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                             <div>
                                 <p class="text-sm font-bold text-slate-800">Selesai membaca?</p>
                                 <p class="mt-1 text-sm leading-relaxed text-slate-500">
-                                    Kembali untuk melihat tips, artikel, dan panduan lainnya.
+                                    Lihat konten {{ strtolower($detailType) }} lainnya di PawonTani.
                                 </p>
                             </div>
 
-                            <a href="{{ route('home') }}#edukasi"
-                                class="back-to-education"
-                                aria-label="Kembali ke bagian Edukasi Pertanian">
-                                <span class="back-icon">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            <a href="{{ $detailListUrl }}"
+                                class="education-return-button"
+                                aria-label="Kembali ke daftar {{ $detailType }}">
+                                <span class="education-return-icon" aria-hidden="true">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 18l-6-6 6-6" />
                                     </svg>
                                 </span>
-                                <span>Kembali ke Edukasi</span>
+                                <span>Kembali ke Daftar {{ $detailType }}</span>
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" /></svg>
                             </a>
                         </div>
                     </div>
@@ -458,6 +536,68 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const shareButton = document.getElementById('share-content-btn');
+            const shareFeedback = document.getElementById('share-feedback');
+
+            async function copyCurrentLink() {
+                const pageUrl = window.location.href;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(pageUrl);
+                    return;
+                }
+
+                const temporaryInput = document.createElement('textarea');
+                temporaryInput.value = pageUrl;
+                temporaryInput.setAttribute('readonly', '');
+                temporaryInput.style.position = 'absolute';
+                temporaryInput.style.left = '-9999px';
+                document.body.appendChild(temporaryInput);
+                temporaryInput.select();
+                const copied = document.execCommand('copy');
+                temporaryInput.remove();
+
+                if (!copied) {
+                    throw new Error('Browser tidak mendukung penyalinan tautan.');
+                }
+            }
+
+            shareButton?.addEventListener('click', async function () {
+                const originalLabel = shareButton.innerHTML;
+                shareButton.disabled = true;
+                shareButton.style.opacity = '0.7';
+                if (shareFeedback) shareFeedback.textContent = '';
+
+                try {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: @json($detailItem->judul),
+                            text: @json('Baca ' . $detailType . ' ini di PawonTani'),
+                            url: window.location.href
+                        });
+                        if (shareFeedback) shareFeedback.textContent = 'Menu bagikan berhasil dibuka.';
+                    } else {
+                        await copyCurrentLink();
+                        if (shareFeedback) shareFeedback.textContent = 'Tautan berhasil disalin.';
+                    }
+                } catch (error) {
+                    if (error && error.name === 'AbortError') {
+                        // Pengguna menutup menu bagikan; tidak perlu menampilkan pesan error.
+                    } else {
+                        try {
+                            await copyCurrentLink();
+                            if (shareFeedback) shareFeedback.textContent = 'Tautan berhasil disalin.';
+                        } catch (copyError) {
+                            if (shareFeedback) shareFeedback.textContent = 'Tautan belum bisa dibagikan dari browser ini.';
+                        }
+                    }
+                } finally {
+                    shareButton.disabled = false;
+                    shareButton.style.opacity = '';
+                    shareButton.innerHTML = originalLabel;
+                }
+            });
+
             const menuButton = document.getElementById('mobile-menu-btn');
             const mobileMenu = document.getElementById('mobile-menu');
             const iconOpen = document.getElementById('menu-icon-open');

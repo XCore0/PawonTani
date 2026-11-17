@@ -1,0 +1,49 @@
+UPDATE LAYOUT EDUKASI PAWONTANI
+
+Pembaruan ini mencakup fitur edukasi sebelumnya dan perapian tampilan berdasarkan masukan:
+1. Halaman daftar untuk Tips, Panduan, dan Artikel.
+2. Tautan "Lihat semua" pada masing-masing kartu edukasi di beranda.
+3. Tombol Bagikan pada halaman detail konten.
+4. Tombol kembali pada halaman detail menuju daftar kategori yang sedang dibaca.
+5. Deskripsi di bagian beranda Edukasi Pertanian dibuat lebih seimbang dengan judul.
+6. Tombol "Baca Selengkapnya" dan "Lihat semua" pada ketiga kartu diberi jarak dan posisi yang konsisten.
+7. Header halaman daftar dirapikan: judul/deskripsi, jumlah konten, dan navigasi kategori dipisah dengan jarak yang lebih jelas.
+8. Tombol "Kembali ke Pusat Edukasi" dipindahkan ke sisi kanan dan diberi tampilan tombol yang lebih menarik.
+
+FILE YANG DIPERBARUI:
+- routes/web.php
+- app/Http/Controllers/Public/EdukasiController.php
+- resources/views/home.blade.php
+- resources/views/public/edukasi/detail.blade.php
+- resources/views/public/edukasi/index.blade.php
+
+CARA MEMASANG:
+1. Tutup dulu tab website PawonTani yang sedang dibuka.
+2. Buat salinan cadangan dari lima file di atas di proyek PawonTani.
+3. Ekstrak ZIP ini ke C:\laragon\www (folder yang berisi proyek PawonTani).
+4. Saat Windows meminta menggabungkan folder, pilih Yes.
+5. Saat diminta mengganti file, pilih Replace the files in the destination.
+6. Buka terminal pada folder proyek:
+
+   cd C:\laragon\www\PawonTani
+
+7. Jalankan perintah untuk membangun ulang aset tampilan:
+
+   npm run build
+
+8. Setelah selesai, bersihkan cache Laravel:
+
+   php artisan optimize:clear
+
+9. Buka kembali website PawonTani dan tekan Ctrl + F5.
+
+HALAMAN YANG BISA DIPERIKSA:
+- http://127.0.0.1:8000/#edukasi
+- http://127.0.0.1:8000/edukasi/tips
+- http://127.0.0.1:8000/edukasi/panduan
+- http://127.0.0.1:8000/edukasi/artikel
+
+CATATAN:
+- ZIP ini adalah paket pembaruan file, bukan keseluruhan proyek.
+- File .env, database, vendor, dan node_modules tidak disertakan atau diganti.
+- Daftar kategori menampilkan konten dengan status Publik. Pagination tidak diubah dalam pembaruan visual ini.
