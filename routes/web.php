@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Public\EdukasiController as PublicEdukasiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
@@ -25,13 +26,30 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/', function () {
+    $tipsTerbaru = Tip::with('komoditas')
+        ->where('status', 'Publik')
+        ->latest('tanggal')
+        ->first();
+
+    $artikelTerbaru = Artikel::with('komoditas')
+        ->where('status', 'Publik')
+        ->latest('tanggal')
+        ->first();
+
     $panduanTerbaru = Panduan::with('komoditas')
         ->where('status', 'Publik')
         ->latest('tanggal')
         ->first();
 
-    return view('home', compact('panduanTerbaru'));
+    return view('home', compact('tipsTerbaru', 'artikelTerbaru', 'panduanTerbaru'));
 })->name('home');
+
+/* ============================================================
+   PUBLIC EDUCATION DETAIL ROUTES
+   ============================================================ */
+Route::get('/tips/{id_tips}', [PublicEdukasiController::class, 'showTip'])->name('tips.show');
+Route::get('/artikel/{id_artikel}', [PublicEdukasiController::class, 'showArtikel'])->name('artikel.show');
+Route::get('/panduan/{slug}', [PublicEdukasiController::class, 'showPanduan'])->name('panduan.show');
 
 /* ============================================================
    PUBLIC EDUCATION ROUTES

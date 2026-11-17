@@ -1215,33 +1215,46 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
           <!-- Card 1: Tips -->
+          @php
+            $tipsImage = $tipsTerbaru?->gambar;
+            $tipsImageUrl = $tipsImage
+              ? (\Illuminate\Support\Str::startsWith($tipsImage, ['http://', 'https://'])
+                  ? $tipsImage
+                  : (\Illuminate\Support\Str::startsWith($tipsImage, ['storage/', 'images/', 'uploads/'])
+                      ? asset($tipsImage)
+                      : asset('storage/' . $tipsImage)))
+              : 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80';
+            $tipsTitle = $tipsTerbaru?->judul ?? 'Tips Pengelolaan Irigasi dan Air untuk Lahan Kelompok Tani';
+            $tipsSummary = $tipsTerbaru?->ringkasan ?? 'Pelajari teknik efisiensi air mandiri yang praktis untuk menjaga tanaman anggota kelompok tani tetap subur di musim kemarau.';
+            $tipsUrl = $tipsTerbaru
+              ? route('tips.show', $tipsTerbaru->id_tips)
+              : route('tips.show', 'contoh-irigasi-air-kelompok-tani');
+          @endphp
           <article
             class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
             <div>
               <div class="relative h-48 overflow-hidden bg-slate-100">
-                <img src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80"
-                  alt="Tips Pengelolaan Air Lahan"
+                <img src="{{ $tipsImageUrl }}"
+                  alt="{{ $tipsTitle }}"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy">
                 <div class="absolute top-3.5 left-3.5">
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
+                  <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
                     Tips
                   </span>
                 </div>
               </div>
               <div class="p-6">
-                <h3
-                  class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
-                  Tips Pengelolaan Irigasi dan Air untuk Lahan Kelompok Tani
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
+                  {{ $tipsTitle }}
                 </h3>
                 <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">
-                  Pelajari teknik efisiensi air mandiri yang praktis untuk menjaga tanaman anggota kelompok tani tetap subur di musim kemarau.
+                  {{ $tipsSummary }}
                 </p>
               </div>
             </div>
             <div class="px-6 pb-6 pt-0">
-              <a href="#"
+              <a href="{{ $tipsUrl }}"
                 class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
                 <span>Baca Selengkapnya</span>
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -1253,76 +1266,96 @@
 
           <!-- Card 2: Panduan -->
           @if($panduanTerbaru)
-<article
-  class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
-  <div>
-    <div class="relative h-48 overflow-hidden bg-slate-100">
-      <img src="{{ $panduanTerbaru->gambar ?: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80' }}"
-        alt="{{ $panduanTerbaru->judul }}"
-        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        loading="lazy">
-      <div class="absolute top-3.5 left-3.5">
-        <span
-          class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
-          Panduan
-        </span>
-      </div>
-    </div>
-    <div class="p-6">
-      <h3
-        class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
-        {{ $panduanTerbaru->judul }}
-      </h3>
-      <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">
-        {{ $panduanTerbaru->ringkasan }}
-      </p>
-    </div>
-  </div>
-  <div class="px-6 pb-6 pt-0">
-    <a href="/panduan/{{ $panduanTerbaru->slug }}"
-      class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
-      <span>Baca Selengkapnya</span>
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-      </svg>
-    </a>
-  </div>
-</article>
-@else
-<article
-  class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs flex flex-col items-center justify-center text-center p-6 text-slate-400">
-  <p class="text-sm">Belum ada panduan yang dipublikasikan.</p>
-</article>
-@endif
+            @php
+              $panduanImage = $panduanTerbaru->gambar;
+              $panduanImageUrl = $panduanImage
+                ? (\Illuminate\Support\Str::startsWith($panduanImage, ['http://', 'https://'])
+                    ? $panduanImage
+                    : (\Illuminate\Support\Str::startsWith($panduanImage, ['storage/', 'images/', 'uploads/'])
+                        ? asset($panduanImage)
+                        : asset('storage/' . $panduanImage)))
+                : 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80';
+            @endphp
+            <article
+              class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+              <div>
+                <div class="relative h-48 overflow-hidden bg-slate-100">
+                  <img src="{{ $panduanImageUrl }}"
+                    alt="{{ $panduanTerbaru->judul }}"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy">
+                  <div class="absolute top-3.5 left-3.5">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
+                      Panduan
+                    </span>
+                  </div>
+                </div>
+                <div class="p-6">
+                  <h3 class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
+                    {{ $panduanTerbaru->judul }}
+                  </h3>
+                  <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">
+                    {{ $panduanTerbaru->ringkasan }}
+                  </p>
+                </div>
+              </div>
+              <div class="px-6 pb-6 pt-0">
+                <a href="{{ route('panduan.show', $panduanTerbaru->slug) }}"
+                  class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
+                  <span>Baca Selengkapnya</span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+              </div>
+            </article>
+          @else
+            <article class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs flex flex-col items-center justify-center text-center p-6 text-slate-400">
+              <p class="text-sm">Belum ada panduan yang dipublikasikan.</p>
+            </article>
+          @endif
 
           <!-- Card 3: Artikel -->
+          @php
+            $artikelImage = $artikelTerbaru?->gambar;
+            $artikelImageUrl = $artikelImage
+              ? (\Illuminate\Support\Str::startsWith($artikelImage, ['http://', 'https://'])
+                  ? $artikelImage
+                  : (\Illuminate\Support\Str::startsWith($artikelImage, ['storage/', 'images/', 'uploads/'])
+                      ? asset($artikelImage)
+                      : asset('storage/' . $artikelImage)))
+              : 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80';
+            $artikelTitle = $artikelTerbaru?->judul ?? 'Artikel: Pemantauan Rutin dan Deteksi Dini Kondisi Tanaman di Lapangan';
+            $artikelSummary = $artikelTerbaru?->ringkasan ?? 'Pentingnya mencatat aktivitas dan memantau kondisi tanaman secara berkala agar pengurus dan anggota kelompok dapat mengambil tindakan tepat.';
+            $artikelUrl = $artikelTerbaru
+              ? route('artikel.show', $artikelTerbaru->id_artikel)
+              : route('artikel.show', 'contoh-pemantauan-rutin-tanaman');
+          @endphp
           <article
             class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
             <div>
               <div class="relative h-48 overflow-hidden bg-slate-100">
-                <img src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80"
-                  alt="Artikel Pemantauan Rutin Tanaman"
+                <img src="{{ $artikelImageUrl }}"
+                  alt="{{ $artikelTitle }}"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy">
                 <div class="absolute top-3.5 left-3.5">
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
+                  <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
                     Artikel
                   </span>
                 </div>
               </div>
               <div class="p-6">
-                <h3
-                  class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
-                  Artikel: Pemantauan Rutin dan Deteksi Dini Kondisi Tanaman di Lapangan
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-pawon-700 transition-colors mb-2.5 leading-snug">
+                  {{ $artikelTitle }}
                 </h3>
                 <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4">
-                  Pentingnya mencatat aktivitas dan memantau kondisi tanaman secara berkala agar pengurus dan anggota kelompok dapat mengambil tindakan tepat.
+                  {{ $artikelSummary }}
                 </p>
               </div>
             </div>
             <div class="px-6 pb-6 pt-0">
-              <a href="#"
+              <a href="{{ $artikelUrl }}"
                 class="inline-flex items-center gap-1.5 text-xs font-bold text-pawon-700 hover:text-pawon-800">
                 <span>Baca Selengkapnya</span>
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -1331,7 +1364,6 @@
               </a>
             </div>
           </article>
-
         </div>
 
       </div>
