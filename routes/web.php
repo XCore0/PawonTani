@@ -398,13 +398,15 @@ Route::middleware(['auth'])->group(function () {
             'kecamatan_id' => 'nullable|string|max:10',
             'desa_id' => 'nullable|string|max:20',
             'lokasi_nama' => 'nullable|string|max:200',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
-        
-        // Geocode location name to get coordinates using Open-Meteo Geocoding API
-        $lat = null;
-        $lon = null;
-        if (!empty($data['lokasi_nama']) || !empty($data['kabupaten_id'])) {
-            // Get kabupaten name from regions data for better geocoding
+
+        $lat = isset($data['latitude']) ? (float)$data['latitude'] : null;
+        $lon = isset($data['longitude']) ? (float)$data['longitude'] : null;
+
+        // Jika koordinat belum dikirim dari GPS client, lakukan geocode
+        if (($lat === null || $lon === null) && (!empty($data['lokasi_nama']) || !empty($data['kabupaten_id']))) {
             $regionsData = cache()->remember('regions_data', 86400, fn () => require app_path('Data/regions.php'));
             $kabupatenNama = null;
             $kabId = (int) ($data['kabupaten_id'] ?? 0);
@@ -416,21 +418,17 @@ Route::middleware(['auth'])->group(function () {
                     }
                 }
             }
-            
-            // Clean up kabupaten name (remove "KABUPATEN " or "KOTA " prefix)
+
             $kabupatenClean = $kabupatenNama ? preg_replace('/^(KABUPATEN|KOTA)\s+/i', '', $kabupatenNama) : null;
-            
-            // Try multiple search terms
             $searchTerms = array_filter([$kabupatenClean, $kabupatenNama, $data['lokasi_nama'] ?? null]);
-            $ctx = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true]]);
-            
+            $ctx = stream_context_create(['http' => ['timeout' => 8, 'ignore_errors' => true]]);
+
             foreach ($searchTerms as $term) {
                 $geocodeUrl = 'https://geocoding-api.open-meteo.com/v1/search?name=' . urlencode($term) . '&count=3&language=id&format=json';
                 $geocodeResponse = @file_get_contents($geocodeUrl, false, $ctx);
                 if ($geocodeResponse) {
                     $geocodeData = json_decode($geocodeResponse, true);
                     if ($geocodeData && !empty($geocodeData['results'])) {
-                        // Find result that matches Indonesia
                         foreach ($geocodeData['results'] as $result) {
                             if (($result['country_code'] ?? '') === 'ID') {
                                 $lat = $result['latitude'] ?? null;
@@ -443,11 +441,18 @@ Route::middleware(['auth'])->group(function () {
                 }
             }
         }
-        
+
         $data['latitude'] = $lat;
         $data['longitude'] = $lon;
         $user->update($data);
-        return response()->json(['success' => true, 'lokasi' => $user->lokasi_nama, 'lat' => $lat, 'lon' => $lon]);
+
+        return response()->json([
+            'success' => true,
+            'lokasi' => $user->lokasi_nama,
+            'lat' => $lat,
+            'lon' => $lon,
+            'message' => 'Lokasi berhasil disimpan dan diperbarui.'
+        ]);
     })->name('api.lokasi.simpan');
 });
 
