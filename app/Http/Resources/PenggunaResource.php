@@ -56,12 +56,14 @@ class PenggunaResource extends JsonResource
                 return [
                     'id_anggota' => $this->anggota?->id_anggota,
                     'status_keanggotaan' => $this->anggota?->status_keanggotaan,
+                    'tanggal_keluar' => $this->anggota?->tanggal_keluar?->toISOString(),
                 ];
             }, function () {
                 if ($this->anggota) {
                     return [
                         'id_anggota' => $this->anggota->id_anggota,
                         'status_keanggotaan' => $this->anggota->status_keanggotaan,
+                        'tanggal_keluar' => $this->anggota->tanggal_keluar?->toISOString(),
                     ];
                 }
                 return null;

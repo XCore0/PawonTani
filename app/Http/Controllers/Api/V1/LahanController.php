@@ -7,6 +7,7 @@ use App\Http\Requests\Api\StoreLahanRequest;
 use App\Http\Requests\Api\UpdateLahanRequest;
 use App\Http\Resources\LahanResource;
 use App\Services\LahanService;
+use App\Services\AuditLogger;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -142,6 +143,15 @@ class LahanController extends Controller
                 $request->file('foto_lahan')
             );
 
+            AuditLogger::log(
+                'lahan.dibuat',
+                'Anggota mendaftarkan lahan baru.',
+                'Lahan',
+                $lahan->id_lahan,
+                $lahan->id_kelompok,
+                $request
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Lahan berhasil didaftarkan dan menunggu proses verifikasi.',
@@ -175,6 +185,15 @@ class LahanController extends Controller
                 $id,
                 $request->validated(),
                 $request->file('foto_lahan')
+            );
+
+            AuditLogger::log(
+                'lahan.diperbarui',
+                'Anggota memperbarui data lahan.',
+                'Lahan',
+                $lahan->id_lahan,
+                $lahan->id_kelompok,
+                $request
             );
 
             return response()->json([
@@ -218,6 +237,15 @@ class LahanController extends Controller
     {
         try {
             $this->lahanService->deleteLahan($request->user(), $id);
+
+            AuditLogger::log(
+                'lahan.dihapus',
+                'Anggota menghapus lahan miliknya (soft delete).',
+                'Lahan',
+                $id,
+                $request->user()?->id_kelompok,
+                $request
+            );
 
             return response()->json([
                 'success' => true,

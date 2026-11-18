@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\KelompokTani;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -88,6 +89,8 @@ class KelompokTaniController extends Controller
             'status' => $validated['status'],
         ]);
 
+        AuditLogger::log('kelompok.tambah', 'Admin menambahkan kelompok tani.', 'KelompokTani', $kelompok->id_kelompok, $kelompok->id_kelompok, $request);
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -134,6 +137,7 @@ class KelompokTaniController extends Controller
 
         $validated['nama_kelompok'] = trim(preg_replace('/\s+/', ' ', $validated['nama_kelompok']));
         $kelompok->update($validated);
+        AuditLogger::log('kelompok.ubah', 'Admin memperbarui data kelompok tani.', 'KelompokTani', $kelompok->id_kelompok, $kelompok->id_kelompok, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -156,6 +160,7 @@ class KelompokTaniController extends Controller
         $deletedId = $kelompok->id_kelompok;
         $deletedName = $kelompok->nama_kelompok;
         $kelompok->delete();
+        AuditLogger::log('kelompok.hapus', 'Admin menghapus kelompok tani.', 'KelompokTani', $deletedId, $deletedId, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

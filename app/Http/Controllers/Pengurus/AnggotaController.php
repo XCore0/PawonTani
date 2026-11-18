@@ -5,14 +5,19 @@ namespace App\Http\Controllers\Pengurus;
 use App\Http\Controllers\Controller;
 use App\Models\Anggota;
 use App\Models\Pengguna;
+use App\Services\AuditLogger;
+use App\Services\DocumentStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class AnggotaController extends Controller
 {
+    public function __construct(private readonly DocumentStorageService $documents) {}
+
     public function index(Request $request)
     {
         $pengurus = $this->currentPengurus();
@@ -21,61 +26,53 @@ class AnggotaController extends Controller
         $kelompok = $pengurus->kelompokTani;
         abort_unless($kelompok && $kelompok->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif. Hubungi administrator.');
 
-        $anggota = Pengguna::with(['kelompokTani', 'anggota'])
+        $isArchive = $request->boolean('arsip');
+        $anggotaQuery = Pengguna::with(['kelompokTani', 'anggota', 'dokumenIdentitas'])
             ->where('role', 'Anggota')
-            ->where('id_kelompok', $pengurus->id_kelompok)
-            ->orderByDesc('created_at')
-            ->get();
+            ->where('id_kelompok', $pengurus->id_kelompok);
 
-        return view('Pengurus.Content.Anggota', compact('anggota', 'kelompok', 'pengurus'));
+        if ($isArchive) {
+            $anggotaQuery->whereHas('anggota', fn ($q) => $q->where('status_keanggotaan', 'Keluar'));
+        } else {
+            $anggotaQuery->whereHas('anggota', fn ($q) => $q->where('status_keanggotaan', '!=', 'Keluar'));
+        }
+
+        $anggota = $anggotaQuery->orderByDesc('created_at')->get();
+        $jumlahAktif = Pengguna::where('role', 'Anggota')->where('id_kelompok', $pengurus->id_kelompok)
+            ->whereHas('anggota', fn ($q) => $q->where('status_keanggotaan', 'Aktif'))->count();
+        $jumlahArsip = Pengguna::where('role', 'Anggota')->where('id_kelompok', $pengurus->id_kelompok)
+            ->whereHas('anggota', fn ($q) => $q->where('status_keanggotaan', 'Keluar'))->count();
+
+        return view('Pengurus.Content.Anggota', compact('anggota', 'kelompok', 'pengurus', 'isArchive', 'jumlahAktif', 'jumlahArsip'));
     }
 
     public function store(Request $request)
     {
         $pengurus = $this->currentPengurus();
         abort_unless($pengurus?->id_kelompok, 403, 'Pengurus belum memiliki kelompok tani.');
+        abort_unless($pengurus->kelompokTani?->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif. Hubungi administrator.');
 
-        $kelompok = $pengurus->kelompokTani;
-        abort_unless($kelompok && $kelompok->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif. Hubungi administrator.');
-
-        // Lowercase username before validation for case-insensitive unique check
         $request->merge(['username' => strtolower($request->input('username', ''))]);
-
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:100', 'regex:/^[\pL\s.\'-]+$/u'],
             'nik' => ['nullable', 'digits:16', 'unique:pengguna,nik'],
             'username' => 'required|string|max:50|alpha_dash|unique:pengguna,username',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
             'email' => 'nullable|email|max:255|unique:pengguna,email',
             'no_telepon' => ['nullable', 'regex:/^[0-9]+$/', 'max:20'],
             'alamat' => 'nullable|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ], [
-            'nama.required' => 'Nama lengkap anggota wajib diisi.',
-            'nama.regex' => "Nama hanya boleh berisi huruf, spasi, titik (.), strip (-), dan tanda petik (').",
-            'nik.digits' => 'NIK harus terdiri dari 16 digit angka.',
-            'nik.unique' => 'NIK ini sudah terdaftar dalam sistem.',
-            'username.required' => 'Username wajib diisi.',
-            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, strip (-), dan garis bawah (_).',
-            'username.unique' => 'Username ini sudah digunakan, silakan pilih username lain.',
-            'password.required' => 'Password login wajib diisi.',
-            'password.min' => 'Password minimal terdiri dari 6 karakter.',
-            'email.email' => 'Format alamat email tidak valid.',
-            'email.unique' => 'Alamat email ini sudah terdaftar.',
-            'no_telepon.regex' => 'Nomor telepon hanya boleh berisi angka.',
-            'status.required' => 'Status wajib dipilih.',
-            'status.in' => 'Status harus bernilai Aktif atau Tidak Aktif.',
-            'foto_profil.image' => 'File foto profil harus berupa gambar.',
-            'foto_profil.max' => 'Ukuran foto profil maksimal 2MB.',
-        ]);
+            'dokumen_ktp' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
+            'dokumen_kk' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
+        ], $this->documentValidationMessages());
 
-        DB::transaction(function () use ($request, $validated, $pengurus) {
-            $fotoPath = null;
-            if ($request->hasFile('foto_profil')) {
-                $fotoPath = $this->storePhoto($request);
-            }
+        $fotoPath = null;
+        if ($request->hasFile('foto_profil')) {
+            $fotoPath = $this->storePhoto($request);
+        }
 
+        $member = DB::transaction(function () use ($validated, $pengurus, $fotoPath) {
             $pengguna = Pengguna::create([
                 'nama' => $validated['nama'],
                 'nik' => $validated['nik'] ?? null,
@@ -94,52 +91,47 @@ class AnggotaController extends Controller
                 'id_pengguna' => $pengguna->id_pengguna,
                 'status_keanggotaan' => $validated['status'],
             ]);
+
+            return $pengguna;
         });
 
-        return redirect()->route('pengurus.anggota')
-            ->with('success', 'Anggota berhasil ditambahkan.');
+        try {
+            if ($request->hasFile('dokumen_ktp')) {
+                $this->documents->storeIdentity($member, 'KTP', $request->file('dokumen_ktp'), $pengurus);
+            }
+            if ($request->hasFile('dokumen_kk')) {
+                $this->documents->storeIdentity($member, 'KK', $request->file('dokumen_kk'), $pengurus);
+            }
+        } catch (RuntimeException $exception) {
+            report($exception);
+            return redirect()->route('pengurus.anggota')->with('warning', 'Data anggota berhasil dibuat, tetapi dokumen gagal disimpan. Silakan edit anggota dan unggah ulang dokumen.');
+        }
+
+        AuditLogger::log('anggota.tambah', 'Menambahkan anggota ' . $member->nama, 'Pengguna', $member->id_pengguna, $member->id_kelompok, $request);
+
+        return redirect()->route('pengurus.anggota')->with('success', 'Anggota berhasil ditambahkan.');
     }
 
     public function update(Request $request, string $id_pengguna)
     {
         $pengurus = $this->currentPengurus();
-        abort_unless($pengurus?->id_kelompok, 403, 'Pengurus belum memiliki kelompok tani.');
-
-        $kelompok = $pengurus->kelompokTani;
-        abort_unless($kelompok && $kelompok->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif. Hubungi administrator.');
-
+        abort_unless($pengurus?->id_kelompok && $pengurus->kelompokTani?->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif.');
         $anggota = $this->scopedAnggota($pengurus, $id_pengguna);
 
-        // Lowercase username before validation for case-insensitive unique check
         $request->merge(['username' => strtolower($request->input('username', ''))]);
-
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:100', 'regex:/^[\pL\s.\'-]+$/u'],
             'nik' => ['nullable', 'digits:16', Rule::unique('pengguna', 'nik')->ignore($anggota->id_pengguna, 'id_pengguna')],
             'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('pengguna', 'username')->ignore($anggota->id_pengguna, 'id_pengguna')],
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:8',
             'email' => ['nullable', 'email', 'max:255', Rule::unique('pengguna', 'email')->ignore($anggota->id_pengguna, 'id_pengguna')],
             'no_telepon' => ['nullable', 'regex:/^[0-9]+$/', 'max:20'],
             'alamat' => 'nullable|string',
             'status' => 'required|in:Aktif,Tidak Aktif',
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ], [
-            'nama.required' => 'Nama lengkap anggota wajib diisi.',
-            'nama.regex' => "Nama hanya boleh berisi huruf, spasi, titik (.), strip (-), dan tanda petik (').",
-            'nik.digits' => 'NIK harus terdiri dari 16 digit angka.',
-            'nik.unique' => 'NIK ini sudah terdaftar oleh pengguna lain.',
-            'username.required' => 'Username wajib diisi.',
-            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, strip (-), dan garis bawah (_).',
-            'username.unique' => 'Username sudah digunakan oleh pengguna lain.',
-            'password.min' => 'Password minimal terdiri dari 6 karakter.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email ini sudah digunakan oleh pengguna lain.',
-            'no_telepon.regex' => 'Nomor telepon hanya boleh berisi angka.',
-            'status.required' => 'Status wajib dipilih.',
-            'status.in' => 'Status harus bernilai Aktif atau Tidak Aktif.',
-            'foto_profil.image' => 'File foto profil harus berupa gambar.',
-            'foto_profil.max' => 'Ukuran foto profil maksimal 2MB.',
-        ]);
+            'dokumen_ktp' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
+            'dokumen_kk' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
+        ], $this->documentValidationMessages());
 
         DB::transaction(function () use ($request, $validated, $anggota) {
             $anggota->fill([
@@ -156,50 +148,75 @@ class AnggotaController extends Controller
                 $anggota->password = Hash::make($validated['password']);
             }
             if ($request->hasFile('foto_profil')) {
-                if ($anggota->foto_profil) {
-                    $cloudinary = app(\App\Services\CloudinaryService::class);
-                    $cloudinary->delete($anggota->foto_profil);
+                $newPhoto = $this->storePhoto($request);
+                $oldPhoto = $anggota->foto_profil;
+                $anggota->foto_profil = $newPhoto;
+                if ($oldPhoto) {
+                    try {
+                        app(\App\Services\CloudinaryService::class)->delete($oldPhoto);
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                    }
                 }
-                $anggota->foto_profil = $this->storePhoto($request);
             }
             $anggota->save();
             $anggota->anggota()->update(['status_keanggotaan' => $validated['status']]);
         });
 
+        try {
+            if ($request->hasFile('dokumen_ktp')) {
+                $this->documents->storeIdentity($anggota, 'KTP', $request->file('dokumen_ktp'), $pengurus);
+            }
+            if ($request->hasFile('dokumen_kk')) {
+                $this->documents->storeIdentity($anggota, 'KK', $request->file('dokumen_kk'), $pengurus);
+            }
+        } catch (RuntimeException $exception) {
+            report($exception);
+            return redirect()->route('pengurus.anggota')->with('warning', 'Data anggota diperbarui, tetapi salah satu dokumen gagal disimpan. Coba unggah ulang.');
+        }
+
+        AuditLogger::log('anggota.ubah', 'Memperbarui data anggota ' . $anggota->nama, 'Pengguna', $anggota->id_pengguna, $anggota->id_kelompok, $request);
+
         return redirect()->route('pengurus.anggota')->with('success', 'Data anggota berhasil diperbarui.');
     }
 
-    public function destroy(string $id_pengguna)
+    /** Pengurus hanya mengeluarkan anggota dari kelompok, bukan menghapus akun. */
+    public function destroy(Request $request, string $id_pengguna)
     {
         $pengurus = $this->currentPengurus();
-        abort_unless($pengurus?->id_kelompok, 403, 'Pengurus belum memiliki kelompok tani.');
+        abort_unless($pengurus?->id_kelompok && $pengurus->kelompokTani?->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif.');
+        $validated = $request->validate([
+            'alasan_keluar' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
 
-        $kelompok = $pengurus->kelompokTani;
-        abort_unless($kelompok && $kelompok->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif. Hubungi administrator.');
         $anggota = $this->scopedAnggota($pengurus, $id_pengguna);
-        $nama = $anggota->nama;
+        $name = $anggota->nama;
 
-        if ($anggota->foto_profil) {
-            $cloudinary = app(\App\Services\CloudinaryService::class);
-            $cloudinary->delete($anggota->foto_profil);
-        }
-        $anggota->delete();
+        DB::transaction(function () use ($anggota, $pengurus, $validated) {
+            $anggota->anggota()->updateOrCreate(
+                ['id_pengguna' => $anggota->id_pengguna],
+                [
+                    'status_keanggotaan' => 'Keluar',
+                    'tanggal_keluar' => now(),
+                    'alasan_keluar' => $validated['alasan_keluar'],
+                    'dikeluarkan_oleh' => $pengurus->id_pengguna,
+                ]
+            );
+        });
 
-        return redirect()->route('pengurus.anggota')->with('success', "Anggota {$nama} berhasil dihapus.");
+        AuditLogger::log('anggota.keluar', 'Mengeluarkan anggota ' . $name . ' dari kelompok. Alasan: ' . $validated['alasan_keluar'], 'Pengguna', $anggota->id_pengguna, $pengurus->id_kelompok, $request);
+
+        return redirect()->route('pengurus.anggota')->with('success', "{$name} telah dikeluarkan dari kelompok. Akun dan riwayatnya tetap tersimpan.");
     }
 
     private function currentPengurus(): Pengguna
     {
         $pengurus = Auth::user();
-
         abort_unless(
-            $pengurus instanceof Pengguna
-                && $pengurus->role === 'Pengurus'
-                && $pengurus->status === 'Aktif',
+            $pengurus instanceof Pengguna && $pengurus->role === 'Pengurus' && $pengurus->status === 'Aktif',
             403,
             'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.'
         );
-
         return $pengurus;
     }
 
@@ -208,12 +225,22 @@ class AnggotaController extends Controller
         return Pengguna::where('role', 'Anggota')
             ->where('id_kelompok', $pengurus->id_kelompok)
             ->where('id_pengguna', $idPengguna)
+            ->whereHas('anggota', fn ($q) => $q->where('status_keanggotaan', '!=', 'Keluar'))
             ->firstOrFail();
     }
 
     private function storePhoto(Request $request): string
     {
-        $cloudinary = app(\App\Services\CloudinaryService::class);
-        return $cloudinary->upload($request->file('foto_profil')->getRealPath(), 'pawontani/profil');
+        return app(\App\Services\CloudinaryService::class)->upload($request->file('foto_profil')->getRealPath(), 'pawontani/profil');
+    }
+
+    private function documentValidationMessages(): array
+    {
+        return [
+            'dokumen_ktp.mimes' => 'Format KTP tidak didukung. Gunakan PDF atau JPG.',
+            'dokumen_ktp.max' => 'Ukuran KTP maksimal 5 MB.',
+            'dokumen_kk.mimes' => 'Format KK tidak didukung. Gunakan PDF atau JPG.',
+            'dokumen_kk.max' => 'Ukuran KK maksimal 5 MB.',
+        ];
     }
 }

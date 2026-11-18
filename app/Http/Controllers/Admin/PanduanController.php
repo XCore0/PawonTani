@@ -7,6 +7,7 @@ use App\Http\Requests\StorePanduanRequest;
 use App\Http\Requests\UpdatePanduanRequest;
 use App\Models\Komoditas;
 use App\Models\Panduan;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -72,6 +73,7 @@ class PanduanController extends Controller
         }
 
         $panduan = Panduan::create($data);
+        AuditLogger::log('edukasi.panduan.tambah', 'Admin menambahkan panduan.', 'Panduan', $panduan->id_panduan, null, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -108,6 +110,7 @@ class PanduanController extends Controller
         }
 
         $panduan->update($data);
+        AuditLogger::log('edukasi.panduan.ubah', 'Admin memperbarui panduan.', 'Panduan', $panduan->id_panduan, null, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -128,6 +131,7 @@ class PanduanController extends Controller
         $this->deleteImage($panduan->gambar);
 
         $panduan->delete();
+        AuditLogger::log('edukasi.panduan.hapus', 'Admin menghapus panduan.', 'Panduan', $id_panduan, null, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

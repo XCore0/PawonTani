@@ -715,5 +715,56 @@
 
   </div>
 
+  <div class="rounded-[22px] border border-[#DCE9D0] bg-white p-5 shadow-2xs sm:p-6 space-y-4">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F2DF] text-[#4D9830]"><i data-lucide="file-text" class="h-5 w-5"></i></div>
+        <div><h2 class="text-sm font-bold text-[#27451B]">Dokumen SPPT Lahan</h2><p class="text-xs text-[#78965F]">Satu lahan dapat memiliki beberapa dokumen SPPT. Upload baru akan menambah berkas, bukan mengganti berkas lama.</p></div>
+      </div>
+      @if($lahan->dokumenSppt->isNotEmpty())
+        <span class="shrink-0 rounded-full bg-[#E8F2DF] px-2.5 py-1 text-[10px] font-bold text-[#3D8024]">{{ $lahan->dokumenSppt->count() }} dokumen</span>
+      @else
+        <span class="shrink-0 rounded-full bg-[#F7F1E5] px-2.5 py-1 text-[10px] font-bold text-[#8A6D32]">Belum tersedia</span>
+      @endif
+    </div>
+
+    @if($lahan->dokumenSppt->isNotEmpty())
+      <div class="space-y-2">
+        @foreach($lahan->dokumenSppt as $document)
+          <div class="flex flex-col gap-2 rounded-xl border border-[#DCE9D0] bg-[#F7FAF4] p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex min-w-0 items-start gap-2.5">
+              <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F2DF] text-[#4D9830]"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+              <div class="min-w-0">
+                <p class="truncate text-xs font-semibold text-[#27451B]" title="{{ $document->original_name }}">{{ $document->original_name }}</p>
+                <p class="mt-1 text-[10px] text-[#78965F]">{{ number_format($document->size_bytes / 1024, 0) }} KB · Diunggah {{ $document->created_at?->format('d M Y, H:i') }}</p>
+              </div>
+            </div>
+            <div class="flex shrink-0 flex-wrap gap-2">
+              <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax href="{{ route('pengurus.dokumen.sppt.preview', $document->id) }}" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DCE9D0] bg-white px-3 py-2 text-xs font-bold text-[#536F3F] hover:bg-[#F0F6E9]"><i data-lucide="eye" class="h-3.5 w-3.5"></i> Lihat</a>
+              <a download data-no-admin-ajax href="{{ route('pengurus.dokumen.sppt.download', $document->id) }}" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E8F2DF] px-3 py-2 text-xs font-bold text-[#3D8024] hover:bg-[#DCECCF]"><i data-lucide="download" class="h-3.5 w-3.5"></i> Unduh</a>
+            </div>
+          </div>
+        @endforeach
+      </div>
+    @else
+      <div class="rounded-xl border border-dashed border-[#C9DDB9] bg-[#F7FAF4] px-4 py-6 text-center">
+        <i data-lucide="file-plus-2" class="mx-auto h-6 w-6 text-[#78965F]"></i>
+        <p class="mt-2 text-xs font-semibold text-[#536F3F]">Belum ada dokumen SPPT untuk lahan ini</p>
+      </div>
+    @endif
+
+    <form method="POST" action="{{ route('pengurus.lahan.sppt.upload', $lahan->id_lahan) }}" enctype="multipart/form-data" class="space-y-2 border-t border-[#E3ECD9] pt-4">
+      @csrf
+      <label class="block text-xs font-semibold text-[#27451B]">Tambahkan dokumen SPPT</label>
+      <input type="file" name="dokumen_sppt[]" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple required class="w-full rounded-xl border border-[#C9DDB9] bg-white p-2 text-xs text-[#536F3F] file:mr-3 file:rounded-lg file:border-0 file:bg-[#E8F2DF] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#3D8024]">
+      <p class="text-[11px] text-[#78965F]">Bisa memilih beberapa file sekaligus (maksimal 10 file). Format PDF/JPG, maksimal 5 MB per file. Upload baru tidak menghapus dokumen sebelumnya.</p>
+      @error('dokumen_sppt')<p class="text-[11px] font-semibold text-red-600">{{ $message }}</p>@enderror
+      @foreach($errors->get('dokumen_sppt.*') as $messages)
+        @foreach($messages as $message)<p class="text-[11px] font-semibold text-red-600">{{ $message }}</p>@endforeach
+      @endforeach
+      <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#3D8024]"><i data-lucide="upload" class="h-3.5 w-3.5"></i> Tambahkan Dokumen SPPT</button>
+    </form>
+  </div>
+
 </div>
 @endsection

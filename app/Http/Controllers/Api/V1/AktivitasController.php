@@ -8,6 +8,7 @@ use App\Http\Requests\Api\UpdateAktivitasRequest;
 use App\Http\Resources\AktivitasResource;
 use App\Models\AktivitasTanam;
 use App\Models\Lahan;
+use App\Services\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,319 +19,186 @@ use Throwable;
 
 class AktivitasController extends Controller
 {
-    /**
-     * Mengambil daftar aktivitas tanam terfilter.
-     */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
+        abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Autentikasi diperlukan.',
-            ], 401);
-        }
+        $query = AktivitasTanam::with(['lahan.komoditas', 'pengguna'])
+            ->where('id_pengguna', $user->id_pengguna)
+            ->where('id_kelompok', $user->id_kelompok);
 
-        $query = AktivitasTanam::with(['lahan.komoditas', 'pengguna']);
-
-        // Scope berdasarkan aktor:
-        // Jika Anggota, tampilkan aktivitas miliknya atau pada lahannya
-        if ($user->role === 'Anggota') {
-            $query->where('id_pengguna', $user->id_pengguna);
-        } elseif ($user->role === 'Pengurus' && !empty($user->id_kelompok)) {
-            $query->where('id_kelompok', $user->id_kelompok);
-        }
-
-        // Filter per Lahan
         if ($lahanId = ($request->query('id_lahan') ?? $request->query('lahan_id'))) {
             $query->where('id_lahan', $lahanId);
         }
-
-        // Filter per Kategori
         if ($kategori = $request->query('kategori')) {
             $query->where('kategori', strtolower($kategori));
         }
-
-        // Filter per Kondisi
         if ($kondisi = ($request->query('kondisi') ?? $request->query('condition'))) {
-            $kondisiNormalized = match (strtolower($kondisi)) {
+            $normalized = match (strtolower($kondisi)) {
                 'sehat' => 'sehat',
                 'perluperhatian', 'perlu_perhatian' => 'perluPerhatian',
                 'terseranghama', 'terserang_hama' => 'terserangHama',
                 default => $kondisi,
             };
-            $query->where('kondisi_tanaman', $kondisiNormalized);
+            $query->where('kondisi_tanaman', $normalized);
         }
-
-        // Pencarian teks
-        if ($search = $request->query('q')) {
+        if ($search = trim((string) $request->query('q'))) {
             $like = DB::getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
-            $query->where(function ($q) use ($search, $like) {
-                $q->where('judul', $like, "%{$search}%")
-                  ->orWhere('catatan', $like, "%{$search}%")
-                  ->orWhereHas('lahan', function ($lq) use ($search, $like) {
-                      $lq->where('nama_lahan', $like, "%{$search}%");
-                  });
-            });
+            $query->where(fn ($q) => $q->where('judul', $like, "%{$search}%")
+                ->orWhere('catatan', $like, "%{$search}%")
+                ->orWhereHas('lahan', fn ($lq) => $lq->where('nama_lahan', $like, "%{$search}%")));
         }
 
-        // Urutkan terbaru
-        $query->orderByDesc('tanggal')->orderByDesc('created_at');
+        $limit = max(1, min((int) $request->query('limit', 50), 100));
+        $items = $query->orderByDesc('tanggal')->orderByDesc('created_at')->take($limit)->get();
 
-        $limit = (int) $request->query('limit', 50);
-        $aktivitas = $query->take($limit)->get();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Daftar aktivitas berhasil dimuat.',
-            'data' => AktivitasResource::collection($aktivitas),
-        ]);
+        return response()->json(['success' => true, 'message' => 'Daftar aktivitas berhasil dimuat.', 'data' => AktivitasResource::collection($items)]);
     }
 
-    /**
-     * Menyimpan aktivitas tanam baru.
-     */
     public function store(StoreAktivitasRequest $request): JsonResponse
     {
         $user = $request->user();
+        abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
+
+        $land = Lahan::where('id_lahan', $request->input('id_lahan'))
+            ->where('id_pengguna', $user->id_pengguna)
+            ->where('id_kelompok', $user->id_kelompok)
+            ->firstOrFail();
 
         try {
-            $lahan = Lahan::findOrFail($request->input('id_lahan'));
-
-            // Pastikan Anggota hanya mencatat di lahan miliknya atau kelompoknya
-            if ($user->role === 'Anggota' && (string) $lahan->id_pengguna !== (string) $user->id_pengguna) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki hak akses untuk mencatat aktivitas di lahan ini.',
-                ], 403);
-            }
-
-            $fotoPath = null;
-            if ($request->hasFile('foto_aktivitas')) {
-                $file = $request->file('foto_aktivitas');
-                $fotoPath = $file->store('aktivitas', 'public');
-            } elseif ($request->filled('foto_aktivitas') && is_string($request->input('foto_aktivitas'))) {
-                $val = $request->input('foto_aktivitas');
-                if (str_starts_with($val, 'http') || str_starts_with($val, 'aktivitas/')) {
-                    $fotoPath = $val;
-                }
-            }
-
-            // Normalisasi tanggal
-            $tanggalInput = $request->input('tanggal');
-            try {
-                $tanggal = Carbon::parse($tanggalInput)->toDateString();
-            } catch (Throwable) {
-                $tanggal = now()->toDateString();
-            }
-
-            $kategori = strtolower($request->input('kategori'));
-            $judul = $request->input('judul');
-            if (empty($judul)) {
-                $judul = ucfirst($kategori);
-            }
-
-            $kondisi = $request->input('kondisi_tanaman', 'sehat');
-            $kondisiNormalized = match (strtolower($kondisi)) {
+            $photoPath = $this->storeActivityPhoto($request);
+            $category = strtolower($request->input('kategori'));
+            $condition = match (strtolower((string) $request->input('kondisi_tanaman', 'sehat'))) {
                 'sehat' => 'sehat',
                 'perluperhatian', 'perlu_perhatian' => 'perluPerhatian',
                 'terseranghama', 'terserang_hama' => 'terserangHama',
-                default => $kondisi,
+                default => 'sehat',
             };
 
-            $aktivitas = new AktivitasTanam();
-            $aktivitas->id_lahan = $lahan->id_lahan;
-            $aktivitas->id_pengguna = $user->id_pengguna;
-            $aktivitas->id_kelompok = $lahan->id_kelompok ?? $user->id_kelompok;
-            $aktivitas->kategori = $kategori;
-            $aktivitas->judul = $judul;
-            $aktivitas->kondisi_tanaman = $kondisiNormalized;
-            $aktivitas->tanggal = $tanggal;
-            $aktivitas->waktu = $request->input('waktu', now()->format('H:i') . ' WIB');
-            $aktivitas->hari_setelah_tanam = $request->input('hari_setelah_tanam', 30);
-            $aktivitas->catatan = $request->input('catatan');
-            $aktivitas->foto_aktivitas = $fotoPath;
-            $aktivitas->biaya = (float) $request->input('biaya', 0);
+            $activity = new AktivitasTanam();
+            $activity->id_lahan = $land->id_lahan;
+            $activity->id_pengguna = $user->id_pengguna;
+            $activity->id_kelompok = $land->id_kelompok;
+            $activity->kategori = $category;
+            $activity->judul = $request->input('judul') ?: ucfirst($category);
+            $activity->kondisi_tanaman = $condition;
+            $activity->tanggal = Carbon::parse($request->input('tanggal'))->toDateString();
+            $activity->waktu = $request->input('waktu', now()->format('H:i') . ' WIB');
+            $activity->hari_setelah_tanam = $request->input('hari_setelah_tanam', 30);
+            $activity->catatan = $request->input('catatan');
+            $activity->foto_aktivitas = $photoPath;
+            $activity->biaya = (float) $request->input('biaya', 0);
+            $activity->saveWithUniqueRetry();
+            $activity->load(['lahan.komoditas', 'pengguna']);
 
-            $aktivitas->saveWithUniqueRetry();
-            $aktivitas->load(['lahan.komoditas', 'pengguna']);
+            AuditLogger::log('aktivitas.tambah', 'Anggota menambahkan aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $land->id_kelompok, $request);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Aktivitas tanam berhasil dicatat.',
-                'data' => new AktivitasResource($aktivitas),
-            ], 201);
-        } catch (Throwable $e) {
-            Log::error('Gagal menyimpan aktivitas tanam: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan sistem saat menyimpan aktivitas: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil dicatat.', 'data' => new AktivitasResource($activity)], 201);
+        } catch (Throwable $exception) {
+            Log::error('Gagal menyimpan aktivitas tanam.', ['exception' => $exception]);
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem saat menyimpan aktivitas.'], 500);
         }
     }
 
-    /**
-     * Detail satu aktivitas tanam.
-     */
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
-        $aktivitas = AktivitasTanam::with(['lahan.komoditas', 'pengguna'])->find($id);
+        $user = $request->user();
+        abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        if (!$aktivitas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data aktivitas tidak ditemukan.',
-            ], 404);
-        }
+        $activity = AktivitasTanam::with(['lahan.komoditas', 'pengguna'])
+            ->where('id_pengguna', $user->id_pengguna)
+            ->where('id_kelompok', $user->id_kelompok)
+            ->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Detail aktivitas berhasil dimuat.',
-            'data' => new AktivitasResource($aktivitas),
-        ]);
+        return response()->json(['success' => true, 'message' => 'Detail aktivitas berhasil dimuat.', 'data' => new AktivitasResource($activity)]);
     }
 
-    /**
-     * Memperbarui data aktivitas tanam.
-     */
     public function update(UpdateAktivitasRequest $request, string $id): JsonResponse
     {
         $user = $request->user();
-        $aktivitas = AktivitasTanam::find($id);
+        abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        if (!$aktivitas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data aktivitas tidak ditemukan.',
-            ], 404);
-        }
-
-        // Otorisasi hak akses ubah
-        if ($user->role === 'Anggota' && (string) $aktivitas->id_pengguna !== (string) $user->id_pengguna) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki hak untuk mengubah aktivitas ini.',
-            ], 403);
-        }
+        $activity = AktivitasTanam::where('id_pengguna', $user->id_pengguna)
+            ->where('id_kelompok', $user->id_kelompok)
+            ->findOrFail($id);
 
         try {
-            if ($request->has('id_lahan')) {
-                $lahan = Lahan::findOrFail($request->input('id_lahan'));
-                $aktivitas->id_lahan = $lahan->id_lahan;
-                $aktivitas->id_kelompok = $lahan->id_kelompok ?? $aktivitas->id_kelompok;
+            if ($request->filled('id_lahan')) {
+                $newLand = Lahan::where('id_lahan', $request->input('id_lahan'))
+                    ->where('id_pengguna', $user->id_pengguna)
+                    ->where('id_kelompok', $user->id_kelompok)
+                    ->firstOrFail();
+                $activity->id_lahan = $newLand->id_lahan;
+                $activity->id_kelompok = $newLand->id_kelompok;
             }
-
             if ($request->has('kategori')) {
-                $kategori = strtolower($request->input('kategori'));
-                $aktivitas->kategori = $kategori;
-                if (!$request->has('judul')) {
-                    $aktivitas->judul = ucfirst($kategori);
-                }
+                $activity->kategori = strtolower($request->input('kategori'));
+                if (!$request->has('judul')) $activity->judul = ucfirst($activity->kategori);
             }
-
-            if ($request->has('judul')) {
-                $aktivitas->judul = $request->input('judul');
+            foreach (['judul', 'waktu', 'hari_setelah_tanam', 'catatan', 'biaya'] as $field) {
+                if ($request->has($field)) $activity->{$field} = $request->input($field);
             }
-
             if ($request->has('kondisi_tanaman')) {
-                $kondisi = $request->input('kondisi_tanaman');
-                $aktivitas->kondisi_tanaman = match (strtolower($kondisi)) {
+                $activity->kondisi_tanaman = match (strtolower((string) $request->input('kondisi_tanaman'))) {
                     'sehat' => 'sehat',
                     'perluperhatian', 'perlu_perhatian' => 'perluPerhatian',
                     'terseranghama', 'terserang_hama' => 'terserangHama',
-                    default => $kondisi,
+                    default => 'sehat',
                 };
             }
+            if ($request->has('tanggal')) $activity->tanggal = Carbon::parse($request->input('tanggal'))->toDateString();
 
-            if ($request->has('tanggal')) {
-                try {
-                    $aktivitas->tanggal = Carbon::parse($request->input('tanggal'))->toDateString();
-                } catch (Throwable) {
-                    // Biarkan nilai lama jika gagal parse
+            if ($request->hasFile('foto_aktivitas') || $request->filled('foto_aktivitas')) {
+                $old = $activity->foto_aktivitas;
+                $activity->foto_aktivitas = $this->resolveActivityPhoto($request);
+                if ($old && !preg_match('/^https?:\\/\\//i', $old) && !str_contains($old, '..')) {
+                    Storage::disk('public')->delete($old);
                 }
             }
+            $activity->save();
+            $activity->load(['lahan.komoditas', 'pengguna']);
 
-            if ($request->has('waktu')) {
-                $aktivitas->waktu = $request->input('waktu');
-            }
-
-            if ($request->has('hari_setelah_tanam')) {
-                $aktivitas->hari_setelah_tanam = $request->input('hari_setelah_tanam');
-            }
-
-            if ($request->has('catatan')) {
-                $aktivitas->catatan = $request->input('catatan');
-            }
-
-            if ($request->has('biaya')) {
-                $aktivitas->biaya = (float) $request->input('biaya');
-            }
-
-            if ($request->hasFile('foto_aktivitas')) {
-                if ($aktivitas->foto_aktivitas && !str_starts_with($aktivitas->foto_aktivitas, 'http')) {
-                    Storage::disk('public')->delete($aktivitas->foto_aktivitas);
-                }
-                $file = $request->file('foto_aktivitas');
-                $aktivitas->foto_aktivitas = $file->store('aktivitas', 'public');
-            } elseif ($request->filled('foto_aktivitas') && is_string($request->input('foto_aktivitas'))) {
-                $val = $request->input('foto_aktivitas');
-                if (str_starts_with($val, 'http') || str_starts_with($val, 'aktivitas/')) {
-                    $aktivitas->foto_aktivitas = $val;
-                }
-            }
-
-            $aktivitas->save();
-            $aktivitas->load(['lahan.komoditas', 'pengguna']);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Aktivitas tanam berhasil diperbarui.',
-                'data' => new AktivitasResource($aktivitas),
-            ]);
-        } catch (Throwable $e) {
-            Log::error('Gagal memperbarui aktivitas tanam: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan sistem saat memperbarui aktivitas: ' . $e->getMessage(),
-            ], 500);
+            AuditLogger::log('aktivitas.ubah', 'Anggota memperbarui aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $activity->id_kelompok, $request);
+            return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil diperbarui.', 'data' => new AktivitasResource($activity)]);
+        } catch (Throwable $exception) {
+            Log::error('Gagal memperbarui aktivitas tanam.', ['exception' => $exception]);
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem saat memperbarui aktivitas.'], 500);
         }
     }
 
-    /**
-     * Menghapus aktivitas tanam (soft delete).
-     */
     public function destroy(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
-        $aktivitas = AktivitasTanam::find($id);
+        abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
+        $activity = AktivitasTanam::where('id_pengguna', $user->id_pengguna)
+            ->where('id_kelompok', $user->id_kelompok)
+            ->findOrFail($id);
+        $activity->delete();
 
-        if (!$aktivitas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data aktivitas tidak ditemukan.',
-            ], 404);
+        AuditLogger::log('aktivitas.hapus', 'Anggota menghapus aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $activity->id_kelompok, $request);
+
+        return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil dihapus.', 'data' => null]);
+    }
+
+    private function storeActivityPhoto(Request $request): ?string
+    {
+        if ($request->hasFile('foto_aktivitas')) {
+            return $request->file('foto_aktivitas')->store('aktivitas', 'public');
         }
 
-        // Otorisasi hak akses hapus
-        if ($user->role === 'Anggota' && (string) $aktivitas->id_pengguna !== (string) $user->id_pengguna) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki hak untuk menghapus aktivitas ini.',
-            ], 403);
+        $value = $request->input('foto_aktivitas');
+        if (is_string($value) && filter_var($value, FILTER_VALIDATE_URL) && str_starts_with($value, 'https://')) {
+            return $value;
         }
+        if (is_string($value) && str_starts_with($value, 'aktivitas/') && !str_contains($value, '..')) {
+            return $value;
+        }
+        return null;
+    }
 
-        $aktivitas->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Aktivitas tanam berhasil dihapus.',
-            'data' => null,
-        ]);
+    private function resolveActivityPhoto(Request $request): ?string
+    {
+        return $this->storeActivityPhoto($request);
     }
 }
-

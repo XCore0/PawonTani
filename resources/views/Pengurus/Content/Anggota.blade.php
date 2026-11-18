@@ -12,6 +12,10 @@
     </div>
   @endif
 
+  @if(session('warning'))
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">{{ session('warning') }}</div>
+  @endif
+
   @if($errors->any())
     <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm space-y-1"><div class="flex items-center gap-2 font-bold text-red-900"><i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i><span>Terjadi kesalahan saat menyimpan anggota:</span></div><ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
   @endif
@@ -23,12 +27,14 @@
         Kelola Anggota
       </h1>
       <p class="text-xs sm:text-sm text-[#9AB880] mt-1 font-medium">
-        Anggota {{ $kelompok->nama_kelompok }}
+        {{ $isArchive ? 'Arsip anggota' : 'Anggota aktif' }} · {{ $kelompok->nama_kelompok }}
       </p>
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex items-center gap-2.5 shrink-0">
+    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+      <a href="{{ route('pengurus.anggota') }}" class="rounded-xl border px-3.5 py-2.5 text-xs font-semibold {{ !$isArchive ? 'border-[#4D9830] bg-[#EBF6E0] text-[#3D8024]' : 'border-[#C5DFB0] bg-white text-[#4A6030]' }}">Aktif ({{ $jumlahAktif }})</a>
+      <a href="{{ route('pengurus.anggota', ['arsip' => 1]) }}" class="rounded-xl border px-3.5 py-2.5 text-xs font-semibold {{ $isArchive ? 'border-[#4D9830] bg-[#EBF6E0] text-[#3D8024]' : 'border-[#C5DFB0] bg-white text-[#4A6030]' }}">Arsip ({{ $jumlahArsip }})</a>
       <!-- Export / Unduh Button -->
       <button type="button" onclick="alert('Fitur unduh data sedang disiapkan.')"
         class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm font-semibold text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] hover:border-[#9AB880] transition-all shadow-2xs cursor-pointer">
@@ -37,11 +43,13 @@
       </button>
 
       <!-- Tambah Anggota Button -->
+      @if(!$isArchive)
       <button type="button" onclick="openModalTambahAnggota()"
         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#4D9830] hover:bg-[#3D8024] active:scale-[0.99] text-white text-xs sm:text-sm font-bold shadow-sm shadow-[#4D9830]/20 hover:shadow-md hover:shadow-[#4D9830]/30 transition-all cursor-pointer">
         <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
         <span>Tambah Anggota</span>
       </button>
+      @endif
     </div>
   </div>
 
@@ -67,7 +75,7 @@
       </div>
       <div>
         <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Anggota Aktif</span>
-        <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ collect($anggota)->where('status', 'Aktif')->count() }}</span>
+        <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ $jumlahAktif }}</span>
         <span class="text-[11px] text-emerald-600 font-semibold block mt-0.5">● Siap Bertugas</span>
       </div>
     </div>
@@ -113,7 +121,7 @@
       <div class="md:col-span-3">
         <select id="anggota-status"
           class="w-full h-11 px-3.5 rounded-xl border border-[#C5DFB0] bg-[#F5F8F1]/40 text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:bg-white focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all cursor-pointer">
-          <option value="">Semua Status</option>
+          <option value="">Semua Status Akun</option>
           <option>Aktif</option>
           <option>Tidak Aktif</option>
         </select>
@@ -159,9 +167,9 @@
               <td class="py-3.5 px-4 max-w-40 truncate text-[#6B7F5B]">{{ $item->alamat ?? '-' }}</td>
               <td class="py-3.5 px-4 text-center"><span class="text-xs font-bold text-[#4D9830]">{{ $kelompok->nama_kelompok }}</span></td>
               <td class="py-3.5 px-4 text-center">
-                <span class="inline-flex items-center gap-1 rounded-full bg-[#DFF7E7] px-2.5 py-1 text-[10px] font-bold text-[#287442]">
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#287442]"></span>
-                  {{ $item->status }}
+                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold {{ $item->anggota?->status_keanggotaan === 'Aktif' ? 'bg-[#DFF7E7] text-[#287442]' : ($item->anggota?->status_keanggotaan === 'Keluar' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600') }}">
+                  <span class="h-1.5 w-1.5 rounded-full {{ $item->anggota?->status_keanggotaan === 'Aktif' ? 'bg-[#287442]' : 'bg-amber-500' }}"></span>
+                  {{ $item->anggota?->status_keanggotaan ?? $item->status }}
                 </span>
               </td>
               <td class="py-3.5 px-4">
@@ -169,12 +177,20 @@
                   <button type="button" onclick="openDetailAnggota(this)" data-nama="{{ $item->nama }}" data-nik="{{ $item->nik ?? '-' }}" data-telepon="{{ $item->no_telepon ?? '-' }}" data-alamat="{{ $item->alamat ?? '-' }}" class="rounded-lg bg-[#EAF5DE] px-2.5 py-1.5 text-[10px] font-bold text-[#4D9830] hover:bg-[#DFF7E7] transition-colors cursor-pointer" title="Detail">
                     <i data-lucide="eye" class="inline h-3 w-3"></i>
                   </button>
-                  <button type="button" onclick="openEditAnggota(this)" data-id="{{ $item->id_pengguna }}" data-nama="{{ $item->nama }}" data-nik="{{ $item->nik }}" data-username="{{ $item->username }}" data-email="{{ $item->email }}" data-telepon="{{ $item->no_telepon }}" data-alamat="{{ $item->alamat }}" data-status="{{ $item->status }}" class="rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEF99] transition-colors cursor-pointer" title="Edit">
+                  @if(!$isArchive)
+                  <button type="button" onclick="openEditAnggota(this)" data-id="{{ $item->id_pengguna }}" data-nama="{{ $item->nama }}" data-nik="{{ $item->nik }}" data-username="{{ $item->username }}" data-email="{{ $item->email }}" data-telepon="{{ $item->no_telepon }}" data-alamat="{{ $item->alamat }}" data-status="{{ $item->status }}"
+                    data-ktp-preview="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KTP') ? route('pengurus.dokumen.identity.preview', [$item->id_pengguna, 'KTP']) : '' }}"
+                    data-ktp-download="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KTP') ? route('pengurus.dokumen.identity.download', [$item->id_pengguna, 'KTP']) : '' }}"
+                    data-kk-preview="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KK') ? route('pengurus.dokumen.identity.preview', [$item->id_pengguna, 'KK']) : '' }}"
+                    data-kk-download="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KK') ? route('pengurus.dokumen.identity.download', [$item->id_pengguna, 'KK']) : '' }}" class="rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEF99] transition-colors cursor-pointer" title="Edit">
                     <i data-lucide="edit-3" class="inline h-3 w-3"></i>
                   </button>
-                  <button type="button" onclick="confirmDeleteAnggota('{{ $item->id_pengguna }}', '{{ addslashes($item->nama) }}')" class="rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD0D0] transition-colors cursor-pointer" title="Hapus">
-                    <i data-lucide="trash-2" class="inline h-3 w-3"></i>
+                  <button type="button" data-member-id="{{ $item->id_pengguna }}" data-member-name="{{ $item->nama }}" onclick="confirmDeleteAnggota(this.dataset.memberId, this.dataset.memberName)" class="rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD0D0] transition-colors cursor-pointer" title="Keluarkan dari kelompok">
+                    <i data-lucide="user-minus" class="inline h-3 w-3"></i>
                   </button>
+                  @else
+                    <span class="text-[10px] text-[#9AB880]">Arsip · {{ $item->anggota?->tanggal_keluar?->format('d M Y') ?? '-' }}</span>
+                  @endif
                 </div>
               </td>
             </tr>
@@ -250,6 +266,11 @@
       <div><label for="anggota-email" class="block font-semibold text-[#1A2D10] mb-1">Alamat Email</label><input type="email" name="email" id="anggota-email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email harus memiliki format seperti nama@domain.com." placeholder="anggota@pawontani.id" value="{{ old('email') }}" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20"></div>
       <div><label for="anggota-alamat" class="block font-semibold text-[#1A2D10] mb-1">Alamat Tempat Tinggal</label><textarea name="alamat" id="anggota-alamat" rows="2" placeholder="Dusun, RT/RW, Desa, Kecamatan..." class="w-full p-3 rounded-xl border border-[#C5DFB0] bg-white text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 resize-none">{{ old('alamat') }}</textarea></div>
       <div><label for="anggota-foto" class="block font-semibold text-[#1A2D10] mb-1">Foto Profil (Opsional)</label><input type="file" name="foto_profil" id="anggota-foto" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#EBF6E0] file:text-[#4D9830] border border-[#C5DFB0] rounded-xl p-1 bg-white cursor-pointer"><p class="text-[11px] text-[#9AB880] mt-1">Format: JPG, PNG, WEBP (Maksimal 2MB).</p></div>
+      <div class="rounded-2xl border border-[#E4F0D6] bg-[#F5F8F1]/60 p-4 space-y-3">
+        <div><h4 class="font-bold text-[#1A2D10]">Dokumen Persyaratan</h4><p class="text-[11px] text-[#9AB880]">Boleh dikosongkan dan dilengkapi nanti. Format PDF/JPG, maksimal 5 MB per file.</p></div>
+        <div><label class="mb-1 block font-semibold text-[#1A2D10]">Fotokopi KTP</label><input type="file" name="dokumen_ktp" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div>
+        <div><label class="mb-1 block font-semibold text-[#1A2D10]">Kartu Keluarga (KK)</label><input type="file" name="dokumen_kk" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div>
+      </div>
 
       <div class="pt-3 border-t border-[#E4F0D6] flex items-center justify-end gap-2.5"><button type="button" onclick="closeModalTambahAnggota()" class="px-4 py-2.5 rounded-xl border border-[#C5DFB0] text-[#4A6030] hover:bg-[#F5F8F1] font-semibold cursor-pointer">Batal</button><button type="submit" class="px-5 py-2.5 rounded-xl bg-[#4D9830] hover:bg-[#3D8024] text-white font-bold shadow-sm shadow-[#4D9830]/20 cursor-pointer">Simpan Anggota</button></div>
     </form>
@@ -272,12 +293,28 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">NIK</label><input type="text" name="nik" id="edit-anggota-nik" inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" title="NIK harus tepat 16 digit angka." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">No. Telepon</label><input type="tel" name="no_telepon" id="edit-anggota-telepon" inputmode="numeric" pattern="[0-9]+" maxlength="15" title="Nomor HP hanya boleh berisi angka." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div></div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">Username <span class="text-red-500">*</span></label><input type="text" name="username" id="edit-anggota-username" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><span id="edit-anggota-username-feedback" class="text-[11px] mt-1 hidden"></span></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Status <span class="text-red-500">*</span></label><select name="status" id="edit-anggota-status" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><option>Aktif</option><option>Tidak Aktif</option></select></div></div>
       <div><label class="block font-semibold text-[#1A2D10] mb-1">Email</label><input type="email" name="email" id="edit-anggota-email" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Alamat</label><textarea name="alamat" id="edit-anggota-alamat" rows="2" class="w-full p-3 rounded-xl border border-[#C5DFB0] resize-none"></textarea></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Password Baru</label><input type="password" name="password" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]" placeholder="Kosongkan jika tidak diubah"></div>
+      <div class="rounded-2xl border border-[#E4F0D6] bg-[#F5F8F1]/60 p-4 space-y-3"><div><h4 class="font-bold text-[#1A2D10]">Dokumen KTP &amp; KK</h4><p class="text-[11px] text-[#9AB880]">Lihat/unduh dokumen saat ini atau unggah pengganti. PDF/JPG maksimal 5 MB.</p></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div id="edit-anggota-ktp-current" class="hidden rounded-xl border border-[#E4F0D6] bg-white p-3"><p class="font-semibold text-[#1A2D10]">KTP tersimpan</p><div class="mt-2 flex gap-2"><a id="edit-anggota-ktp-preview" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#4A6030] underline">Lihat</a><a id="edit-anggota-ktp-download" class="font-semibold text-[#3D8024] underline">Unduh</a></div></div>
+          <div id="edit-anggota-kk-current" class="hidden rounded-xl border border-[#E4F0D6] bg-white p-3"><p class="font-semibold text-[#1A2D10]">KK tersimpan</p><div class="mt-2 flex gap-2"><a id="edit-anggota-kk-preview" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#4A6030] underline">Lihat</a><a id="edit-anggota-kk-download" class="font-semibold text-[#3D8024] underline">Unduh</a></div></div>
+        </div>
+        <div><label class="mb-1 block font-semibold text-[#1A2D10]">Ganti KTP</label><input type="file" name="dokumen_ktp" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div><div><label class="mb-1 block font-semibold text-[#1A2D10]">Ganti KK</label><input type="file" name="dokumen_kk" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div></div>
       <div class="flex justify-end gap-2 pt-3 border-t border-[#E4F0D6]"><button type="button" onclick="closeModal('modal-edit-anggota')" class="px-4 py-2.5 rounded-xl border border-[#C5DFB0] font-semibold cursor-pointer">Batal</button><button type="submit" class="px-5 py-2.5 rounded-xl bg-[#4D9830] text-white font-bold cursor-pointer">Simpan Perubahan</button></div>
     </form>
   </div>
 </div>
 
-<form id="form-delete-anggota" method="POST" class="hidden">@csrf @method('DELETE')</form>
+<div id="modal-keluarkan-anggota" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+  <div class="w-full max-w-md overflow-hidden rounded-[22px] border border-[#E4F0D6] bg-white shadow-2xl">
+    <div class="flex items-center justify-between border-b border-[#E4F0D6] bg-[#F5F8F1] px-5 py-4"><div><h3 class="font-bold text-[#1A2D10]">Keluarkan Anggota</h3><p class="text-xs text-[#9AB880]">Data dan akun anggota tidak dihapus.</p></div><button type="button" onclick="closeKeluarModal()" class="rounded-lg p-1 text-slate-400 hover:bg-white"><i data-lucide="x" class="h-5 w-5"></i></button></div>
+    <form id="form-delete-anggota" method="POST" class="space-y-4 p-5">@csrf @method('DELETE')
+      <p class="text-sm text-[#4A6030]">Anda akan mengeluarkan <strong id="keluar-anggota-nama" class="text-[#1A2D10]"></strong> dari kelompok ini. Akun Flutter dan riwayatnya tetap tersimpan.</p>
+      <div><label class="mb-1 block text-xs font-semibold text-[#1A2D10]">Alasan pengeluaran <span class="text-red-500">*</span></label><textarea name="alasan_keluar" required minlength="5" maxlength="500" rows="3" class="w-full rounded-xl border border-[#C5DFB0] p-3 text-sm focus:border-[#4D9830] focus:outline-none" placeholder="Contoh: mengundurkan diri atau pindah kelompok"></textarea></div>
+      <p class="text-[11px] text-[#9AB880]">Anggota akan masuk ke Arsip Anggota dan tidak dapat mengelola lahan/aktivitas kelompok lama.</p>
+      <div class="flex justify-end gap-2 border-t border-[#E4F0D6] pt-3"><button type="button" onclick="closeKeluarModal()" class="rounded-xl border border-[#C5DFB0] px-4 py-2.5 text-xs font-semibold text-[#4A6030]">Batal</button><button type="submit" class="rounded-xl bg-[#C24141] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#A93636]">Keluarkan Anggota</button></div>
+    </form>
+  </div>
+</div>
 
 <script>
   const anggotaModal = document.getElementById('modal-tambah-anggota');
@@ -346,8 +383,22 @@
   const closeModal = (id) => { const modal = document.getElementById(id); modal.classList.add('hidden'); modal.classList.remove('flex'); };
   const openModal = (id) => { const modal = document.getElementById(id); modal.classList.remove('hidden'); modal.classList.add('flex'); };
   const openDetailAnggota = (button) => { ['nama', 'nik', 'telepon', 'alamat'].forEach((field) => { document.getElementById(`detail-${field}`).textContent = button.dataset[field]; }); openModal('modal-detail-anggota'); };
-  const openEditAnggota = (button) => { const form = document.getElementById('form-edit-anggota'); form.action = `{{ url('/pengurus/anggota') }}/${encodeURIComponent(button.dataset.id)}`; [['nama', 'nama'], ['nik', 'nik'], ['username', 'username'], ['email', 'email'], ['telepon', 'telepon'], ['alamat', 'alamat'], ['status', 'status']].forEach(([field, input]) => { document.getElementById(`edit-anggota-${input}`).value = button.dataset[field] || ''; }); openModal('modal-edit-anggota'); };
-  const confirmDeleteAnggota = (id, nama) => { if (confirm(`Hapus anggota ${nama}?`)) { const form = document.getElementById('form-delete-anggota'); form.action = `{{ url('/pengurus/anggota') }}/${encodeURIComponent(id)}`; form.submit(); } };
+  const openEditAnggota = (button) => {
+    const form = document.getElementById('form-edit-anggota');
+    form.action = `{{ url('/pengurus/anggota') }}/${encodeURIComponent(button.dataset.id)}`;
+    [['nama', 'nama'], ['nik', 'nik'], ['username', 'username'], ['email', 'email'], ['telepon', 'telepon'], ['alamat', 'alamat'], ['status', 'status']].forEach(([field, input]) => { document.getElementById(`edit-anggota-${input}`).value = button.dataset[field] || ''; });
+    ['ktp', 'kk'].forEach((type) => {
+      const preview = document.getElementById(`edit-anggota-${type}-preview`);
+      const download = document.getElementById(`edit-anggota-${type}-download`);
+      const card = document.getElementById(`edit-anggota-${type}-current`);
+      preview.href = button.dataset[`${type}Preview`] || '#';
+      download.href = button.dataset[`${type}Download`] || '#';
+      card.classList.toggle('hidden', !button.dataset[`${type}Preview`]);
+    });
+    openModal('modal-edit-anggota');
+  };
+  const confirmDeleteAnggota = (id, nama) => { const form = document.getElementById('form-delete-anggota'); form.action = `{{ url('/pengurus/anggota') }}/${encodeURIComponent(id)}`; document.getElementById('keluar-anggota-nama').textContent = nama; openModal('modal-keluarkan-anggota'); };
+  const closeKeluarModal = () => closeModal('modal-keluarkan-anggota');
   (() => {
     const search = document.getElementById('anggota-search');
     const status = document.getElementById('anggota-status');

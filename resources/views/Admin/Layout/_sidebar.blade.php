@@ -47,11 +47,25 @@
             <span>Pengurus</span>
           </a>
 
-          <!-- Verifikasi Lapangan -->
-          <a href="{{ route('admin.verifikasi') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
-            <i data-lucide="file-check" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
-            <span>Verifikasi Lapangan</span>
+          <!-- Data Anggota -->
+          <a href="{{ route('admin.anggota') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.anggota*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
+            <i data-lucide="users-round" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('admin.anggota*') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
+            <span>Data Anggota</span>
+          </a>
+
+          <!-- Permintaan Keanggotaan -->
+          <a href="{{ route('admin.permintaan-keanggotaan') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.permintaan-keanggotaan*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
+            <i data-lucide="user-round-plus" class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.permintaan-keanggotaan*') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }} transition-colors"></i>
+            <span>Permintaan Anggota</span>
+          </a>
+
+          <!-- Dokumen e-RDKK -->
+          <a href="{{ route('admin.dokumen.erdkk') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.dokumen.erdkk') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
+            <i data-lucide="folder-check" class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.dokumen.erdkk') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }} transition-colors"></i>
+            <span>Dokumen e-RDKK</span>
           </a>
 
           <!-- Edukasi -->
@@ -80,10 +94,10 @@
           </details>
 
           <!-- Aktivitas -->
-          <a href="{{ route('admin.aktivitas') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group">
+          <a href="{{ route('admin.log-aktivitas') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.log-aktivitas') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
             <i data-lucide="activity" class="w-4 h-4 shrink-0 text-[#4A6030] group-hover:text-[#1A2D10] transition-colors"></i>
-            <span>Aktivitas</span>
+            <span>Log Aktivitas</span>
           </a>
         </nav>
       </div>
@@ -91,23 +105,8 @@
     </div>
   </div>
 
-  <!-- 3. Sidebar Footer (User Card & Keluar Button) -->
-  <div class="p-3.5 border-t border-[#F0F7E8] space-y-2.5 bg-white">
-    <!-- User Info Card -->
-    <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#F5F8F1] border border-[#E4F0D6]">
-      <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#4D9830] to-[#72BE4A] text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-        {{ strtoupper(substr(auth()->user()->nama ?? 'A', 0, 1)) }}
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="text-xs font-bold text-[#1A2D10] truncate">
-          {{ auth()->user()->nama ?? 'Admin' }}
-        </p>
-        <p class="text-[10px] text-[#9AB880] truncate font-medium">
-          {{ auth()->user()->jabatan ?? 'PPL' }} / {{ auth()->user()->role ?? 'Admin' }}
-        </p>
-      </div>
-    </div>
-
+  <!-- 3. Sidebar Footer: hanya tombol Keluar; profil tersedia di header kanan. -->
+  <div class="p-3.5 border-t border-[#F0F7E8] bg-white">
     <form method="POST" action="{{ route('logout') }}" class="w-full">
       @csrf
       <button type="submit" class="w-full flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors cursor-pointer">

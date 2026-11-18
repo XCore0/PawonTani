@@ -230,6 +230,11 @@
       document.addEventListener('click', (event) => {
         const link = event.target.closest('a[href]');
         if (!isAdminNavigation(link)) return;
+
+        // Jangan tangkap tautan file. Preview PDF/JPG harus terbuka di tab baru,
+        // sedangkan unduhan harus diterima browser sebagai file, bukan HTML parsial.
+        if (link.target === '_blank' || link.hasAttribute('download') || link.hasAttribute('data-no-admin-ajax')) return;
+
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
         event.preventDefault();
         const url = new URL(link.href, window.location.origin);

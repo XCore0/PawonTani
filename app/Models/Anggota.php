@@ -14,10 +14,18 @@ class Anggota extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
+    protected function casts(): array
+    {
+        return ['tanggal_keluar' => 'datetime'];
+    }
+
     protected $fillable = [
         'id_anggota',
         'id_pengguna',
         'status_keanggotaan',
+        'tanggal_keluar',
+        'alasan_keluar',
+        'dikeluarkan_oleh',
     ];
 
     protected static function boot()

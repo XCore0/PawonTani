@@ -60,7 +60,12 @@ class LahanService
         }
 
         if ($user->role === 'Anggota') {
-            return Lahan::query()->where('id_pengguna', $user->id_pengguna);
+            if (empty($user->id_kelompok) || $user->anggota?->status_keanggotaan !== 'Aktif') {
+                return Lahan::query()->whereRaw('1 = 0');
+            }
+            return Lahan::query()
+                ->where('id_pengguna', $user->id_pengguna)
+                ->where('id_kelompok', $user->id_kelompok);
         }
 
         if ($user->role === 'Pengurus') {
@@ -327,7 +332,11 @@ class LahanService
             // 1. Periksa otorisasi aktor terlebih dahulu (apakah pemilik lahan yang sah dan aktif)
             // Pengguna yang tidak berhak harus langsung ditolak dengan AuthorizationException
             // sehingga tidak dapat mengetahui status verifikasi lahan melalui respons (mencegah information disclosure)
-            if ($user->status !== 'Aktif' || $user->role !== 'Anggota' || $user->id_pengguna !== $lahanLocked->id_pengguna) {
+            if ($user->status !== 'Aktif'
+                || $user->role !== 'Anggota'
+                || $user->anggota?->status_keanggotaan !== 'Aktif'
+                || $user->id_pengguna !== $lahanLocked->id_pengguna
+                || $user->id_kelompok !== $lahanLocked->id_kelompok) {
                 throw new AuthorizationException('Pengguna tidak memiliki izin untuk menghapus lahan ini.');
             }
 

@@ -52,12 +52,14 @@ class UpdateAktivitasRequest extends FormRequest
             'kategori' => ['sometimes', 'required', 'string', 'max:50'],
             'judul' => ['nullable', 'string', 'max:150'],
             'kondisi_tanaman' => ['nullable', 'string', 'max:50'],
-            'tanggal' => ['sometimes', 'required'],
+            'tanggal' => ['sometimes', 'required', 'date'],
             'waktu' => ['nullable', 'string', 'max:30'],
             'hari_setelah_tanam' => ['nullable', 'integer', 'min:0'],
             'catatan' => ['nullable', 'string'],
             'biaya' => ['nullable', 'numeric', 'min:0'],
-            'foto_aktivitas' => ['nullable'],
+            'foto_aktivitas' => $this->hasFile('foto_aktivitas')
+                ? ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']
+                : ['nullable', 'string', 'max:2000'],
         ];
     }
 

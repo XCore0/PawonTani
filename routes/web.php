@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Public\EdukasiController as PublicEdukasiController;
+use App\Http\Controllers\DokumenController;
+use App\Http\Controllers\Admin\DokumenERdkkController;
+use App\Http\Controllers\Admin\AnggotaController as AdminAnggotaController;
+use App\Http\Controllers\Admin\LogAktivitasController;
+use App\Http\Controllers\Admin\PermintaanKeanggotaanController as AdminPermintaanKeanggotaanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
@@ -22,7 +27,7 @@ use App\Models\Panduan;
    AUTH ROUTES
    ============================================================ */
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/', function () {
@@ -81,6 +86,11 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
     Route::put('/anggota/{id_pengguna}', [AnggotaController::class, 'update'])->name('anggota.update');
     Route::delete('/anggota/{id_pengguna}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
+    Route::get('/dokumen/anggota/{idPengguna}/{jenis}', [DokumenController::class, 'downloadIdentity'])->name('dokumen.identity.download');
+    Route::get('/dokumen/anggota/{idPengguna}/{jenis}/preview', [DokumenController::class, 'previewIdentity'])->name('dokumen.identity.preview');
+    Route::get('/dokumen/sppt/{idDokumen}/download', [DokumenController::class, 'downloadSppt'])->name('dokumen.sppt.download');
+    Route::get('/dokumen/sppt/{idDokumen}/preview', [DokumenController::class, 'previewSppt'])->name('dokumen.sppt.preview');
+    Route::post('/lahan/{idLahan}/sppt', [DokumenController::class, 'uploadSpptPengurus'])->name('lahan.sppt.upload');
 
     // Kelola Lahan
     Route::get('/lahan', [LahanController::class, 'index'])->name('lahan');
@@ -271,6 +281,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
         return view('Admin.Content.Dashboard');
     })->name('dashboard');
 
+    // Data Anggota: pemulihan keanggotaan dan penghapusan data pribadi oleh Admin.
+    Route::get('/anggota', [AdminAnggotaController::class, 'index'])->name('anggota');
+    Route::post('/anggota/{idPengguna}/aktifkan', [AdminAnggotaController::class, 'restore'])->name('anggota.restore');
+    Route::get('/permintaan-keanggotaan', [AdminPermintaanKeanggotaanController::class, 'index'])->name('permintaan-keanggotaan');
+    Route::post('/permintaan-keanggotaan/{id}/setujui', [AdminPermintaanKeanggotaanController::class, 'approve'])->middleware('throttle:10,1')->name('permintaan-keanggotaan.approve');
+    Route::post('/permintaan-keanggotaan/{id}/tolak', [AdminPermintaanKeanggotaanController::class, 'reject'])->middleware('throttle:10,1')->name('permintaan-keanggotaan.reject');
+    Route::delete('/anggota/{idPengguna}', [AdminAnggotaController::class, 'destroy'])->middleware('throttle:3,1')->name('anggota.destroy');
+
     // Pengurus Management
     Route::get('/pengurus', [PengurusController::class, 'index'])->name('pengurus');
     Route::post('/pengurus', [PengurusController::class, 'store'])->name('pengurus.store');
@@ -283,16 +301,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
     Route::put('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'update'])->name('kelompok.update');
     Route::delete('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'destroy'])->name('kelompok.destroy');
 
-    // Pages in development
-    Route::get('/verifikasi-lapangan', fn () => $errorPage(
-        'Verifikasi Lapangan',
-        'Kelola proses verifikasi data dan kondisi kelompok tani di lapangan.'
-    ))->name('verifikasi');
+    // Dokumen e-RDKK: Admin/PPL hanya melihat dan mengunduh.
+    Route::get('/dokumen-erdkk', [DokumenERdkkController::class, 'index'])->name('dokumen.erdkk');
+    Route::get('/dokumen-erdkk/anggota/{idPengguna}/download-all', [DokumenController::class, 'downloadMemberArchive'])->middleware('throttle:10,1')->name('dokumen.member.download-all');
+    Route::get('/dokumen-erdkk/anggota/{idPengguna}/{jenis}', [DokumenController::class, 'downloadIdentity'])->name('dokumen.identity.download');
+    Route::get('/dokumen-erdkk/anggota/{idPengguna}/{jenis}/preview', [DokumenController::class, 'previewIdentity'])->name('dokumen.identity.preview');
+    Route::get('/dokumen-erdkk/sppt/{idDokumen}/download', [DokumenController::class, 'downloadSppt'])->name('dokumen.sppt.download');
+    Route::get('/dokumen-erdkk/sppt/{idDokumen}/preview', [DokumenController::class, 'previewSppt'])->name('dokumen.sppt.preview');
+    // Alias rute lama agar bookmark sebelumnya tidak putus.
+    Route::get('/verifikasi-lapangan', fn () => redirect()->route('admin.dokumen.erdkk'))->name('verifikasi');
 
-    Route::get('/aktivitas', fn () => $errorPage(
-        'Aktivitas',
-        'Pantau aktivitas pertanian dan kegiatan kelompok tani secara terpusat.'
-    ))->name('aktivitas');
+    Route::get('/log-aktivitas', [LogAktivitasController::class, 'index'])->name('log-aktivitas');
+    Route::get('/aktivitas', fn () => redirect()->route('admin.log-aktivitas'))->name('aktivitas');
 
     // Tips Edukasi CRUD
     Route::get('/edukasi/tips', [TipsController::class, 'index'])->name('edukasi.tips');
@@ -449,25 +469,26 @@ Route::middleware(['auth'])->group(function () {
 });
 
 /* ============================================================
-   CORS-ENABLED PUBLIC MEDIA STREAMING ROUTE
-   Memastikan foto lahan dan aktivitas dapat dimuat tanpa terblokir
-   CORS baik di Flutter Web, Emulator, maupun HP Fisik.
+   PUBLIC IMAGE MEDIA ROUTE
+   Hanya gambar non-sensitif pada folder media yang diizinkan.
+   Dokumen KTP/KK/SPPT tidak boleh disimpan di public storage.
    ============================================================ */
 Route::get('/media/{path}', function (string $path) {
-    $cleanPath = str_replace(['..', '\\'], ['', '/'], $path);
-    $fullPath = storage_path('app/public/' . $cleanPath);
+    $path = ltrim(str_replace('\\', '/', $path), '/');
+    abort_if(str_contains($path, '..') || str_contains($path, "\0"), 404);
+    abort_unless(preg_match('/^(lahan|aktivitas)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
 
-    if (!file_exists($fullPath) || !is_file($fullPath)) {
-        abort(404, 'File media tidak ditemukan.');
-    }
+    $root = realpath(storage_path('app/public'));
+    $fullPath = realpath(storage_path('app/public/' . $path));
+    abort_unless($root && $fullPath && str_starts_with($fullPath, $root . DIRECTORY_SEPARATOR) && is_file($fullPath), 404);
 
-    $mime = mime_content_type($fullPath) ?: 'image/jpeg';
+    $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($fullPath);
+    abort_unless(in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true), 404);
 
     return response()->file($fullPath, [
         'Content-Type' => $mime,
+        'X-Content-Type-Options' => 'nosniff',
         'Access-Control-Allow-Origin' => '*',
-        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers' => '*',
         'Cache-Control' => 'public, max-age=86400',
     ]);
 })->where('path', '.*')->name('media.serve');

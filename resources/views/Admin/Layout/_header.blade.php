@@ -43,7 +43,7 @@
         </div>
         <div class="max-h-[360px] divide-y divide-[#E4F0D6]/70 overflow-y-auto">
           <a href="{{ route('admin.verifikasi') }}" data-admin-title="Verifikasi Lapangan" class="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[#F5F8F1]">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600"><i data-lucide="file-check-2" class="h-4 w-4"></i></span>
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F2DF] text-[#4D9830]"><i data-lucide="file-check-2" class="h-4 w-4"></i></span>
             <span class="min-w-0 flex-1"><span class="block text-xs font-bold text-[#1A2D10]">Verifikasi baru menunggu</span><span class="mt-0.5 block text-[11px] leading-relaxed text-[#6B7F5B]">Data kelompok perlu diperiksa.</span><span class="mt-1 block text-[10px] text-[#9AB880]">10 menit lalu</span></span>
             <i data-lucide="chevron-right" class="mt-2 h-3.5 w-3.5 shrink-0 text-[#9AB880]"></i>
           </a>
@@ -53,7 +53,7 @@
             <i data-lucide="chevron-right" class="mt-2 h-3.5 w-3.5 shrink-0 text-[#9AB880]"></i>
           </a>
           <a href="{{ route('admin.kelompok') }}" data-admin-title="Kelompok Tani" class="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[#F5F8F1]">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"><i data-lucide="sprout" class="h-4 w-4"></i></span>
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F2DF] text-[#4D9830]"><i data-lucide="sprout" class="h-4 w-4"></i></span>
             <span class="min-w-0 flex-1"><span class="block text-xs font-bold text-[#1A2D10]">Data kelompok diperbarui</span><span class="mt-0.5 block text-[11px] leading-relaxed text-[#6B7F5B]">Informasi Sri Rejeki berubah.</span><span class="mt-1 block text-[10px] text-[#9AB880]">3 jam lalu</span></span>
             <i data-lucide="chevron-right" class="mt-2 h-3.5 w-3.5 shrink-0 text-[#9AB880]"></i>
           </a>

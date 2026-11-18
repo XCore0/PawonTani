@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Artikel;
 use App\Models\Komoditas;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -88,6 +89,8 @@ class ArtikelController extends Controller
             throw $e;
         }
 
+        AuditLogger::log('edukasi.artikel.tambah', 'Admin menambahkan artikel.', 'Artikel', $artikel->id_artikel, null, $request);
+
         return redirect()->route('admin.edukasi.artikel')
             ->with('success', 'Artikel berhasil ditambahkan.');
     }
@@ -121,11 +124,13 @@ class ArtikelController extends Controller
             $this->deleteImage($oldImage);
         }
 
+        AuditLogger::log('edukasi.artikel.ubah', 'Admin memperbarui artikel.', 'Artikel', $artikel->id_artikel, null, $request);
+
         return redirect()->route('admin.edukasi.artikel')
             ->with('success', 'Artikel berhasil diperbarui.');
     }
 
-    public function destroy(string $id_artikel)
+    public function destroy(Request $request, string $id_artikel)
     {
         $artikel = Artikel::findOrFail($id_artikel);
         $image = $artikel->gambar;
@@ -134,6 +139,7 @@ class ArtikelController extends Controller
         if ($image) {
             $this->deleteImage($image);
         }
+        AuditLogger::log('edukasi.artikel.hapus', 'Admin menghapus artikel.', 'Artikel', $id_artikel, null, $request);
 
         return redirect()->route('admin.edukasi.artikel')
             ->with('success', 'Artikel berhasil dihapus.');

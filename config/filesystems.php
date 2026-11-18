@@ -33,8 +33,18 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Jangan buat route penyajian file untuk storage privat umum.
+            'serve' => false,
             'throw' => false,
+            'report' => false,
+        ],
+
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => true,
             'report' => false,
         ],
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pengurus\VerifikasiLahanRequest;
 use App\Models\Komoditas;
 use App\Services\LahanService;
+use App\Services\AuditLogger;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -113,6 +114,7 @@ class LahanController extends Controller
                 'verifikator:id_pengguna,nama,jabatan',
                 'riwayatVerifikasi.pengguna:id_pengguna,nama,role,jabatan',
                 'aktivitas.pengguna:id_pengguna,nama,foto_profil',
+                'dokumenSppt',
             ]);
 
         // Evaluasi kewenangan Ketua aktif
@@ -142,6 +144,7 @@ class LahanController extends Controller
         try {
             // Seluruh transisi status didelegasikan ke LahanService (tidak mengubah status langsung di Controller)
             $this->lahanService->verifyLahan($pengurus, $lahan, $aksi, $catatan);
+            AuditLogger::log('lahan.verifikasi', 'Pengurus melakukan tindakan verifikasi lahan: ' . $aksi . '.', 'Lahan', $lahan, $pengurus->id_kelompok, $request);
 
             $messages = [
                 'setujui' => 'Lahan berhasil disetujui dan status telah diverifikasi.',

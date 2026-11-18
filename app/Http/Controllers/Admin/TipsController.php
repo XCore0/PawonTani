@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Komoditas;
 use App\Models\Tip;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -195,6 +196,8 @@ class TipsController extends Controller
             'status' => $validated['status'],
         ]);
 
+        AuditLogger::log('edukasi.tips.tambah', 'Admin menambahkan konten tips pertanian.', 'Tip', $tip->id_tips, null, $request);
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -278,6 +281,8 @@ class TipsController extends Controller
             'status' => $validated['status'],
         ]);
 
+        AuditLogger::log('edukasi.tips.ubah', 'Admin memperbarui konten tips pertanian.', 'Tip', $tip->id_tips, null, $request);
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -305,6 +310,7 @@ class TipsController extends Controller
         }
 
         $tip->delete();
+        AuditLogger::log('edukasi.tips.hapus', 'Admin menghapus konten tips pertanian.', 'Tip', $id_tips, null, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -337,6 +343,7 @@ class TipsController extends Controller
             'nama_komoditas' => trim($validated['nama_komoditas']),
             'kategori' => $validated['kategori'],
         ]);
+        AuditLogger::log('komoditas.tambah', 'Admin menambahkan data komoditas.', 'Komoditas', $komoditas->id_komoditas, null, $request);
 
         return response()->json([
             'success' => true,

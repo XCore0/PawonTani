@@ -50,7 +50,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Token aplikasi mobile berlaku maksimal 30 hari. Pengguna dapat logout lebih cepat.
+    'expiration' => 43200,
 
     /*
     |--------------------------------------------------------------------------

@@ -21,7 +21,7 @@ class LahanPolicy
         }
 
         if ($user->role === 'Anggota') {
-            return !empty($user->id_kelompok);
+            return !empty($user->id_kelompok) && $user->anggota?->status_keanggotaan === 'Aktif';
         }
 
         if ($user->role === 'Pengurus') {
@@ -45,7 +45,9 @@ class LahanPolicy
         }
 
         if ($user->role === 'Anggota') {
-            return $user->id_pengguna === $lahan->id_pengguna;
+            return $user->anggota?->status_keanggotaan === 'Aktif'
+                && $user->id_pengguna === $lahan->id_pengguna
+                && $user->id_kelompok === $lahan->id_kelompok;
         }
 
         if ($user->role === 'Pengurus') {
@@ -68,7 +70,7 @@ class LahanPolicy
             return false;
         }
 
-        return $user->role === 'Anggota' && !empty($user->id_kelompok);
+        return $user->role === 'Anggota' && !empty($user->id_kelompok) && $user->anggota?->status_keanggotaan === 'Aktif';
     }
 
     /**
@@ -86,7 +88,9 @@ class LahanPolicy
         }
 
         if ($user->role === 'Anggota') {
-            return $user->id_pengguna === $lahan->id_pengguna;
+            return $user->anggota?->status_keanggotaan === 'Aktif'
+                && $user->id_pengguna === $lahan->id_pengguna
+                && $user->id_kelompok === $lahan->id_kelompok;
         }
 
         return false;
@@ -107,7 +111,9 @@ class LahanPolicy
         }
 
         if ($user->role === 'Anggota') {
-            return $user->id_pengguna === $lahan->id_pengguna
+            return $user->anggota?->status_keanggotaan === 'Aktif'
+                && $user->id_pengguna === $lahan->id_pengguna
+                && $user->id_kelompok === $lahan->id_kelompok
                 && $lahan->status_verifikasi !== 'terverifikasi';
         }
 

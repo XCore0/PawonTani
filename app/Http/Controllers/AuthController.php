@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengguna;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -76,6 +77,7 @@ class AuthController extends Controller
 
         Auth::login($pengguna, $request->boolean('remember'));
         $request->session()->regenerate();
+        AuditLogger::log('auth.web_login', 'Pengguna berhasil masuk ke website PawonTani.', 'Pengguna', $pengguna->id_pengguna, $pengguna->id_kelompok, $request);
 
         return $this->redirectByRole($pengguna);
     }
@@ -85,6 +87,10 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            AuditLogger::log('auth.web_logout', 'Pengguna keluar dari website PawonTani.', 'Pengguna', $user->id_pengguna, $user->id_kelompok, $request);
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

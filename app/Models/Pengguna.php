@@ -52,6 +52,11 @@ class Pengguna extends Authenticatable
         return $this->hasOne(Anggota::class, 'id_pengguna', 'id_pengguna');
     }
 
+    public function dokumenIdentitas()
+    {
+        return $this->hasMany(DokumenAnggota::class, 'id_pengguna', 'id_pengguna');
+    }
+
     /**
      * Relationship to Owned Lahan
      */

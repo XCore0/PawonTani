@@ -171,4 +171,9 @@ class Lahan extends Model
     {
         return $this->hasMany(AktivitasTanam::class, 'id_lahan', 'id_lahan')->orderByDesc('tanggal')->orderByDesc('created_at');
     }
+
+    public function dokumenSppt()
+    {
+        return $this->hasMany(DokumenLahan::class, 'id_lahan', 'id_lahan')->latest();
+    }
 }

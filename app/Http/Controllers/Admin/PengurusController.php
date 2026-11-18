@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\KelompokTani;
 use App\Models\Pengguna;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -200,6 +201,8 @@ class PengurusController extends Controller
             'status' => $validated['status'],
         ]);
 
+        AuditLogger::log('pengurus.tambah', 'Admin menambahkan data Pengurus baru.', 'Pengguna', $pengguna->id_pengguna, $pengguna->id_kelompok, $request);
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -353,6 +356,7 @@ class PengurusController extends Controller
         }
 
         $pengurus->update($dataToUpdate);
+        AuditLogger::log('pengurus.ubah', 'Admin memperbarui data Pengurus.', 'Pengguna', $pengurus->id_pengguna, $pengurus->id_kelompok, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -382,6 +386,7 @@ class PengurusController extends Controller
         }
 
         $pengurus->delete();
+        AuditLogger::log('pengurus.hapus', 'Admin menghapus data Pengurus.', 'Pengguna', $deletedId, $pengurus->id_kelompok, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
