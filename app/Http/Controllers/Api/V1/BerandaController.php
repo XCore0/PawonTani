@@ -32,9 +32,9 @@ class BerandaController extends Controller
 
         $allLahans = $lahanQuery->with('komoditas')->get();
         $totalLahan = $allLahans->count();
-        $lahanAktif = $allLahans->where('status_operasional', 'Aktif')->count();
-        $lahanIstirahat = $allLahans->where('status_operasional', 'Istirahat')->count();
-        $lahanPersiapan = $allLahans->where('status_operasional', 'Persiapan')->count();
+        $lahanAktif = $allLahans->filter(fn($l) => strcasecmp($l->status_operasional ?? '', 'aktif') === 0)->count();
+        $lahanIstirahat = $allLahans->filter(fn($l) => strcasecmp($l->status_operasional ?? '', 'istirahat') === 0)->count();
+        $lahanPersiapan = $allLahans->filter(fn($l) => strcasecmp($l->status_operasional ?? '', 'persiapan') === 0)->count();
         $totalLuas = (float) $allLahans->sum('luas');
 
         // Komoditas unik yang ditanam anggota
@@ -55,7 +55,7 @@ class BerandaController extends Controller
         // Ambil lat/lon dari query param (jika HP kirim via GPS) atau fallback ke profil user / default Jawa Timur
         $lat = $request->query('lat', $user?->latitude ?? -8.1724);
         $lon = $request->query('lon', $user?->longitude ?? 113.7007);
-        $lokasiNama = $user?->lokasi_nama ?? 'Jember, Jawa Timur';
+        $lokasiNama = $this->resolveLocationName($lat, $lon, $user?->lokasi_nama);
 
         $cuaca = $this->fetchWeather($lat, $lon, $lokasiNama);
 
@@ -63,7 +63,7 @@ class BerandaController extends Controller
         $artikels = Artikel::where('status', 'Publik')
             ->latest('tanggal')
             ->take(4)
-            ->get(['id_artikel', 'judul', 'kategori', 'tanggal', 'gambar', 'konten']);
+            ->get(['id_artikel', 'judul', 'kategori', 'tanggal', 'gambar', 'ringkasan', 'isi']);
 
         return response()->json([
             'success' => true,
@@ -97,7 +97,7 @@ class BerandaController extends Controller
     {
         $cacheKey = "mobile_weather_{$lat}_{$lon}";
 
-        return cache()->remember($cacheKey, 1800, function () use ($lat, $lon, $lokasiNama) {
+        return cache()->remember($cacheKey, 600, function () use ($lat, $lon, $lokasiNama) {
             try {
                 $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}" .
                     "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m" .
@@ -151,6 +151,36 @@ class BerandaController extends Controller
                 'peluang_hujan' => 25,
                 'forecast_daily' => [],
             ];
+        });
+    }
+
+    /**
+     * Cari nama kota/kabupaten berdasarkan koordinat GPS
+     */
+    protected function resolveLocationName($lat, $lon, ?string $fallback): string
+    {
+        if (empty($lat) || empty($lon)) {
+            return $fallback ?? 'Jember, Jawa Timur';
+        }
+
+        $cacheKey = "geo_name_{$lat}_{$lon}";
+        return cache()->remember($cacheKey, 86400, function () use ($lat, $lon, $fallback) {
+            try {
+                // Reverse geocoding menggunakan BigDataCloud Free Client API (cepat & no auth)
+                $res = Http::timeout(4)->get("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={$lat}&longitude={$lon}&localityLanguage=id");
+                if ($res->successful()) {
+                    $json = $res->json();
+                    $city = $json['city'] ?? $json['locality'] ?? $json['principalSubdivision'] ?? null;
+                    $admin = $json['principalSubdivision'] ?? '';
+                    if ($city) {
+                        return $admin && !str_contains($city, $admin) ? "{$city}, {$admin}" : $city;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Reverse geocode error: ' . $e->getMessage());
+            }
+
+            return $fallback ?? 'Jember, Jawa Timur';
         });
     }
 
