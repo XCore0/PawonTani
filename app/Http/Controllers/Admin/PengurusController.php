@@ -379,14 +379,44 @@ class PengurusController extends Controller
         $deletedName = $pengurus->nama;
         $deletedId = $pengurus->id_pengguna;
 
-        // Delete photo if exists
+        // Cek apakah pengurus memiliki riwayat verifikasi lahan atau audit yang terikat
+        $hasVerifikasi = \App\Models\Lahan::where('verifikator_id', $deletedId)->exists()
+            || \App\Models\RiwayatVerifikasiLahan::where('id_pengguna', $deletedId)->exists();
+
+        if ($hasVerifikasi) {
+            // Amankan dengan menonaktifkan akun agar foreign key audit trail tidak rusak
+            $pengurus->tokens()->delete();
+            $pengurus->update(['status' => 'Tidak Aktif']);
+            AuditLogger::log('pengurus.nonaktifkan', 'Admin menonaktifkan Pengurus karena memiliki riwayat audit verifikasi.', 'Pengguna', $deletedId, $pengurus->id_kelompok, $request);
+
+            $message = "Pengurus {$deletedName} memiliki riwayat verifikasi lahan. Status akun dialihkan menjadi 'Tidak Aktif' demi menjaga integritas data audit.";
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            }
+            return redirect()->route('admin.pengurus')->with('warning', $message);
+        }
+
+        // Hapus foto profil dari CDN jika ada
         if ($pengurus->foto_profil) {
             $cloudinary = app(\App\Services\CloudinaryService::class);
             $cloudinary->delete($pengurus->foto_profil);
         }
 
-        $pengurus->delete();
-        AuditLogger::log('pengurus.hapus', 'Admin menghapus data Pengurus.', 'Pengguna', $deletedId, $pengurus->id_kelompok, $request);
+        try {
+            $pengurus->tokens()->delete();
+            $pengurus->delete();
+            AuditLogger::log('pengurus.hapus', 'Admin menghapus data Pengurus.', 'Pengguna', $deletedId, $pengurus->id_kelompok, $request);
+        } catch (\Illuminate\Database\QueryException $e) {
+            $pengurus->update(['status' => 'Tidak Aktif']);
+            $message = "Pengurus {$deletedName} terikat pada referensi sistem. Status dialihkan menjadi 'Tidak Aktif'.";
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            return redirect()->route('admin.pengurus')->with('warning', $message);
+        }
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

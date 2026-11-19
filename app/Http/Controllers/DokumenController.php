@@ -216,6 +216,25 @@ class DokumenController extends Controller
         ], 201);
     }
 
+    public function downloadIdentity(Request $request, string $idPengguna, string $jenis): StreamedResponse
+    {
+        $member = Pengguna::where('role', 'Anggota')->where('id_pengguna', $idPengguna)->firstOrFail();
+        $this->authorizeMemberDocument($request, $member);
+        $jenis = strtoupper($jenis);
+        abort_unless(in_array($jenis, ['KTP', 'KK'], true), 404);
+
+        $document = DokumenAnggota::where('id_pengguna', $member->id_pengguna)->where('jenis', $jenis)->firstOrFail();
+        abort_unless(Storage::disk('documents')->exists($document->file_path), 404, 'File dokumen tidak ditemukan.');
+
+        AuditLogger::log('dokumen.download', 'Mengunduh dokumen ' . $jenis . ' anggota ' . $member->nama, 'DokumenAnggota', $document->id, $member->id_kelompok, $request);
+
+        return Storage::disk('documents')->download($document->file_path, $this->safeDownloadName($document->original_name), [
+            'Content-Type' => $document->mime_type,
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
+    }
+
     public function apiDownloadIdentity(Request $request, string $jenis): StreamedResponse
     {
         return $this->downloadIdentity($request, $request->user()->id_pengguna, $jenis);
@@ -332,7 +351,7 @@ class DokumenController extends Controller
         $actor = $request->user();
         abort_unless($actor, 401);
 
-        if ($actor->role === 'PPL') {
+        if (in_array($actor->role, ['Admin', 'PPL'], true)) {
             return;
         }
         if ($actor->role === 'Pengurus') {
@@ -353,7 +372,7 @@ class DokumenController extends Controller
         $actor = $request->user();
         abort_unless($actor, 401);
 
-        if ($actor->role === 'PPL') {
+        if (in_array($actor->role, ['Admin', 'PPL'], true)) {
             return;
         }
         if ($actor->role === 'Pengurus') {

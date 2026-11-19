@@ -134,13 +134,13 @@ class Pengguna extends Authenticatable
     }
 
     /**
-     * Generate unique random id_pengguna: PGR-AngkaRandom
+     * Generate unique random id_pengguna: PGR-XXXXXX (alphanumeric, 6 karakter acak)
      */
     public static function generateIdPengguna(): string
     {
         do {
-            $randomNumber = mt_rand(1000, 9999);
-            $id = 'PGR-' . $randomNumber;
+            $random = strtoupper(\Illuminate\Support\Str::random(6));
+            $id = 'PGR-' . $random;
         } while (self::where('id_pengguna', $id)->exists());
 
         return $id;
