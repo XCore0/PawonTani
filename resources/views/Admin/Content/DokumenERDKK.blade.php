@@ -4,156 +4,317 @@
 
 @section('content')
 <div class="space-y-6">
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+
+  <!-- ==================== FLASH ALERT NOTIFICATION ==================== -->
+  @if(session('success'))
+    <div id="flash-banner" class="flex items-center justify-between p-4 rounded-2xl bg-[#EBF6E0] border border-[#C5DFB0] text-[#1A2D10] text-xs sm:text-sm shadow-xs transition-all">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-[#4D9830] text-white flex items-center justify-center shrink-0">
+          <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+        </div>
+        <div>
+          <span class="font-bold">Berhasil!</span>
+          <span class="text-[#4A6030] ml-1">{{ session('success') }}</span>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('flash-banner').remove()" class="p-1 text-[#4A6030] hover:text-[#1A2D10] rounded-lg hover:bg-[#dff0d0] transition-colors cursor-pointer">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+  @endif
+
+  <!-- ==================== 1. TOP HEADER & ACTION BUTTONS ==================== -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-wider text-[#78965F]">Pengelolaan dokumen</p>
-      <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-[#27451B] sm:text-[28px]">Dokumen e-RDKK</h1>
-      <p class="mt-1 text-sm text-[#657B55]">Lihat dan unduh dokumen anggota untuk membantu proses input data e-RDKK.</p>
+      <h1 class="text-2xl sm:text-[28px] font-extrabold text-[#1A2D10] tracking-tight">
+        Dokumen e-RDKK
+      </h1>
+      <p class="text-xs sm:text-sm text-[#9AB880] mt-1 font-medium">
+        Pemeriksaan dan pengunduhan berkas identitas (KTP, KK) serta bukti SPPT lahan anggota.
+      </p>
     </div>
-    <div class="rounded-xl border border-[#DCE9D0] bg-white px-4 py-2 text-xs font-medium text-[#536F3F]">Akses Admin/PPL: lihat dan unduh saja</div>
-  </div>
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <div class="rounded-[18px] border border-[#DCE9D0] bg-white p-5">
-      <p class="text-xs font-semibold uppercase tracking-wide text-[#78965F]">Total Anggota</p>
-      <p class="mt-2 text-2xl font-extrabold text-[#27451B]">{{ number_format($totalAnggota) }}</p>
-    </div>
-    <div class="rounded-[18px] border border-[#DCE9D0] bg-white p-5">
-      <p class="text-xs font-semibold uppercase tracking-wide text-[#78965F]">KTP & KK Tersedia</p>
-      <p class="mt-2 text-2xl font-extrabold text-[#27451B]">{{ number_format($totalDokumenIdentitasLengkap) }}</p>
-      <p class="mt-1 text-xs text-[#657B55]">Anggota dengan dua dokumen identitas</p>
-    </div>
-    <div class="rounded-[18px] border border-[#DCE9D0] bg-white p-5">
-      <p class="text-xs font-semibold uppercase tracking-wide text-[#78965F]">Perlu SPPT</p>
-      <p class="mt-2 text-2xl font-extrabold text-[#27451B]">{{ number_format($totalSpptKurang) }}</p>
-      <p class="mt-1 text-xs text-[#657B55]">Anggota dengan lahan yang belum memiliki SPPT</p>
+    <!-- Action Badge -->
+    <div class="flex items-center gap-2.5 shrink-0">
+      <div class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm font-semibold text-[#4A6030]">
+        <i data-lucide="shield-check" class="w-4 h-4 text-[#4D9830]"></i>
+        <span>Hak Akses: Unduh Arsip</span>
+      </div>
     </div>
   </div>
 
-  <form method="GET" class="grid grid-cols-1 gap-3 rounded-[20px] border border-[#DCE9D0] bg-white p-4 md:grid-cols-12">
-    <div class="md:col-span-5">
-      <label class="mb-1 block text-xs font-semibold text-[#536F3F]">Cari anggota</label>
-      <input name="q" value="{{ request('q') }}" placeholder="Nama, NIK, atau username" class="h-11 w-full rounded-xl border border-[#C9DDB9] px-3 text-sm text-[#27451B] outline-none transition focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/15">
+  <!-- ==================== 2. SUMMARY METRICS CARDS ==================== -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Card 1: Total Anggota -->
+    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center shrink-0">
+        <i data-lucide="users" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Total Anggota</span>
+        <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($totalAnggota) }}</span>
+        <span class="text-[11px] text-[#4A6030] block mt-0.5 font-medium">Terdaftar e-RDKK</span>
+      </div>
     </div>
-    <div class="md:col-span-4">
-      <label class="mb-1 block text-xs font-semibold text-[#536F3F]">Kelompok tani</label>
-      <select name="kelompok" class="h-11 w-full rounded-xl border border-[#C9DDB9] bg-white px-3 text-sm text-[#27451B]">
-        <option value="">Semua kelompok</option>
-        @foreach($kelompok as $item)
-          <option value="{{ $item->id_kelompok }}" @selected(request('kelompok') === $item->id_kelompok)>{{ $item->nama_kelompok }}</option>
-        @endforeach
-      </select>
-    </div>
-    <div class="md:col-span-2">
-      <label class="mb-1 block text-xs font-semibold text-[#536F3F]">Keanggotaan</label>
-      <select name="status" class="h-11 w-full rounded-xl border border-[#C9DDB9] bg-white px-3 text-sm text-[#27451B]">
-        <option value="">Semua</option>
-        <option value="Aktif" @selected(request('status') === 'Aktif')>Aktif</option>
-        <option value="Keluar" @selected(request('status') === 'Keluar')>Keluar</option>
-        <option value="Tidak Aktif" @selected(request('status') === 'Tidak Aktif')>Tidak Aktif</option>
-      </select>
-    </div>
-    <div class="flex items-end md:col-span-1">
-      <button class="h-11 w-full rounded-xl bg-[#4D9830] px-3 text-sm font-bold text-white transition hover:bg-[#3D8024]">Cari</button>
-    </div>
-  </form>
 
-  <div class="overflow-hidden rounded-[20px] border border-[#DCE9D0] bg-white">
-    <div class="border-b border-[#DCE9D0] bg-[#F4F8EF] px-5 py-4">
-      <h2 class="text-sm font-bold text-[#27451B]">Daftar Dokumen Anggota</h2>
-      <p class="mt-0.5 text-xs text-[#78965F]">Preview terbuka di tab baru. Unduhan dapat dilakukan per dokumen atau sekaligus dalam satu ZIP.</p>
+    <!-- Card 2: KTP & KK Lengkap -->
+    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <i data-lucide="badge-check" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">KTP & KK Lengkap</span>
+        <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($totalDokumenIdentitasLengkap) }}</span>
+        <span class="text-[11px] text-emerald-600 font-semibold block mt-0.5">● Validasi Simluhtan Siap</span>
+      </div>
     </div>
+
+    <!-- Card 3: Perlu SPPT Lahan -->
+    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-amber-50 text-[#F4A020] flex items-center justify-center shrink-0">
+        <i data-lucide="file-warning" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Perlu Bukti SPPT</span>
+        <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($totalSpptKurang) }}</span>
+        <span class="text-[11px] text-amber-600 font-semibold block mt-0.5">● Lahan Belum Berkas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 3. FILTER & SEARCH TOOLBAR ==================== -->
+  <div class="p-4 sm:p-5 rounded-[20px] bg-white border border-[#E4F0D6] shadow-2xs">
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+      
+      <!-- Search Box (Col 5) -->
+      <div class="md:col-span-5 relative">
+        <i data-lucide="search" class="w-4 h-4 text-[#9AB880] absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+        <input type="text" name="q" value="{{ request('q') }}"
+          placeholder="Cari nama, NIK, username, atau ID..."
+          class="w-full h-11 pl-10 pr-4 rounded-xl border border-[#C5DFB0] bg-[#F5F8F1]/40 text-slate-800 placeholder-[#9AB880] text-xs sm:text-sm focus:outline-none focus:bg-white focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all">
+      </div>
+
+      <!-- Filter Kelompok Tani (Col 4) -->
+      <div class="md:col-span-4">
+        <select name="kelompok" onchange="this.form.submit()"
+          class="w-full h-11 px-3.5 rounded-xl border border-[#C5DFB0] bg-[#F5F8F1]/40 text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:bg-white focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all cursor-pointer">
+          <option value="">Semua Kelompok Tani</option>
+          @foreach($kelompok as $item)
+            <option value="{{ $item->id_kelompok }}" @selected(request('kelompok') === $item->id_kelompok)>
+              {{ $item->nama_kelompok }}
+            </option>
+          @endforeach
+        </select>
+      </div>
+
+      <!-- Filter Status (Col 2) -->
+      <div class="md:col-span-2">
+        <select name="status" onchange="this.form.submit()"
+          class="w-full h-11 px-3.5 rounded-xl border border-[#C5DFB0] bg-[#F5F8F1]/40 text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:bg-white focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all cursor-pointer">
+          <option value="">Semua Status</option>
+          <option value="Aktif" @selected(request('status') === 'Aktif')>Aktif</option>
+          <option value="Keluar" @selected(request('status') === 'Keluar')>Keluar</option>
+          <option value="Tidak Aktif" @selected(request('status') === 'Tidak Aktif')>Tidak Aktif</option>
+        </select>
+      </div>
+
+      <!-- Reset / Action (Col 1) -->
+      <div class="md:col-span-1 flex items-center justify-end">
+        @if(request()->hasAny(['q', 'kelompok', 'status']))
+          <a href="{{ route('admin.dokumen.erdkk') }}"
+            class="w-full h-11 rounded-xl border border-[#C5DFB0] bg-white hover:bg-[#F5F8F1] text-[#4A6030] flex items-center justify-center transition-colors cursor-pointer"
+            title="Reset Filter">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          </a>
+        @else
+          <button type="submit"
+            class="w-full h-11 rounded-xl bg-[#4D9830] hover:bg-[#3D8024] text-white flex items-center justify-center transition-all cursor-pointer"
+            title="Cari">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </button>
+        @endif
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ==================== 4. DATA TABLE ==================== -->
+  <div class="bg-white rounded-[20px] border border-[#E4F0D6] shadow-2xs overflow-hidden">
+    
     <div class="overflow-x-auto">
-      <table class="min-w-full text-left text-sm">
-        <thead class="bg-white text-[11px] uppercase tracking-wide text-[#78965F]">
-          <tr>
-            <th class="px-5 py-3">Anggota</th>
-            <th class="px-5 py-3">Kelompok</th>
-            <th class="px-5 py-3">KTP</th>
-            <th class="px-5 py-3">KK</th>
-            <th class="px-5 py-3">SPPT per lahan</th>
-            <th class="px-5 py-3">Status</th>
-            <th class="px-5 py-3">Semua dokumen</th>
+      <table class="w-full text-left border-collapse text-xs sm:text-sm" id="erdkk-table">
+        <!-- Table Header (Identik Pengurus) -->
+        <thead>
+          <tr class="bg-[#F5F8F1] border-b border-[#E4F0D6] text-[#1A2D10] font-bold tracking-wider uppercase text-[11px]">
+            <th class="py-3.5 px-4 text-center w-12">No</th>
+            <th class="py-3.5 px-4">Petani</th>
+            <th class="py-3.5 px-4">Kelompok Tani</th>
+            <th class="py-3.5 px-4 text-center w-24">KTP</th>
+            <th class="py-3.5 px-4 text-center w-24">KK</th>
+            <th class="py-3.5 px-4">Bukti SPPT per Lahan</th>
+            <th class="py-3.5 px-4 text-center">Status</th>
+            <th class="py-3.5 px-4 text-center w-28">Arsip ZIP</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-[#E3ECD9]">
-          @forelse($anggota as $member)
+
+        <!-- Table Body -->
+        <tbody class="divide-y divide-[#E4F0D6]/60 text-slate-700">
+          @forelse($anggota as $index => $member)
             @php($ktp = $member->dokumenIdentitas->firstWhere('jenis', 'KTP'))
             @php($kk = $member->dokumenIdentitas->firstWhere('jenis', 'KK'))
-            <tr class="align-top transition-colors hover:bg-[#F7FAF4]">
-              <td class="px-5 py-4">
-                <p class="font-bold text-[#27451B]">{{ $member->nama }}</p>
-                <p class="mt-0.5 text-xs text-[#78965F]">{{ $member->nik ?: 'NIK belum diisi' }}</p>
+            <tr class="hover:bg-[#F5F8F1]/50 transition-colors">
+              <!-- NO -->
+              <td class="py-4 px-4 text-center font-medium text-slate-500">
+                {{ $anggota->firstItem() + $index }}
               </td>
-              <td class="px-5 py-4 text-xs text-[#536F3F]">{{ $member->kelompokTani?->nama_kelompok ?? '-' }}</td>
-              <td class="px-5 py-4">
+
+              <!-- PETANI (Nama, Avatar & NIK) -->
+              <td class="py-4 px-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#4D9830] to-[#72BE4A] text-white font-bold flex items-center justify-center text-xs shrink-0 border border-emerald-200">
+                    {{ strtoupper(substr($member->nama, 0, 2)) }}
+                  </div>
+                  <div>
+                    <span class="font-bold text-[#1A2D10] block">{{ $member->nama }}</span>
+                    <span class="text-[11px] text-slate-500 block">
+                      NIK: {{ $member->nik ?: 'Belum diisi' }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- KELOMPOK TANI -->
+              <td class="py-4 px-4">
+                <span class="font-medium text-[#1A2D10] block">{{ $member->kelompokTani?->nama_kelompok ?? '-' }}</span>
+                <span class="text-[11px] text-slate-400 block">Anggota Poktan</span>
+              </td>
+
+              <!-- KTP -->
+              <td class="py-4 px-4 text-center">
                 @if($ktp)
-                  <div class="flex flex-wrap gap-1.5">
-                    <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax href="{{ route('admin.dokumen.identity.preview', [$member->id_pengguna, 'KTP']) }}" class="inline-flex items-center gap-1 rounded-lg border border-[#DCE9D0] px-2 py-1.5 text-xs font-semibold text-[#536F3F] hover:bg-[#F4F8EF]">Lihat</a>
-                    <a download data-no-admin-ajax href="{{ route('admin.dokumen.identity.download', [$member->id_pengguna, 'KTP']) }}" class="inline-flex items-center gap-1 rounded-lg bg-[#E8F2DF] px-2 py-1.5 text-xs font-semibold text-[#3D8024] hover:bg-[#DCECCF]">Unduh</a>
+                  <div class="flex items-center justify-center gap-1">
+                    <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax
+                      href="{{ route('admin.dokumen.identity.preview', [$member->id_pengguna, 'KTP']) }}"
+                      class="p-1.5 text-slate-500 hover:text-[#4D9830] hover:bg-[#EBF6E0] rounded-lg transition-colors"
+                      title="Lihat KTP">
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </a>
+                    <a download data-no-admin-ajax
+                      href="{{ route('admin.dokumen.identity.download', [$member->id_pengguna, 'KTP']) }}"
+                      class="p-1.5 text-[#4D9830] hover:text-[#3D8024] hover:bg-[#EBF6E0] rounded-lg transition-colors"
+                      title="Unduh KTP">
+                      <i data-lucide="download" class="w-4 h-4"></i>
+                    </a>
                   </div>
                 @else
-                  <span class="text-xs text-[#9A8354]">Belum tersedia</span>
+                  <span class="text-[11px] text-amber-600 italic">Belum ada</span>
                 @endif
               </td>
-              <td class="px-5 py-4">
+
+              <!-- KK -->
+              <td class="py-4 px-4 text-center">
                 @if($kk)
-                  <div class="flex flex-wrap gap-1.5">
-                    <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax href="{{ route('admin.dokumen.identity.preview', [$member->id_pengguna, 'KK']) }}" class="inline-flex items-center gap-1 rounded-lg border border-[#DCE9D0] px-2 py-1.5 text-xs font-semibold text-[#536F3F] hover:bg-[#F4F8EF]">Lihat</a>
-                    <a download data-no-admin-ajax href="{{ route('admin.dokumen.identity.download', [$member->id_pengguna, 'KK']) }}" class="inline-flex items-center gap-1 rounded-lg bg-[#E8F2DF] px-2 py-1.5 text-xs font-semibold text-[#3D8024] hover:bg-[#DCECCF]">Unduh</a>
+                  <div class="flex items-center justify-center gap-1">
+                    <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax
+                      href="{{ route('admin.dokumen.identity.preview', [$member->id_pengguna, 'KK']) }}"
+                      class="p-1.5 text-slate-500 hover:text-[#4D9830] hover:bg-[#EBF6E0] rounded-lg transition-colors"
+                      title="Lihat Kartu Keluarga">
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </a>
+                    <a download data-no-admin-ajax
+                      href="{{ route('admin.dokumen.identity.download', [$member->id_pengguna, 'KK']) }}"
+                      class="p-1.5 text-[#4D9830] hover:text-[#3D8024] hover:bg-[#EBF6E0] rounded-lg transition-colors"
+                      title="Unduh Kartu Keluarga">
+                      <i data-lucide="download" class="w-4 h-4"></i>
+                    </a>
                   </div>
                 @else
-                  <span class="text-xs text-[#9A8354]">Belum tersedia</span>
+                  <span class="text-[11px] text-amber-600 italic">Belum ada</span>
                 @endif
               </td>
-              <td class="min-w-[250px] px-5 py-4">
+
+              <!-- SPPT LAHAN -->
+              <td class="py-4 px-4 min-w-[220px]">
                 @forelse($member->lahan as $land)
-                  <div class="mb-3 last:mb-0">
-                    <p class="mb-1 text-xs font-semibold text-[#536F3F]">{{ $land->nama_lahan }}</p>
+                  <div class="mb-2 last:mb-0 p-2 rounded-xl border border-[#E4F0D6] bg-[#F5F8F1]/40">
+                    <div class="flex items-center justify-between text-xs mb-1">
+                      <span class="font-bold text-[#1A2D10] flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3 h-3 text-[#4D9830]"></i>
+                        {{ $land->nama_lahan }}
+                      </span>
+                      <span class="text-slate-400 font-medium">{{ $land->luas }} Ha</span>
+                    </div>
+
                     @if($land->dokumenSppt->isNotEmpty())
-                      <div class="space-y-1.5">
+                      <div class="space-y-1">
                         @foreach($land->dokumenSppt as $sppt)
-                          <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#F4F8EF] px-2.5 py-2">
-                            <span class="max-w-[155px] truncate text-[11px] text-[#536F3F]" title="{{ $sppt->original_name }}">{{ $sppt->original_name }}</span>
-                            <span class="flex shrink-0 items-center gap-2">
-                              <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax href="{{ route('admin.dokumen.sppt.preview', $sppt->id) }}" class="text-[11px] font-semibold text-[#536F3F] hover:underline">Lihat</a>
-                              <a download data-no-admin-ajax href="{{ route('admin.dokumen.sppt.download', $sppt->id) }}" class="text-[11px] font-semibold text-[#3D8024] hover:underline">Unduh</a>
-                            </span>
+                          <div class="flex items-center justify-between gap-1.5 text-[11px] bg-white border border-[#E4F0D6] rounded-lg px-2 py-0.5">
+                            <span class="truncate max-w-[130px] text-slate-600" title="{{ $sppt->original_name }}">{{ $sppt->original_name }}</span>
+                            <div class="flex items-center gap-1 shrink-0">
+                              <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax
+                                href="{{ route('admin.dokumen.sppt.preview', $sppt->id) }}"
+                                class="text-slate-500 hover:text-[#1A2D10] font-semibold">Lihat</a>
+                              <span class="text-slate-300">·</span>
+                              <a download data-no-admin-ajax
+                                href="{{ route('admin.dokumen.sppt.download', $sppt->id) }}"
+                                class="text-[#4D9830] hover:underline font-bold">Unduh</a>
+                            </div>
                           </div>
                         @endforeach
                       </div>
                     @else
-                      <span class="text-[11px] text-[#9A8354]">SPPT belum tersedia</span>
+                      <span class="text-[11px] text-amber-600 italic block">SPPT belum diunggah</span>
                     @endif
                   </div>
                 @empty
-                  <span class="text-xs text-[#78965F]">Belum memiliki lahan</span>
+                  <span class="text-xs text-slate-400 italic">Belum ada lahan</span>
                 @endforelse
               </td>
-              <td class="px-5 py-4">
-                <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold {{ $member->anggota?->status_keanggotaan === 'Aktif' ? 'bg-[#E8F2DF] text-[#3D8024]' : 'bg-[#F7F1E5] text-[#8A6D32]' }}">{{ $member->anggota?->status_keanggotaan ?? 'Tidak diketahui' }}</span>
+
+              <!-- STATUS -->
+              <td class="py-4 px-4 text-center">
+                @php($st = $member->anggota?->status_keanggotaan ?? '-')
+                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $st === 'Aktif' ? 'bg-[#EBF6E0] text-[#4D9830] border border-[#C5DFB0]' : 'bg-slate-100 text-slate-600 border border-slate-200' }}">
+                  {{ $st }}
+                </span>
               </td>
-              <td class="px-5 py-4">
+
+              <!-- ARSIP ZIP -->
+              <td class="py-4 px-4 text-center">
                 @if($member->dokumenIdentitas->isNotEmpty() || $member->lahan->contains(fn ($land) => $land->dokumenSppt->isNotEmpty()))
-                  <a download data-no-admin-ajax href="{{ route('admin.dokumen.member.download-all', $member->id_pengguna) }}" class="inline-flex whitespace-nowrap items-center gap-1.5 rounded-xl bg-[#4D9830] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#3D8024]">
-                    <i data-lucide="download" class="h-3.5 w-3.5"></i> Unduh Semua
+                  <a download data-no-admin-ajax
+                    href="{{ route('admin.dokumen.member.download-all', $member->id_pengguna) }}"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4D9830] hover:bg-[#3D8024] text-white text-xs font-bold transition-all shadow-2xs whitespace-nowrap">
+                    <i data-lucide="archive" class="w-3.5 h-3.5"></i>
+                    <span>Unduh ZIP</span>
                   </a>
                 @else
-                  <span class="text-xs text-[#9A8354]">Belum ada dokumen</span>
+                  <span class="text-xs text-slate-300 font-bold">—</span>
                 @endif
               </td>
             </tr>
           @empty
-            <tr><td colspan="7" class="px-5 py-12 text-center text-sm text-[#78965F]">Data anggota tidak ditemukan.</td></tr>
+            <tr>
+              <td colspan="8" class="py-12 text-center text-slate-400">
+                <div class="flex flex-col items-center justify-center">
+                  <div class="w-12 h-12 rounded-2xl bg-[#F5F8F1] flex items-center justify-center mb-3">
+                    <i data-lucide="folder-x" class="w-6 h-6 text-[#9AB880]"></i>
+                  </div>
+                  <span class="font-bold text-slate-700 text-sm">Dokumen e-RDKK tidak ditemukan</span>
+                  <span class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter kelompok</span>
+                </div>
+              </td>
+            </tr>
           @endforelse
         </tbody>
       </table>
     </div>
-    <div class="border-t border-[#DCE9D0] p-4">{{ $anggota->links() }}</div>
+
+    <!-- Pagination Footer -->
+    <div class="p-4 sm:p-5 border-t border-[#E4F0D6]/60 bg-white">
+      {{ $anggota->links() }}
+    </div>
   </div>
 
-  <div class="rounded-xl border border-[#E5D8B7] bg-[#FBF7EE] p-4 text-xs leading-relaxed text-[#705B30]">
-    <strong>Pengingat keamanan:</strong> KTP, KK, dan SPPT merupakan dokumen pribadi. Simpan hasil unduhan di perangkat yang aman dan jangan membagikannya kepada pihak yang tidak berwenang.
-  </div>
 </div>
 @endsection

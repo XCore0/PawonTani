@@ -5,75 +5,433 @@
 @section('content')
 <div class="space-y-6">
 
-  <!-- Welcome Banner -->
-  <div class="p-6 sm:p-8 rounded-[22px] bg-gradient-to-r from-[#4D9830] to-[#72BE4A] text-white shadow-xs relative overflow-hidden">
-    <div class="absolute -right-8 -bottom-8 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-    <div class="relative z-10 max-w-2xl space-y-2">
-      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold backdrop-blur-xs">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-300"></i>
-        <span>Selamat Datang, {{ auth()->user()->nama ?? 'Admin' }}</span>
-      </span>
-      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-        Panel Administrasi PawonTani
-      </h1>
-      <p class="text-xs sm:text-sm text-emerald-50 leading-relaxed font-medium">
-        Pusat kendali dan monitoring data kelompok tani, struktur pengurus, komoditas, dan aktivitas pertanian terpadu.
-      </p>
-      <div class="pt-2">
-        <a href="{{ route('admin.pengurus') }}"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#1A2D10] text-xs sm:text-sm font-bold shadow-xs hover:bg-[#F5F8F1] transition-all">
-          <span>Kelola Pengurus Poktan</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+  <!-- ==================== 1. HERO WELCOME BANNER ==================== -->
+  <div class="p-6 sm:p-8 rounded-[22px] bg-gradient-to-r from-[#2B571B] via-[#4D9830] to-[#6EB844] text-white shadow-sm relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-8 w-60 h-60 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
+    <div class="absolute right-1/4 -top-12 w-40 h-40 rounded-full bg-emerald-300/10 blur-xl pointer-events-none"></div>
+    
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div class="max-w-2xl space-y-2.5">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-semibold backdrop-blur-xs border border-white/20">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-300"></i>
+          <span>{{ $sapaanWaktu }}, {{ auth()->user()->nama ?? 'Admin PPL' }}</span>
+          <span class="text-white/40">•</span>
+          <span class="text-emerald-100 font-normal">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Pusat Kendali Operasional Pertanian
+        </h1>
+        
+        <p class="text-xs sm:text-sm text-emerald-50 leading-relaxed font-medium">
+          @if ($permintaanPending > 0)
+            Perhatian: Terdapat <span class="font-bold underline text-white">{{ $permintaanPending }} pengajuan keanggotaan baru</span> yang membutuhkan verifikasi Anda.
+          @else
+            Semua pengajuan keanggotaan tertangani dengan baik. Pantau verifikasi lahan dan kesiapan e-RDKK secara berkala.
+          @endif
+        </p>
+      </div>
+
+      <!-- Tombol Pintas Aksi Cepat -->
+      <div class="flex flex-wrap items-center gap-2.5 self-start lg:self-center shrink-0">
+        <a href="{{ route('admin.permintaan-keanggotaan') }}"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#1A2D10] text-xs sm:text-sm font-bold shadow-xs hover:bg-[#F5F8F1] hover:shadow-md transition-all">
+          <i data-lucide="user-check" class="w-4 h-4 text-[#4D9830]"></i>
+          <span>Tinjau Permintaan</span>
+          @if ($permintaanPending > 0)
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+          @endif
+        </a>
+        <a href="{{ route('admin.dokumen.erdkk') }}"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1A2D10]/40 hover:bg-[#1A2D10]/60 border border-white/25 text-white text-xs sm:text-sm font-bold backdrop-blur-xs transition-all">
+          <i data-lucide="file-check-2" class="w-4 h-4 text-emerald-300"></i>
+          <span>Verifikasi e-RDKK</span>
         </a>
       </div>
     </div>
   </div>
 
-  <!-- Quick Metrics -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center shrink-0">
-        <i data-lucide="users" class="w-6 h-6"></i>
+  <!-- ==================== 2. GRID KPI CARDS (5 METRICS) ==================== -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    
+    <!-- Kelompok Tani -->
+    <div class="p-5 rounded-[20px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-[11px] font-bold text-[#9AB880] uppercase tracking-wider">Kelompok Tani</span>
+        <div class="w-10 h-10 rounded-xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center">
+          <i data-lucide="users" class="w-5 h-5"></i>
+        </div>
       </div>
       <div>
-        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Kelompok Tani</span>
-        <span class="text-2xl font-extrabold text-[#1A2D10]">8</span>
-        <span class="text-[11px] text-[#4A6030] block font-medium">100% Aktif</span>
+        <div class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($totalKelompok) }}</div>
+        <div class="mt-1 flex items-center gap-1.5 text-xs text-[#4A6030]">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span class="font-semibold">{{ $kelompokAktif }} Aktif</span>
+          <span class="text-slate-400">({{ $persenKelompokAktif }}%)</span>
+        </div>
       </div>
     </div>
 
-    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-amber-50 text-[#F4A020] flex items-center justify-center shrink-0">
-        <i data-lucide="user-check" class="w-6 h-6"></i>
+    <!-- Total Petani -->
+    <div class="p-5 rounded-[20px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-[11px] font-bold text-[#9AB880] uppercase tracking-wider">Petani / Anggota</span>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="sprout" class="w-5 h-5"></i>
+        </div>
       </div>
       <div>
-        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Total Pengurus</span>
-        <span class="text-2xl font-extrabold text-[#1A2D10]">28</span>
-        <span class="text-[11px] text-[#4A6030] block font-medium">Terverifikasi</span>
+        <div class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($totalPetani) }}</div>
+        <div class="mt-1 text-xs text-slate-500 font-medium">
+          + {{ $totalPengurus }} Pengurus Poktan
+        </div>
       </div>
     </div>
 
-    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-        <i data-lucide="sprout" class="w-6 h-6"></i>
+    <!-- Permintaan Pending -->
+    <div class="p-5 rounded-[20px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-[11px] font-bold text-[#9AB880] uppercase tracking-wider">Permintaan Masuk</span>
+        <div class="w-10 h-10 rounded-xl {{ $permintaanPending > 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-400' }} flex items-center justify-center">
+          <i data-lucide="user-plus" class="w-5 h-5"></i>
+        </div>
       </div>
       <div>
-        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Total Luas Lahan</span>
-        <span class="text-2xl font-extrabold text-[#1A2D10]">142.5 Ha</span>
-        <span class="text-[11px] text-[#4A6030] block font-medium">Padi & Jagung</span>
+        <div class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($permintaanPending) }}</div>
+        <div class="mt-1 text-xs {{ $permintaanPending > 0 ? 'text-amber-600 font-semibold' : 'text-slate-500' }}">
+          {{ $permintaanPending > 0 ? 'Perlu Tinjauan Segera' : 'Semua telah diproses' }}
+        </div>
       </div>
     </div>
 
-    <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-        <i data-lucide="check-circle" class="w-6 h-6"></i>
+    <!-- Total Luas Lahan -->
+    <div class="p-5 rounded-[20px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-[11px] font-bold text-[#9AB880] uppercase tracking-wider">Luas Lahan Terdata</span>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+        </div>
       </div>
       <div>
-        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Verifikasi Lapangan</span>
-        <span class="text-2xl font-extrabold text-[#1A2D10]">24 / 24</span>
-        <span class="text-[11px] text-emerald-600 font-semibold block">Tuntas Semester Ini</span>
+        <div class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ number_format($totalLuasLahan, 2) }} <span class="text-sm font-semibold text-slate-500">Ha</span></div>
+        <div class="mt-1 text-xs text-slate-500 font-medium">
+          Dari {{ number_format($totalLahan) }} petak lahan
+        </div>
       </div>
     </div>
+
+    <!-- Kesiapan e-RDKK -->
+    <div class="p-5 rounded-[20px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between sm:col-span-2 lg:col-span-1">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-[11px] font-bold text-[#9AB880] uppercase tracking-wider">Kesiapan e-RDKK</span>
+        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+          <i data-lucide="file-check-2" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div>
+        <div class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ $dokumenLengkapCount }} / {{ $totalAnggotaValid }}</div>
+        <div class="mt-1 text-xs text-[#4A6030] font-medium">
+          Petani berkas lengkap KTP & KK
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== 3. DUA KOLOM UTAMA ==================== -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- ========== KOLOM KIRI: TINDAKAN & OPERASIONAL (7 Kolom) ========== -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- Kartu 1: Permintaan Keanggotaan Tertunda -->
+      <div class="bg-white rounded-[22px] border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-[#E4F0D6]/70 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <i data-lucide="user-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-[#1A2D10]">Permintaan Keanggotaan Masuk</h2>
+              <p class="text-xs text-slate-500 font-medium">Pengajuan petani yang menunggu persetujuan PPL</p>
+            </div>
+          </div>
+          <a href="{{ route('admin.permintaan-keanggotaan') }}"
+            class="text-xs font-bold text-[#4D9830] hover:text-[#3D8024] hover:underline flex items-center gap-1">
+            <span>Lihat Semua</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+        <div class="p-5 sm:p-6">
+          @forelse ($permintaanTerbaru as $req)
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-[#E4F0D6] bg-[#F5F8F1]/40 mb-3 last:mb-0 hover:bg-[#F5F8F1] transition-colors">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-[#1A2D10]">{{ $req->pengguna->nama ?? 'Petani' }}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white border border-[#E4F0D6] text-slate-500">
+                    {{ substr($req->pengguna->nik ?? '0000000000000000', 0, 6) . '******' }}
+                  </span>
+                </div>
+                <div class="text-xs text-slate-600 flex items-center gap-2 flex-wrap">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="users" class="w-3.5 h-3.5 text-[#4D9830]"></i>
+                    <span>{{ $req->kelompokTani->nama_kelompok ?? 'Tanpa Kelompok' }}</span>
+                  </span>
+                  <span class="text-slate-300">•</span>
+                  <span class="text-slate-400">{{ $req->created_at ? $req->created_at->diffForHumans() : '-' }}</span>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <form action="{{ route('admin.permintaan-keanggotaan.approve', $req->id) }}" method="POST" onsubmit="return confirm('Setujui permintaan keanggotaan ini?')">
+                  @csrf
+                  <button type="submit"
+                    class="h-8 px-3 rounded-lg bg-[#4D9830] hover:bg-[#3D8024] text-white text-xs font-bold shadow-2xs flex items-center gap-1 transition-colors">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    <span>Setujui</span>
+                  </button>
+                </form>
+                <form action="{{ route('admin.permintaan-keanggotaan.reject', $req->id) }}" method="POST" onsubmit="return confirm('Tolak permintaan keanggotaan ini?')">
+                  @csrf
+                  <button type="submit"
+                    class="h-8 px-2.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1 transition-colors">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    <span>Tolak</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          @empty
+            <div class="py-8 text-center">
+              <div class="w-12 h-12 rounded-2xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center mx-auto mb-2.5">
+                <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-sm font-bold text-[#1A2D10]">Semua Permintaan Selesai</h3>
+              <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                Tidak ada permintaan keanggotaan baru yang tertunda. Petani akan muncul di sini saat mendaftar.
+              </p>
+            </div>
+          @endforelse
+        </div>
+      </div>
+
+      <!-- Kartu 2: Sebaran Komoditas Wilayah Binaan -->
+      <div class="bg-white rounded-[22px] border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-[#E4F0D6]/70 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <i data-lucide="wheat" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-[#1A2D10]">Sebaran Komoditas Garapan</h2>
+              <p class="text-xs text-slate-500 font-medium">Rekapitulasi komoditas utama dan luasan lahan binaan</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-slate-500">{{ $totalLuasLahan > 0 ? number_format($totalLuasLahan, 2) . ' Ha' : '0 Ha' }} Total</span>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-4">
+          @forelse ($sebaranKomoditas as $kmdt)
+            @php
+              $luas = (float) ($kmdt->lahan_sum_luas ?? 0);
+              $persen = $totalLuasLahan > 0 ? round(($luas / $totalLuasLahan) * 100) : 0;
+            @endphp
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-[#1A2D10] flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#4D9830]"></span>
+                  <span>{{ $kmdt->nama_komoditas }}</span>
+                </span>
+                <span class="text-slate-600 font-semibold">
+                  {{ number_format($luas, 2) }} Ha <span class="text-slate-400 font-normal">({{ $persen }}% • {{ $kmdt->lahan_count }} petak)</span>
+                </span>
+              </div>
+              <div class="h-2.5 w-full bg-[#EBF6E0] rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-[#4D9830] to-[#72BE4A] rounded-full transition-all duration-500" style="width: {{ max($persen, 4) }}%"></div>
+              </div>
+            </div>
+          @empty
+            <div class="py-6 text-center text-xs text-slate-500 font-medium">
+              Belum ada data komoditas yang terhubung dengan lahan terdata.
+            </div>
+          @endforelse
+        </div>
+      </div>
+
+      <!-- Kartu 3: Kelompok Tani Binaan Terbesar -->
+      <div class="bg-white rounded-[22px] border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-[#E4F0D6]/70 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <i data-lucide="building-2" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-[#1A2D10]">Kelompok Tani Binaan</h2>
+              <p class="text-xs text-slate-500 font-medium">Distribusi anggota dan akumulasi lahan per kelompok</p>
+            </div>
+          </div>
+          <a href="{{ route('admin.kelompok') }}"
+            class="text-xs font-bold text-[#4D9830] hover:text-[#3D8024] hover:underline flex items-center gap-1">
+            <span>Kelola Poktan</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+        <div class="divide-y divide-[#E4F0D6]/60">
+          @forelse ($topKelompok as $poktan)
+            <div class="p-4 sm:px-6 flex items-center justify-between hover:bg-[#F5F8F1]/40 transition-colors">
+              <div class="space-y-0.5">
+                <h4 class="text-sm font-bold text-[#1A2D10]">{{ $poktan->nama_kelompok }}</h4>
+                <div class="text-xs text-slate-500 flex items-center gap-2">
+                  <span>{{ $poktan->desa ?? 'Kecamatan Binaan' }}</span>
+                  <span class="text-slate-300">•</span>
+                  <span class="font-semibold text-[#4A6030]">{{ $poktan->anggota_count }} Anggota</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-bold text-[#1A2D10] block">{{ number_format((float) ($poktan->lahan_sum_luas ?? 0), 2) }} Ha</span>
+                <span class="text-[11px] text-slate-400 font-medium">{{ $poktan->lahan_count }} Petak</span>
+              </div>
+            </div>
+          @empty
+            <div class="p-6 text-center text-xs text-slate-500">
+              Belum ada data kelompok tani.
+            </div>
+          @endforelse
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========== KOLOM KANAN: MONITORING, e-RDKK, & LOG AUDIT (5 Kolom) ========== -->
+    <div class="lg:col-span-5 space-y-6">
+
+      <!-- Kartu 1: Status Kesiapan e-RDKK & Berkas -->
+      <div class="bg-white rounded-[22px] border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-[#E4F0D6]/70 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-[#1A2D10]">Kesiapan Berkas e-RDKK</h2>
+              <p class="text-xs text-slate-500 font-medium">Validasi syarat subsidi pupuk</p>
+            </div>
+          </div>
+          <a href="{{ route('admin.dokumen.erdkk') }}" class="text-xs font-bold text-[#4D9830] hover:underline">
+            Buka Berkas
+          </a>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-4">
+          <!-- Widget Status -->
+          <div class="p-4 rounded-xl bg-[#F5F8F1] border border-[#E4F0D6] space-y-2.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-slate-700">KTP & KK Terverifikasi</span>
+              <span class="font-bold text-[#1A2D10]">{{ $dokumenLengkapCount }} / {{ $totalAnggotaValid }} Petani</span>
+            </div>
+            @php
+              $persenDokumen = $totalAnggotaValid > 0 ? round(($dokumenLengkapCount / $totalAnggotaValid) * 100) : 0;
+            @endphp
+            <div class="h-2 w-full bg-white rounded-full overflow-hidden border border-[#E4F0D6]">
+              <div class="h-full bg-teal-500 rounded-full" style="width: {{ max($persenDokumen, 2) }}%"></div>
+            </div>
+            <p class="text-[11px] text-slate-500">
+              {{ $dokumenLengkapCount }} petani siap diekspor ke format e-RDKK Kementan.
+            </p>
+          </div>
+
+          <!-- Alert SPPT Kurang -->
+          <div class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/70 flex items-start gap-3">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+            <div class="text-xs">
+              <span class="font-bold text-amber-900 block">Catatan SPPT Lahan</span>
+              <span class="text-amber-800">
+                Terdapat <strong class="font-bold">{{ $spptKurangCount }} petani</strong> yang belum melampirkan berkas SPPT pada petak lahannya.
+              </span>
+            </div>
+          </div>
+
+          <!-- Lahan butuh verifikasi -->
+          <div class="pt-2">
+            <span class="text-xs font-bold text-[#9AB880] uppercase tracking-wider block mb-2.5">Lahan Menunggu Verifikasi</span>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">
+                <span class="text-lg font-extrabold text-amber-800 block">{{ $lahanMenungguVerifikasi }}</span>
+                <span class="text-[10px] font-semibold text-amber-700 uppercase">Menunggu</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200">
+                <span class="text-lg font-extrabold text-emerald-800 block">{{ $lahanTerverifikasi }}</span>
+                <span class="text-[10px] font-semibold text-emerald-700 uppercase">Valid</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200">
+                <span class="text-lg font-extrabold text-rose-800 block">{{ $lahanPerluPerbaikan }}</span>
+                <span class="text-[10px] font-semibold text-rose-700 uppercase">Revisi</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Kartu 2: Log Aktivitas Sistem Terkini -->
+      <div class="bg-white rounded-[22px] border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-[#E4F0D6]/70 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center shrink-0">
+              <i data-lucide="activity" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-[#1A2D10]">Aktivitas Terkini</h2>
+              <p class="text-xs text-slate-500 font-medium">Jejak audit sistem terbaru</p>
+            </div>
+          </div>
+          <a href="{{ route('admin.log-aktivitas') }}"
+            class="text-xs font-bold text-[#4D9830] hover:text-[#3D8024] hover:underline flex items-center gap-1">
+            <span>Audit Trail</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+        <div class="p-5 sm:p-6">
+          <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#E4F0D6]">
+            @forelse ($recentLogs as $log)
+              <div class="relative group">
+                <!-- Dot icon -->
+                <div class="absolute -left-6 top-1 w-3 h-3 rounded-full border-2 border-white bg-[#4D9830] shadow-xs"></div>
+                
+                <div class="text-xs space-y-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-[#1A2D10] truncate max-w-[160px]">
+                      {{ $log->actor_name ?? ($log->actor->nama ?? 'Sistem') }}
+                    </span>
+                    <span class="text-[11px] text-slate-400 shrink-0">
+                      {{ $log->created_at ? $log->created_at->diffForHumans() : '-' }}
+                    </span>
+                  </div>
+                  <p class="text-slate-600 line-clamp-2 leading-relaxed">
+                    {{ $log->description }}
+                  </p>
+                  @if ($log->event)
+                    <span class="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                      {{ $log->event }}
+                    </span>
+                  @endif
+                </div>
+              </div>
+            @empty
+              <div class="text-center py-6 text-xs text-slate-400">
+                Belum ada aktivitas tercatat hari ini.
+              </div>
+            @endforelse
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
 </div>

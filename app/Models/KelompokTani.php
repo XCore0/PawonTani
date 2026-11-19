@@ -22,6 +22,22 @@ class KelompokTani extends Model
     ];
 
     /**
+     * Relationship to Pengguna
+     */
+    public function pengguna()
+    {
+        return $this->hasMany(Pengguna::class, 'id_kelompok', 'id_kelompok');
+    }
+
+    /**
+     * Relationship to Anggota
+     */
+    public function anggota()
+    {
+        return $this->hasMany(Pengguna::class, 'id_kelompok', 'id_kelompok')->where('role', 'Anggota');
+    }
+
+    /**
      * Relationship to Pengurus
      */
     public function pengurus()

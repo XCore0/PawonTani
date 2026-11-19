@@ -27,7 +27,7 @@ class LogAktivitasController extends Controller
                 ->orWhere('subject_id', $like, "%{$search}%"));
         }
 
-        $logs = $query->orderByDesc('created_at')->paginate(25)->withQueryString();
+        $logs = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
         $kelompok = KelompokTani::orderBy('nama_kelompok')->get(['id_kelompok', 'nama_kelompok']);
         $events = LogAktivitasSistem::query()->select('event')->distinct()->orderBy('event')->pluck('event');
         $totalHariIni = LogAktivitasSistem::whereDate('created_at', today())->count();

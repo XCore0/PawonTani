@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Public\EdukasiController as PublicEdukasiController;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\Admin\DokumenERdkkController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\AnggotaController as AdminAnggotaController;
 use App\Http\Controllers\Admin\LogAktivitasController;
 use App\Http\Controllers\Admin\PermintaanKeanggotaanController as AdminPermintaanKeanggotaanController;
@@ -277,9 +278,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
    ============================================================ */
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(function () use ($errorPage) {
-    Route::get('/dashboard', function () {
-        return view('Admin.Content.Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Data Anggota: pemulihan keanggotaan dan penghapusan data pribadi oleh Admin.
     Route::get('/anggota', [AdminAnggotaController::class, 'index'])->name('anggota');
