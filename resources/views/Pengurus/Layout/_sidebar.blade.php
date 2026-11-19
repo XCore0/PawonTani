@@ -103,20 +103,6 @@
 
   <!-- 3. Sidebar Footer (User Card & Keluar Button) -->
   <div class="p-3.5 border-t border-[#F0F7E8] space-y-2.5 bg-white">
-    <!-- User Info Card -->
-    <div class="flex items-center gap-3 p-2.5 rounded-xl bg-[#F5F8F1] border border-[#E4F0D6]">
-      <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#4D9830] to-[#72BE4A] text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-        {{ strtoupper(substr(auth()->user()->nama ?? 'S', 0, 1)) }}
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="text-xs font-bold text-[#1A2D10] truncate">
-          {{ auth()->user()->nama ?? 'Pengurus' }}
-        </p>
-        <p class="text-[10px] text-[#9AB880] truncate font-medium">
-          {{ auth()->user()->jabatan ?? 'Ketua Kelompok' }}
-        </p>
-      </div>
-    </div>
 
     <form method="POST" action="{{ route('logout') }}" class="w-full">
       @csrf

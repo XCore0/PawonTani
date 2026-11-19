@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\EdukasiController as PublicEdukasiController;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\Admin\DokumenERdkkController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\PermintaanKeanggotaanController as AdminPermintaa
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pengurus\AnggotaController;
+use App\Http\Controllers\Pengurus\DashboardController as PengurusDashboardController;
 use App\Http\Controllers\Pengurus\LahanController;
 use App\Http\Controllers\Pengurus\MonitoringController;
 use App\Services\CommodityService;
@@ -79,9 +81,7 @@ $errorPage = function (string $pageTitle, string $description, string $layout = 
    ============================================================ */
 Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus'])->group(function () use ($errorPage) {
     // Implemented pages
-    Route::get('/dashboard', function () {
-        return view('Pengurus.Content.Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [PengurusDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota');
     Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
@@ -266,11 +266,8 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
 
     Route::get('/notifikasi', fn () => view('Notifications', ['layout' => 'Pengurus.Layout._layout']))->name('notifikasi');
 
-    Route::get('/profil', fn () => $errorPage(
-        'Profil',
-        'Kelola informasi profil dan preferensi akun.',
-        'Pengurus.Layout._layout'
-    ))->name('profil');
+    Route::get('/profil', [ProfileController::class, 'show'])->name('profil');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profil.update');
 });
 
 /* ============================================================
@@ -333,10 +330,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
 
     Route::get('/notifikasi', fn () => view('Notifications'))->name('notifikasi');
 
-    Route::get('/profil', fn () => $errorPage(
-        'Profil',
-        'Kelola informasi profil dan preferensi akun administrator.'
-    ))->name('profil');
+    Route::get('/profil', [ProfileController::class, 'show'])->name('profil');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profil.update');
 });
 
 /* ============================================================
