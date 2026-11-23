@@ -58,8 +58,12 @@ class UpdateAktivitasRequest extends FormRequest
             'catatan' => ['nullable', 'string'],
             'biaya' => ['nullable', 'numeric', 'min:0'],
             'foto_aktivitas' => $this->hasFile('foto_aktivitas')
-                ? ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']
+                ? ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']
                 : ['nullable', 'string', 'max:2000'],
+            'foto_aktivitas_list' => ['nullable', 'array', 'max:10'],
+            'foto_aktivitas_list.*' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'existing_photos' => ['nullable', 'array'],
+            'existing_photos.*' => ['nullable', 'string'],
         ];
     }
 

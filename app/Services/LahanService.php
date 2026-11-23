@@ -103,22 +103,34 @@ class LahanService
      * @throws AuthorizationException
      * @throws Throwable
      */
-    public function createLahan(Pengguna $user, array $data, ?UploadedFile $foto = null): Lahan
+    public function createLahan(Pengguna $user, array $data, ?UploadedFile $foto = null, $fotoList = null): Lahan
     {
         // 1. Otorisasi aktor menggunakan Policy
         if (Gate::forUser($user)->denies('create', Lahan::class)) {
             throw new AuthorizationException('Pengguna tidak memiliki izin untuk mendaftarkan lahan.');
         }
 
-        // 2. Upload foto baru ke Cloudinary sebelum membuka transaksi database
-        $newPhotoUrl = null;
-        if ($foto) {
-            $newPhotoUrl = $this->cloudinaryService->upload($foto->getRealPath(), 'pawontani/lahan');
+        // 2. Upload foto baru ke Cloudinary / local storage
+        $uploadedUrls = [];
+        if ($fotoList) {
+            $files = is_array($fotoList) ? $fotoList : [$fotoList];
+            foreach ($files as $f) {
+                if ($f instanceof UploadedFile) {
+                    $url = $this->cloudinaryService->upload($f->getRealPath(), 'pawontani/lahan');
+                    if ($url) $uploadedUrls[] = $url;
+                }
+            }
         }
+        if ($foto && empty($uploadedUrls)) {
+            $url = $this->cloudinaryService->upload($foto->getRealPath(), 'pawontani/lahan');
+            if ($url) $uploadedUrls[] = $url;
+        }
+
+        $newPhotoUrl = $uploadedUrls[0] ?? null;
 
         // 3. Eksekusi transaksi database dengan kompensasi foto
         try {
-            return DB::transaction(function () use ($user, $data, $newPhotoUrl) {
+            return DB::transaction(function () use ($user, $data, $newPhotoUrl, $uploadedUrls) {
                 $filteredData = array_intersect_key($data, array_flip(self::ALLOWED_ATTRIBUTES));
 
                 $lahan = new Lahan($filteredData);
@@ -133,6 +145,7 @@ class LahanService
 
                 if ($newPhotoUrl) {
                     $lahan->foto_lahan = $newPhotoUrl;
+                    $lahan->foto_lahan_list = !empty($uploadedUrls) ? $uploadedUrls : [$newPhotoUrl];
                 }
 
                 $lahan->saveWithUniqueRetry();
@@ -183,26 +196,36 @@ class LahanService
      * @throws AuthorizationException
      * @throws Throwable
      */
-    public function updateLahan(Pengguna $user, Lahan|string $lahan, array $data, ?UploadedFile $foto = null): Lahan
+    public function updateLahan(Pengguna $user, Lahan|string $lahan, array $data, ?UploadedFile $foto = null, $fotoList = null): Lahan
     {
         $idLahan = $lahan instanceof Lahan ? $lahan->id_lahan : $lahan;
         $lahanInstance = $lahan instanceof Lahan ? $lahan : Lahan::findOrFail($idLahan);
 
-        // 1. Verifikasi otorisasi pengguna SEBELUM melakukan upload ke Cloudinary
+        // 1. Verifikasi otorisasi pengguna SEBELUM melakukan upload
         if (Gate::forUser($user)->denies('update', $lahanInstance)) {
             throw new AuthorizationException('Pengguna tidak memiliki izin untuk mengubah data lahan ini.');
         }
 
-        // 2. Upload foto baru ke Cloudinary HANYA setelah otorisasi awal lolos
-        $newPhotoUrl = null;
-        if ($foto) {
-            $newPhotoUrl = $this->cloudinaryService->upload($foto->getRealPath(), 'pawontani/lahan');
+        // 2. Upload foto-foto baru
+        $newUploadedUrls = [];
+        if ($fotoList) {
+            $files = is_array($fotoList) ? $fotoList : [$fotoList];
+            foreach ($files as $f) {
+                if ($f instanceof UploadedFile) {
+                    $url = $this->cloudinaryService->upload($f->getRealPath(), 'pawontani/lahan');
+                    if ($url) $newUploadedUrls[] = $url;
+                }
+            }
+        }
+        if ($foto && empty($newUploadedUrls)) {
+            $url = $this->cloudinaryService->upload($foto->getRealPath(), 'pawontani/lahan');
+            if ($url) $newUploadedUrls[] = $url;
         }
 
-        $oldPhotoUrlToDelete = null;
+        $oldPhotosToDelete = [];
 
         try {
-            $updatedLahan = DB::transaction(function () use ($user, $idLahan, $data, $newPhotoUrl, &$oldPhotoUrlToDelete) {
+            $updatedLahan = DB::transaction(function () use ($user, $idLahan, $data, $newUploadedUrls, &$oldPhotosToDelete) {
                 // 3. Kunci baris dengan lockForUpdate untuk mencegah race condition
                 $lahanLocked = Lahan::where('id_lahan', $idLahan)->lockForUpdate()->firstOrFail();
 
@@ -220,7 +243,6 @@ class LahanService
                 $nomorRevisiBaru = $nomorRevisiSebelumnya;
 
                 if ($statusSebelumnya === 'terverifikasi') {
-                    // Perubahan lahan terverifikasi mencabut status dan menjadikannya pengajuan ulang
                     $lahanLocked->status_verifikasi = 'menunggu_verifikasi';
                     $lahanLocked->verifikator_id = null;
                     $lahanLocked->tanggal_verifikasi = null;
@@ -229,7 +251,6 @@ class LahanService
                     $isResubmission = true;
                     $aksiRiwayat = 'pengajuan_ulang';
                 } elseif ($statusSebelumnya === 'perlu_perbaikan') {
-                    // Perbaikan lahan ditransisikan kembali menjadi menunggu_verifikasi
                     $lahanLocked->status_verifikasi = 'menunggu_verifikasi';
                     $lahanLocked->verifikator_id = null;
                     $lahanLocked->tanggal_verifikasi = null;
@@ -238,7 +259,6 @@ class LahanService
                     $isResubmission = true;
                     $aksiRiwayat = 'pengajuan_ulang';
                 } else {
-                    // Status menunggu_verifikasi: perubahan draft biasa tanpa menaikkan revisi
                     $lahanLocked->status_verifikasi = 'menunggu_verifikasi';
                     $aksiRiwayat = 'pembaruan_draft';
                 }
@@ -249,12 +269,36 @@ class LahanService
                 $filteredData = array_intersect_key($data, array_flip(self::ALLOWED_ATTRIBUTES));
                 $lahanLocked->fill($filteredData);
 
-                // 6. Tangani pergantian foto
-                if ($newPhotoUrl) {
-                    if ($lahanLocked->foto_lahan && $lahanLocked->foto_lahan !== $newPhotoUrl) {
-                        $oldPhotoUrlToDelete = $lahanLocked->foto_lahan;
+                // 6. Tangani penggabungan foto lama yang dipertahankan dan foto baru
+                $fotoTersimpan = [];
+                if (!empty($lahanLocked->foto_lahan_list) && is_array($lahanLocked->foto_lahan_list)) {
+                    $fotoTersimpan = $lahanLocked->foto_lahan_list;
+                } elseif (!empty($lahanLocked->foto_lahan)) {
+                    $fotoTersimpan = [$lahanLocked->foto_lahan];
+                }
+
+                $keptOld = null;
+                if (isset($data['existing_photos'])) {
+                    $rawKept = (array) $data['existing_photos'];
+                    $keptOld = [];
+                    foreach ($rawKept as $p) {
+                        if (is_string($p) && trim($p) !== '') {
+                            $keptOld[] = trim($p);
+                        }
                     }
-                    $lahanLocked->foto_lahan = $newPhotoUrl;
+                    // Hapus berkas lama yang tidak lagi dipertahankan
+                    foreach ($fotoTersimpan as $oldUrl) {
+                        if (!in_array($oldUrl, $keptOld, true)) {
+                            $oldPhotosToDelete[] = $oldUrl;
+                        }
+                    }
+                }
+
+                if ($keptOld !== null || !empty($newUploadedUrls)) {
+                    $baseKept = $keptOld ?? $fotoTersimpan;
+                    $finalPhotos = array_values(array_unique(array_merge($baseKept, $newUploadedUrls)));
+                    $lahanLocked->foto_lahan_list = !empty($finalPhotos) ? $finalPhotos : null;
+                    $lahanLocked->foto_lahan = $finalPhotos[0] ?? null;
                 }
 
                 $lahanLocked->save();
@@ -281,13 +325,17 @@ class LahanService
             });
 
             // 9. Setelah transaksi database COMMIT: Dispatch penghapusan foto lama ke queue
-            if ($oldPhotoUrlToDelete) {
+            $allPhotosToDelete = array_unique(array_filter(array_merge(
+                $oldPhotosToDelete,
+                $oldPhotoUrlToDelete ? [$oldPhotoUrlToDelete] : []
+            )));
+            foreach ($allPhotosToDelete as $toDel) {
                 try {
-                    DeleteCloudinaryPhotoJob::dispatch($oldPhotoUrlToDelete);
+                    DeleteCloudinaryPhotoJob::dispatch($toDel);
                 } catch (Throwable $queueError) {
-                    // Kegagalan antrean setelah commit TIDAK BOLEH membatalkan operasi database yang sudah sah
                     Log::error('Gagal menjadwalkan DeleteCloudinaryPhotoJob setelah transaksi commit.', [
                         'lahan_id' => $updatedLahan->id_lahan,
+                        'photo' => $toDel,
                         'error' => $queueError->getMessage(),
                     ]);
                 }
@@ -296,12 +344,12 @@ class LahanService
             return $updatedLahan;
         } catch (Throwable $e) {
             // Kompensasi: Hapus foto baru di Cloudinary jika transaksi database gagal
-            if ($newPhotoUrl) {
+            foreach ($newUploadedUrls as $failUrl) {
                 try {
-                    $this->cloudinaryService->delete($newPhotoUrl);
+                    $this->cloudinaryService->delete($failUrl);
                 } catch (Throwable $compensationError) {
                     Log::critical('Kompensasi penghapusan foto baru gagal saat updateLahan rollback.', [
-                        'photo_url' => $newPhotoUrl,
+                        'photo_url' => $failUrl,
                         'error' => $compensationError->getMessage(),
                     ]);
                 }

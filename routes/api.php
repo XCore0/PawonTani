@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BerandaController;
 use App\Http\Controllers\Api\V1\KomoditasController;
 use App\Http\Controllers\Api\V1\LahanController;
+use App\Http\Controllers\Api\V1\PanenController;
 use App\Http\Controllers\Api\V1\PermintaanKeanggotaanController;
 use App\Http\Controllers\DokumenController;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,15 @@ Route::prefix('v1')->group(function () {
                 'show' => 'api.v1.aktivitas.show',
                 'update' => 'api.v1.aktivitas.update',
                 'destroy' => 'api.v1.aktivitas.destroy',
+            ]);
+
+            Route::post('/panen/{panen}', [PanenController::class, 'update'])->name('api.v1.panen.update.post');
+            Route::apiResource('panen', PanenController::class)->names([
+                'index' => 'api.v1.panen.index',
+                'store' => 'api.v1.panen.store',
+                'show' => 'api.v1.panen.show',
+                'update' => 'api.v1.panen.update',
+                'destroy' => 'api.v1.panen.destroy',
             ]);
 
             Route::get('/documents', [DokumenController::class, 'apiIndex'])->name('api.v1.documents.index');

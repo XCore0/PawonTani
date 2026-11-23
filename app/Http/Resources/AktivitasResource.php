@@ -29,6 +29,26 @@ class AktivitasResource extends JsonResource
             }
         }
 
+        $fotoAktivitasListUrls = [];
+        if (!empty($this->foto_aktivitas_list) && is_array($this->foto_aktivitas_list)) {
+            foreach ($this->foto_aktivitas_list as $f) {
+                if ($f) {
+                    if (str_contains($f, 'res.cloudinary.com') || str_contains($f, 'images.unsplash.com')) {
+                        $fotoAktivitasListUrls[] = $f;
+                    } else {
+                        if (preg_match('#(?:storage|media)[/\\\\](.*)$#i', $f, $matches)) {
+                            $rel = str_replace('\\', '/', $matches[1]);
+                        } else {
+                            $rel = str_replace('\\', '/', ltrim($f, '/'));
+                        }
+                        $fotoAktivitasListUrls[] = url('media/' . $rel);
+                    }
+                }
+            }
+        } elseif ($imageUrl) {
+            $fotoAktivitasListUrls[] = $imageUrl;
+        }
+
         $namaKomoditas = $this->lahan?->komoditas?->nama_komoditas ?? 'Pertanian';
         $namaLahan = $this->lahan?->nama_lahan ?? 'Lahan Petani';
         $luasHa = $this->lahan ? number_format((float) $this->lahan->luas, 2, ',', '.') . ' Ha' : '';
@@ -87,6 +107,8 @@ class AktivitasResource extends JsonResource
             'catatan' => $this->catatan ?? '',
             'image_url' => $imageUrl,
             'imageUrl' => $imageUrl,
+            'foto_aktivitas_list' => $fotoAktivitasListUrls,
+            'photos' => $fotoAktivitasListUrls,
             'day_number' => $this->hari_setelah_tanam,
             'dayNumber' => $this->hari_setelah_tanam,
             'biaya' => (float) ($this->biaya ?? 0),

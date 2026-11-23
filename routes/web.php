@@ -15,6 +15,7 @@ use App\Http\Controllers\Pengurus\AnggotaController;
 use App\Http\Controllers\Pengurus\DashboardController as PengurusDashboardController;
 use App\Http\Controllers\Pengurus\LahanController;
 use App\Http\Controllers\Pengurus\MonitoringController;
+use App\Http\Controllers\Pengurus\PanenController as PengurusPanenController;
 use App\Services\CommodityService;
 use App\Services\HarvestPredictionService;
 use App\Http\Controllers\Admin\KelompokTaniController;
@@ -103,11 +104,10 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     // Monitoring Pertanian & Aktivitas
     Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring');
 
-    Route::get('/panen', fn () => $errorPage(
-        'Panen',
-        'Catat dan kelola data hasil panen kelompok tani.',
-        'Pengurus.Layout._layout'
-    ))->name('panen');
+    // Kelola Hasil Panen Kelompok Tani
+    Route::get('/panen', [PengurusPanenController::class, 'index'])->name('panen');
+    Route::get('/panen/{id}', [PengurusPanenController::class, 'show'])->name('panen.show');
+    Route::post('/panen/{id}/verifikasi', [PengurusPanenController::class, 'verifikasi'])->name('panen.verifikasi');
 
     Route::get('/penjualan', fn () => $errorPage(
         'Penjualan',
@@ -470,7 +470,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/media/{path}', function (string $path) {
     $path = ltrim(str_replace('\\', '/', $path), '/');
     abort_if(str_contains($path, '..') || str_contains($path, "\0"), 404);
-    abort_unless(preg_match('/^(lahan|aktivitas)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
+    abort_unless(preg_match('/^(lahan|aktivitas|panen)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
 
     $root = realpath(storage_path('app/public'));
     $fullPath = realpath(storage_path('app/public/' . $path));

@@ -32,6 +32,7 @@ class AktivitasTanam extends Model
         'hari_setelah_tanam',
         'catatan',
         'foto_aktivitas',
+        'foto_aktivitas_list',
         'biaya',
     ];
 
@@ -41,6 +42,7 @@ class AktivitasTanam extends Model
             'tanggal' => 'date',
             'hari_setelah_tanam' => 'integer',
             'biaya' => 'decimal:2',
+            'foto_aktivitas_list' => 'array',
         ];
     }
 

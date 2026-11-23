@@ -137,10 +137,14 @@ class LahanController extends Controller
     public function store(StoreLahanRequest $request): JsonResponse
     {
         try {
+            $fotoLahan = $request->file('foto_lahan');
+            $fotoLahanList = $request->file('foto_lahan_list');
+
             $lahan = $this->lahanService->createLahan(
                 $request->user(),
                 $request->validated(),
-                $request->file('foto_lahan')
+                $fotoLahan,
+                $fotoLahanList
             );
 
             AuditLogger::log(
@@ -180,11 +184,15 @@ class LahanController extends Controller
     public function update(UpdateLahanRequest $request, string $id): JsonResponse
     {
         try {
+            $fotoLahan = $request->file('foto_lahan');
+            $fotoLahanList = $request->file('foto_lahan_list');
+
             $lahan = $this->lahanService->updateLahan(
                 $request->user(),
                 $id,
                 $request->validated(),
-                $request->file('foto_lahan')
+                $fotoLahan,
+                $fotoLahanList
             );
 
             AuditLogger::log(

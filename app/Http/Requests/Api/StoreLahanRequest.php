@@ -52,7 +52,9 @@ class StoreLahanRequest extends FormRequest
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'id_komoditas' => ['nullable', 'string', 'exists:komoditas,id_komoditas'],
             'musim_tanam' => ['nullable', 'string', 'max:50'],
-            'foto_lahan' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'foto_lahan' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'foto_lahan_list' => ['nullable', 'array', 'max:10'],
+            'foto_lahan_list.*' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
             'keterangan' => ['nullable', 'string'],
         ];
     }

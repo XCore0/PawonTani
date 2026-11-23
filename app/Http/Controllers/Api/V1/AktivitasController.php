@@ -68,6 +68,13 @@ class AktivitasController extends Controller
 
         try {
             $photoPath = $this->storeActivityPhoto($request);
+            $photoList = $this->storeActivityPhotoList($request);
+            if ($photoPath && empty($photoList)) {
+                $photoList = [$photoPath];
+            } elseif (empty($photoPath) && !empty($photoList)) {
+                $photoPath = $photoList[0];
+            }
+
             $category = strtolower($request->input('kategori'));
             $condition = match (strtolower((string) $request->input('kondisi_tanaman', 'sehat'))) {
                 'sehat' => 'sehat',
@@ -88,6 +95,7 @@ class AktivitasController extends Controller
             $activity->hari_setelah_tanam = $request->input('hari_setelah_tanam', 30);
             $activity->catatan = $request->input('catatan');
             $activity->foto_aktivitas = $photoPath;
+            $activity->foto_aktivitas_list = !empty($photoList) ? $photoList : null;
             $activity->biaya = (float) $request->input('biaya', 0);
             $activity->saveWithUniqueRetry();
             $activity->load(['lahan.komoditas', 'pengguna']);
@@ -149,13 +157,51 @@ class AktivitasController extends Controller
             }
             if ($request->has('tanggal')) $activity->tanggal = Carbon::parse($request->input('tanggal'))->toDateString();
 
-            if ($request->hasFile('foto_aktivitas') || $request->filled('foto_aktivitas')) {
-                $old = $activity->foto_aktivitas;
-                $activity->foto_aktivitas = $this->resolveActivityPhoto($request);
-                if ($old && !preg_match('/^https?:\\/\\//i', $old) && !str_contains($old, '..')) {
-                    Storage::disk('public')->delete($old);
+            // Penanganan foto lama yang dipertahankan dan foto baru
+            $fotoTersimpan = [];
+            if (!empty($activity->foto_aktivitas_list) && is_array($activity->foto_aktivitas_list)) {
+                $fotoTersimpan = $activity->foto_aktivitas_list;
+            } elseif (!empty($activity->foto_aktivitas)) {
+                $fotoTersimpan = [$activity->foto_aktivitas];
+            }
+
+            $keptOld = null;
+            if ($request->has('existing_photos')) {
+                $rawKept = (array) $request->input('existing_photos', []);
+                $keptOld = [];
+                foreach ($rawKept as $p) {
+                    if (is_string($p) && trim($p) !== '') {
+                        $clean = trim($p);
+                        if (preg_match('#(?:storage|media)[/\\\\](.*)$#i', $clean, $m)) {
+                            $clean = $m[1];
+                        }
+                        $clean = ltrim($clean, '/');
+                        $keptOld[] = $clean;
+                    }
+                }
+                // Hapus berkas lama yang tidak lagi dipertahankan
+                foreach ($fotoTersimpan as $oldPath) {
+                    if (!in_array($oldPath, $keptOld, true) && !preg_match('/^https?:\\/\\//i', $oldPath) && !str_contains($oldPath, '..')) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
                 }
             }
+
+            $newPhotos = $this->storeActivityPhotoList($request);
+            if ($request->hasFile('foto_aktivitas')) {
+                $singleNew = $this->storeActivityPhoto($request);
+                if ($singleNew && !in_array($singleNew, $newPhotos, true)) {
+                    $newPhotos[] = $singleNew;
+                }
+            }
+
+            if ($keptOld !== null || !empty($newPhotos)) {
+                $baseKept = $keptOld ?? $fotoTersimpan;
+                $finalPhotos = array_values(array_unique(array_merge($baseKept, $newPhotos)));
+                $activity->foto_aktivitas_list = !empty($finalPhotos) ? $finalPhotos : null;
+                $activity->foto_aktivitas = $finalPhotos[0] ?? null;
+            }
+
             $activity->save();
             $activity->load(['lahan.komoditas', 'pengguna']);
 
@@ -179,6 +225,35 @@ class AktivitasController extends Controller
         AuditLogger::log('aktivitas.hapus', 'Anggota menghapus aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $activity->id_kelompok, $request);
 
         return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil dihapus.', 'data' => null]);
+    }
+
+    private function storeActivityPhotoList(Request $request): array
+    {
+        if (!$request->hasFile('foto_aktivitas_list')) {
+            return [];
+        }
+
+        $files = $request->file('foto_aktivitas_list');
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+
+        $paths = [];
+        foreach ($files as $file) {
+            if ($file && $file->isValid()) {
+                $ext = strtolower((string) $file->getClientOriginalExtension());
+                if ($ext === '') {
+                    $ext = strtolower((string) $file->extension());
+                }
+                $ext = $ext !== '' ? $ext : 'jpg';
+                $filename = 'aktivitas_' . now()->format('Ymd_His') . '_' . uniqid() . '.' . $ext;
+                $path = $file->storeAs('aktivitas', $filename, 'public');
+                if ($path) {
+                    $paths[] = $path;
+                }
+            }
+        }
+        return $paths;
     }
 
     private function storeActivityPhoto(Request $request): ?string

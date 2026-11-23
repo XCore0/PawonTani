@@ -36,6 +36,7 @@ class Lahan extends Model
         'id_komoditas',
         'musim_tanam',
         'foto_lahan',
+        'foto_lahan_list',
         'keterangan',
         'status_operasional',
         'status_verifikasi',
@@ -53,6 +54,7 @@ class Lahan extends Model
             'longitude' => 'decimal:7',
             'tanggal_verifikasi' => 'datetime',
             'nomor_revisi' => 'integer',
+            'foto_lahan_list' => 'array',
         ];
     }
 

@@ -30,6 +30,26 @@ class LahanResource extends JsonResource
             }
         }
 
+        $fotoLahanListUrls = [];
+        if (!empty($this->foto_lahan_list) && is_array($this->foto_lahan_list)) {
+            foreach ($this->foto_lahan_list as $f) {
+                if ($f) {
+                    if (str_contains($f, 'res.cloudinary.com') || str_contains($f, 'images.unsplash.com')) {
+                        $fotoLahanListUrls[] = $f;
+                    } else {
+                        if (preg_match('#(?:storage|media)[/\\\\](.*)$#i', $f, $matches)) {
+                            $rel = str_replace('\\', '/', $matches[1]);
+                        } else {
+                            $rel = str_replace('\\', '/', ltrim($f, '/'));
+                        }
+                        $fotoLahanListUrls[] = url('media/' . $rel);
+                    }
+                }
+            }
+        } elseif ($fotoLahanUrl) {
+            $fotoLahanListUrls[] = $fotoLahanUrl;
+        }
+
         return [
             // Identitas & Alias Kompatibilitas Flutter
             'id' => $this->id_lahan,
@@ -77,6 +97,8 @@ class LahanResource extends JsonResource
             // Atribut Operasional & Dokumen (Read-Only)
             'musim_tanam' => $this->musim_tanam,
             'foto_lahan' => $fotoLahanUrl,
+            'foto_lahan_list' => $fotoLahanListUrls,
+            'photos' => $fotoLahanListUrls,
             'keterangan' => $this->keterangan,
             'status_operasional' => $this->status_operasional,
             'status_verifikasi' => $this->status_verifikasi,
@@ -90,13 +112,53 @@ class LahanResource extends JsonResource
 
             // Relasi Terkondisi (whenLoaded)
             'kelompok_tani' => $this->whenLoaded('kelompokTani', function () {
-                return [
+                $fotoLahanListUrls = [];
+        if (!empty($this->foto_lahan_list) && is_array($this->foto_lahan_list)) {
+            foreach ($this->foto_lahan_list as $f) {
+                if ($f) {
+                    if (str_contains($f, 'res.cloudinary.com') || str_contains($f, 'images.unsplash.com')) {
+                        $fotoLahanListUrls[] = $f;
+                    } else {
+                        if (preg_match('#(?:storage|media)[/\\\\](.*)$#i', $f, $matches)) {
+                            $rel = str_replace('\\', '/', $matches[1]);
+                        } else {
+                            $rel = str_replace('\\', '/', ltrim($f, '/'));
+                        }
+                        $fotoLahanListUrls[] = url('media/' . $rel);
+                    }
+                }
+            }
+        } elseif ($fotoLahanUrl) {
+            $fotoLahanListUrls[] = $fotoLahanUrl;
+        }
+
+        return [
                     'id_kelompok' => $this->kelompokTani?->id_kelompok,
                     'nama_kelompok' => $this->kelompokTani?->nama_kelompok,
                 ];
             }),
             'verifikator' => $this->whenLoaded('verifikator', function () {
-                return [
+                $fotoLahanListUrls = [];
+        if (!empty($this->foto_lahan_list) && is_array($this->foto_lahan_list)) {
+            foreach ($this->foto_lahan_list as $f) {
+                if ($f) {
+                    if (str_contains($f, 'res.cloudinary.com') || str_contains($f, 'images.unsplash.com')) {
+                        $fotoLahanListUrls[] = $f;
+                    } else {
+                        if (preg_match('#(?:storage|media)[/\\\\](.*)$#i', $f, $matches)) {
+                            $rel = str_replace('\\', '/', $matches[1]);
+                        } else {
+                            $rel = str_replace('\\', '/', ltrim($f, '/'));
+                        }
+                        $fotoLahanListUrls[] = url('media/' . $rel);
+                    }
+                }
+            }
+        } elseif ($fotoLahanUrl) {
+            $fotoLahanListUrls[] = $fotoLahanUrl;
+        }
+
+        return [
                     'id_pengguna' => $this->verifikator?->id_pengguna,
                     'nama' => $this->verifikator?->nama,
                     'jabatan' => $this->verifikator?->jabatan,
