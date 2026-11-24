@@ -85,6 +85,8 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     Route::get('/dashboard', [PengurusDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota');
+    Route::get('/anggota/cari-lama', [AnggotaController::class, 'searchFormerMembers'])->name('anggota.search-former');
+    Route::post('/anggota/{id_pengguna}/masukkan-kembali', [AnggotaController::class, 'restoreFormerMember'])->name('anggota.restore-former');
     Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
     Route::put('/anggota/{id_pengguna}', [AnggotaController::class, 'update'])->name('anggota.update');
     Route::delete('/anggota/{id_pengguna}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');

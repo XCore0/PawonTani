@@ -11,6 +11,7 @@ use App\Services\DocumentStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
@@ -165,20 +166,48 @@ class DokumenController extends Controller
             ->where('id_kelompok', $user->id_kelompok)
             ->firstOrFail();
 
-        // Mendukung format lama `file` sekaligus format multi-upload `files[]`.
-        $validated = $request->validate([
-            'files' => ['sometimes', 'required', 'array', 'min:1', 'max:10'],
-            'files.*' => ['required', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
-            'file' => ['required_without:files', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
-        ], [
-            'files.max' => 'Maksimal 10 file dapat diunggah sekaligus.',
-            'files.*.mimes' => 'Format file tidak didukung. Gunakan PDF atau JPG.',
-            'files.*.max' => 'Setiap file harus berukuran maksimal 5 MB.',
-            'file.mimes' => 'Format file tidak didukung. Gunakan PDF atau JPG.',
-            'file.max' => 'Ukuran file maksimal 5 MB.',
-        ]);
+        // Ambil file SPPT yang dikirim dari aplikasi Flutter.
+$uploadedFiles = $request->file('files');
 
-        $files = $validated['files'] ?? [$validated['file']];
+// Jika hanya satu file yang diterima, ubah menjadi array.
+if ($uploadedFiles instanceof \Illuminate\Http\UploadedFile) {
+    $uploadedFiles = [$uploadedFiles];
+}
+
+// Mendukung format upload lama dengan nama field "file".
+if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
+    $singleFile = $request->file('file');
+
+    $uploadedFiles = $singleFile ? [$singleFile] : [];
+}
+
+// Pastikan seluruh file tersusun dalam satu array.
+$files = [];
+
+array_walk_recursive($uploadedFiles, function ($file) use (&$files) {
+    if ($file instanceof \Illuminate\Http\UploadedFile) {
+        $files[] = $file;
+    }
+});
+
+// Validasi dokumen SPPT.
+$validated = validator(
+    ['files' => $files],
+    [
+        'files' => ['required', 'array', 'min:1', 'max:10'],
+        'files.*' => ['required', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
+    ],
+    [
+        'files.required' => 'Dokumen SPPT wajib diunggah.',
+        'files.array' => 'Dokumen SPPT harus berupa daftar file.',
+        'files.min' => 'Pilih minimal satu dokumen SPPT.',
+        'files.max' => 'Maksimal 10 file dapat diunggah sekaligus.',
+        'files.*.mimes' => 'Format file tidak didukung. Gunakan PDF atau JPG.',
+        'files.*.max' => 'Setiap file harus berukuran maksimal 5 MB.',
+    ]
+)->validate();
+
+$files = $validated['files'];
         $savedDocuments = [];
         try {
             foreach ($files as $file) {
@@ -232,6 +261,79 @@ class DokumenController extends Controller
             'Content-Type' => $document->mime_type,
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
+    }
+
+    /**
+     * Menghapus satu dokumen SPPT yang dimiliki anggota pada lahannya sendiri.
+     * Dokumen lain, akun anggota, dan data lahannya tidak ikut dihapus.
+     */
+    public function apiDeleteSppt(Request $request, string $idDokumen): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless(
+            $user
+                && $user->role === 'Anggota'
+                && $user->status === 'Aktif'
+                && $user->anggota?->status_keanggotaan === 'Aktif',
+            403,
+            'Hanya anggota aktif yang dapat mengelola dokumen SPPT miliknya.'
+        );
+
+        $document = DokumenLahan::with('lahan')->findOrFail($idDokumen);
+        $land = $document->lahan;
+        abort_unless(
+            $land
+                && $land->id_pengguna === $user->id_pengguna
+                && $land->id_kelompok === $user->id_kelompok,
+            403,
+            'Anda tidak memiliki akses untuk menghapus dokumen SPPT ini.'
+        );
+
+        $disk = Storage::disk('documents');
+        $filePath = $document->file_path;
+
+        try {
+            DB::transaction(function () use ($document, $disk, $filePath, $user, $land) {
+                $lockedDocument = DokumenLahan::whereKey($document->id)->lockForUpdate()->firstOrFail();
+                $lockedLand = Lahan::where('id_lahan', $lockedDocument->id_lahan)->firstOrFail();
+
+                abort_unless(
+                    $lockedLand->id_pengguna === $user->id_pengguna
+                        && $lockedLand->id_kelompok === $user->id_kelompok,
+                    403,
+                    'Akses dokumen SPPT ditolak.'
+                );
+
+                if ($disk->exists($filePath) && !$disk->delete($filePath)) {
+                    throw new \RuntimeException('File SPPT gagal dihapus dari penyimpanan.');
+                }
+
+                $lockedDocument->delete();
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+            return response()->json([
+                'success' => false,
+                'message' => $exception instanceof \RuntimeException
+                    ? $exception->getMessage()
+                    : 'Dokumen SPPT gagal dihapus. Silakan coba kembali.',
+            ], 500);
+        }
+
+        AuditLogger::log(
+            'dokumen.sppt.dihapus',
+            'Anggota menghapus dokumen SPPT ' . $document->original_name . ' dari lahan ' . $land->nama_lahan,
+            'DokumenLahan',
+            $document->id,
+            $land->id_kelompok,
+            $request
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dokumen SPPT berhasil dihapus.',
+            'data' => ['id' => (string) $document->id, 'id_lahan' => $land->id_lahan],
         ]);
     }
 

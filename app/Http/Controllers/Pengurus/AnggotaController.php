@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Pengurus;
 
 use App\Http\Controllers\Controller;
+use App\Models\AktivitasTanam;
 use App\Models\Anggota;
+use App\Models\Lahan;
 use App\Models\Pengguna;
 use App\Services\AuditLogger;
 use App\Services\DocumentStorageService;
@@ -44,6 +46,105 @@ class AnggotaController extends Controller
             ->whereHas('anggota', fn ($q) => $q->where('status_keanggotaan', 'Keluar'))->count();
 
         return view('Pengurus.Content.Anggota', compact('anggota', 'kelompok', 'pengurus', 'isArchive', 'jumlahAktif', 'jumlahArsip'));
+    }
+
+    /**
+     * Mencari akun anggota yang pernah keluar agar dapat dimasukkan kembali
+     * ke kelompok Pengurus tanpa membuat akun atau mengunggah dokumen ulang.
+     */
+    public function searchFormerMembers(Request $request)
+    {
+        $pengurus = $this->currentPengurus();
+        abort_unless($pengurus->id_kelompok && $pengurus->kelompokTani?->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif.');
+
+        $search = trim((string) $request->query('q', ''));
+        if (strlen($search) < 2) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $operator = DB::getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+        $members = Pengguna::query()
+            ->where('role', 'Anggota')
+            ->where('status', '!=', 'Dihapus')
+            ->whereHas('anggota', fn ($query) => $query->where('status_keanggotaan', 'Keluar'))
+            ->where('nama', $operator, '%' . $search . '%')
+            ->with('kelompokTani:id_kelompok,nama_kelompok')
+            ->orderBy('nama')
+            ->limit(15)
+            ->get(['id_pengguna', 'nama', 'nik', 'no_telepon', 'id_kelompok']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $members->map(fn (Pengguna $member) => [
+                'id_pengguna' => $member->id_pengguna,
+                'nama' => $member->nama,
+                'nik' => $member->nik,
+                'no_telepon' => $member->no_telepon,
+                'kelompok_sebelumnya' => $member->kelompokTani?->nama_kelompok ?? 'Belum terdaftar',
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * Mengaktifkan kembali anggota lama pada kelompok Pengurus yang sedang login.
+     * Akun, dokumen identitas, SPPT, lahan, dan riwayat aktivitas tetap dipakai.
+     */
+    public function restoreFormerMember(Request $request, string $id_pengguna)
+    {
+        $pengurus = $this->currentPengurus();
+        abort_unless($pengurus->id_kelompok && $pengurus->kelompokTani?->status === 'Aktif', 403, 'Kelompok tani Anda tidak aktif.');
+
+        $previousGroupName = null;
+        $memberName = null;
+
+        DB::transaction(function () use ($pengurus, $id_pengguna, &$previousGroupName, &$memberName) {
+            $member = Pengguna::query()
+                ->where('role', 'Anggota')
+                ->whereKey($id_pengguna)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_if($member->status === 'Dihapus', 422, 'Akun anggota sudah dihapus dan tidak dapat diaktifkan kembali.');
+
+            $membership = Anggota::where('id_pengguna', $member->id_pengguna)
+                ->lockForUpdate()
+                ->firstOrFail();
+            abort_unless($membership->status_keanggotaan === 'Keluar', 422, 'Hanya anggota berstatus Keluar yang dapat dimasukkan kembali.');
+
+            $previousGroupName = $member->kelompokTani?->nama_kelompok;
+            $memberName = $member->nama;
+
+            // Kembalikan akun dan keanggotaan ke kelompok Pengurus saat ini.
+            $member->forceFill([
+                'id_kelompok' => $pengurus->id_kelompok,
+                'status' => 'Aktif',
+            ])->save();
+
+            $membership->update([
+                'status_keanggotaan' => 'Aktif',
+                'tanggal_keluar' => null,
+                'alasan_keluar' => null,
+                'dikeluarkan_oleh' => null,
+            ]);
+
+            // Data lahan dan aktivitas mengikuti kelompok baru agar terlihat kembali
+            // pada halaman Pengurus dan tetap dapat diakses melalui aplikasi mobile.
+            Lahan::where('id_pengguna', $member->id_pengguna)
+                ->update(['id_kelompok' => $pengurus->id_kelompok]);
+            AktivitasTanam::where('id_pengguna', $member->id_pengguna)
+                ->update(['id_kelompok' => $pengurus->id_kelompok]);
+        });
+
+        AuditLogger::log(
+            'anggota.dimasukkan_kembali',
+            'Pengurus memasukkan kembali anggota ' . ($memberName ?? $id_pengguna) . ' ke kelompok ' . $pengurus->kelompokTani->nama_kelompok . '. Kelompok sebelumnya: ' . ($previousGroupName ?? '-'),
+            'Pengguna',
+            $id_pengguna,
+            $pengurus->id_kelompok,
+            $request
+        );
+
+        return redirect()->route('pengurus.anggota')->with('success', ($memberName ?? 'Anggota') . ' berhasil dimasukkan kembali ke kelompok. Dokumen dan data sebelumnya tetap digunakan.');
     }
 
     public function store(Request $request)

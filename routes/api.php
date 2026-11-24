@@ -69,6 +69,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/lahan/{idLahan}/sppt', [DokumenController::class, 'apiUploadSppt'])->name('api.v1.documents.sppt.upload');
             Route::get('/lahan/{idLahan}/sppt', [DokumenController::class, 'apiDownloadSppt'])->name('api.v1.documents.sppt.download');
             Route::get('/documents/sppt/{idDokumen}', [DokumenController::class, 'apiDownloadSpptDocument'])->name('api.v1.documents.sppt.document.download');
+            Route::delete('/documents/sppt/{idDokumen}', [DokumenController::class, 'apiDeleteSppt'])->name('api.v1.documents.sppt.delete');
         });
     });
 });

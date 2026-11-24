@@ -2,6 +2,152 @@
 
 @section('title', 'Kelola Anggota')
 
+@push('styles')
+<style>
+  .print-anggota-report { display: none; }
+
+  @media print {
+    @page {
+      size: A4 landscape;
+      margin: 12mm 10mm;
+    }
+
+    html, body {
+      display: block !important;
+      width: 100% !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #1A2D10 !important;
+    }
+
+    #sidebar,
+    #sidebar-backdrop,
+    .pengurus-shell-content > header,
+    #pengurus-loading {
+      display: none !important;
+    }
+
+    .pengurus-shell-content,
+    .pengurus-shell-content > .relative,
+    #pengurus-content {
+      display: block !important;
+      position: static !important;
+      width: 100% !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      background: #ffffff !important;
+    }
+
+    #pengurus-content > :not(#print-anggota-report) {
+      display: none !important;
+    }
+
+    #print-anggota-report {
+      display: block !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #1A2D10 !important;
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .print-anggota-header {
+      padding: 0 0 10px;
+      border-bottom: 3px solid #4D9830;
+      margin-bottom: 13px;
+    }
+
+    .print-anggota-brand {
+      color: #4D9830;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .print-anggota-title {
+      margin: 6px 0 3px;
+      color: #1A2D10;
+      font-size: 20pt;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .print-anggota-subtitle {
+      margin: 0;
+      color: #4A6030;
+      font-size: 10pt;
+      font-weight: 600;
+    }
+
+    .print-anggota-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 10px;
+      color: #4A6030;
+      font-size: 8.5pt;
+    }
+
+    .print-anggota-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 8pt;
+    }
+
+    .print-anggota-table th {
+      padding: 7px 6px;
+      border: 1px solid #3D8024;
+      background: #4D9830 !important;
+      color: #ffffff !important;
+      text-align: left;
+      vertical-align: middle;
+      font-weight: 700;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .print-anggota-table td {
+      padding: 6px;
+      border: 1px solid #D5E4C8;
+      color: #24351B;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }
+
+    .print-anggota-table tbody tr:nth-child(even) {
+      background: #F5F8F1 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .print-anggota-center { text-align: center; }
+    .print-anggota-nowrap { white-space: nowrap; }
+    .print-anggota-empty { padding: 18px !important; text-align: center; }
+
+    .print-anggota-table thead { display: table-header-group; }
+    .print-anggota-table tr { break-inside: avoid; page-break-inside: avoid; }
+
+    .print-anggota-footer {
+      margin-top: 12px;
+      padding-top: 6px;
+      border-top: 1px solid #D5E4C8;
+      color: #6B7F5B;
+      font-size: 7.5pt;
+      text-align: right;
+    }
+  }
+</style>
+@endpush
+
 @section('content')
 <div class="space-y-6">
 
@@ -35,9 +181,11 @@
     <div class="flex flex-wrap items-center gap-2.5 shrink-0">
       <a href="{{ route('pengurus.anggota') }}" class="rounded-xl border px-3.5 py-2.5 text-xs font-semibold {{ !$isArchive ? 'border-[#4D9830] bg-[#EBF6E0] text-[#3D8024]' : 'border-[#C5DFB0] bg-white text-[#4A6030]' }}">Aktif ({{ $jumlahAktif }})</a>
       <a href="{{ route('pengurus.anggota', ['arsip' => 1]) }}" class="rounded-xl border px-3.5 py-2.5 text-xs font-semibold {{ $isArchive ? 'border-[#4D9830] bg-[#EBF6E0] text-[#3D8024]' : 'border-[#C5DFB0] bg-white text-[#4A6030]' }}">Arsip ({{ $jumlahArsip }})</a>
-      <!-- Export / Unduh Button -->
-      <button type="button" onclick="alert('Fitur unduh data sedang disiapkan.')"
-        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm font-semibold text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] hover:border-[#9AB880] transition-all shadow-2xs cursor-pointer">
+      <!-- Cetak / Simpan PDF Button -->
+      <button type="button" onclick="window.print()"
+        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm font-semibold text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] hover:border-[#9AB880] transition-all shadow-2xs cursor-pointer"
+        aria-label="Cetak atau simpan daftar {{ $isArchive ? 'arsip' : 'anggota aktif' }} sebagai PDF"
+        title="Cetak atau simpan sebagai PDF">
         <i data-lucide="download" class="w-4 h-4 text-[#4D9830]"></i>
         <span>Unduh Data</span>
       </button>
@@ -218,6 +366,62 @@
 
 </div>
 
+<!-- Laporan khusus yang hanya ditampilkan saat dialog cetak dibuka. -->
+<section id="print-anggota-report" class="print-anggota-report" aria-hidden="true">
+  <header class="print-anggota-header">
+    <div class="print-anggota-brand">PAWONTANI</div>
+    <h1 class="print-anggota-title">Daftar {{ $isArchive ? 'Arsip Anggota' : 'Anggota Aktif' }}</h1>
+    <p class="print-anggota-subtitle">{{ $kelompok->nama_kelompok }}</p>
+  </header>
+
+  <div class="print-anggota-meta">
+    <span><strong>Jumlah data:</strong> {{ count($anggota) }} anggota</span>
+    <span><strong>Tanggal cetak:</strong> {{ now()->format('d/m/Y H:i') }}</span>
+  </div>
+
+  <table class="print-anggota-table">
+    <colgroup>
+      <col style="width: 4%">
+      <col style="width: 18%">
+      <col style="width: 15%">
+      <col style="width: 13%">
+      <col style="width: 25%">
+      <col style="width: 13%">
+      <col style="width: 12%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>Nama Anggota</th>
+        <th>NIK</th>
+        <th>No. Telepon</th>
+        <th>Alamat</th>
+        <th>Status Keanggotaan</th>
+        <th>Status Akun</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($anggota as $index => $item)
+        <tr>
+          <td class="print-anggota-center">{{ $index + 1 }}</td>
+          <td>{{ $item->nama }}</td>
+          <td class="print-anggota-nowrap">{{ $item->nik ?? '-' }}</td>
+          <td class="print-anggota-nowrap">{{ $item->no_telepon ?? '-' }}</td>
+          <td>{{ preg_replace('/\s+/u', ' ', trim((string) ($item->alamat ?? '-'))) }}</td>
+          <td>{{ $item->anggota?->status_keanggotaan ?? $item->status }}</td>
+          <td>{{ $item->status }}</td>
+        </tr>
+      @empty
+        <tr>
+          <td colspan="7" class="print-anggota-empty">Belum ada data anggota untuk ditampilkan.</td>
+        </tr>
+      @endforelse
+    </tbody>
+  </table>
+
+  <footer class="print-anggota-footer">Dokumen dibuat melalui sistem PawonTani.</footer>
+</section>
+
 <!-- ==================== 5. MODAL TAMBAH ANGGOTA ==================== -->
 <div id="modal-tambah-anggota" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
   <div class="bg-white w-full max-w-xl rounded-[22px] border border-[#E4F0D6] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -229,6 +433,14 @@
       <button type="button" onclick="closeModalTambahAnggota()" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-white cursor-pointer" aria-label="Tutup"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
 
+    <div class="px-6 pt-4">
+      <div class="grid grid-cols-2 gap-2 rounded-xl bg-[#F5F8F1] p-1">
+        <button type="button" id="tab-anggota-baru" onclick="setTambahAnggotaTab('baru')" class="rounded-lg bg-[#4D9830] px-3 py-2.5 text-xs font-bold text-white transition-colors">Anggota Baru</button>
+        <button type="button" id="tab-anggota-lama" onclick="setTambahAnggotaTab('lama')" class="rounded-lg px-3 py-2.5 text-xs font-bold text-[#4A6030] transition-colors hover:bg-white">Anggota Lama</button>
+      </div>
+    </div>
+
+    <div id="panel-tambah-anggota-baru">
     <form action="{{ route('pengurus.anggota.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-xs sm:text-sm max-h-[80vh] overflow-y-auto">
       @csrf
       <input type="hidden" name="role" value="Anggota">
@@ -274,6 +486,24 @@
 
       <div class="pt-3 border-t border-[#E4F0D6] flex items-center justify-end gap-2.5"><button type="button" onclick="closeModalTambahAnggota()" class="px-4 py-2.5 rounded-xl border border-[#C5DFB0] text-[#4A6030] hover:bg-[#F5F8F1] font-semibold cursor-pointer">Batal</button><button type="submit" class="px-5 py-2.5 rounded-xl bg-[#4D9830] hover:bg-[#3D8024] text-white font-bold shadow-sm shadow-[#4D9830]/20 cursor-pointer">Simpan Anggota</button></div>
     </form>
+    </div>
+
+    <div id="panel-tambah-anggota-lama" class="hidden max-h-[70vh] space-y-4 overflow-y-auto p-6 pt-4">
+      <div class="rounded-xl border border-[#C5DFB0] bg-[#F5F8F1] p-3">
+        <p class="text-xs font-semibold text-[#1A2D10]">Masukkan anggota yang pernah keluar</p>
+        <p class="mt-1 text-[11px] leading-relaxed text-[#6B7F5B]">Cari nama anggota yang sudah pernah terdaftar. Akun, dokumen KTP/KK, SPPT, data lahan, dan riwayat aktivitas yang sudah ada akan tetap digunakan.</p>
+      </div>
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AB880]"></i>
+        <input id="anggota-lama-search" type="search" autocomplete="off" placeholder="Ketik nama anggota (minimal 2 huruf)" class="h-11 w-full rounded-xl border border-[#C5DFB0] bg-white pl-10 pr-4 text-sm text-slate-800 placeholder-[#9AB880] focus:border-[#4D9830] focus:outline-none focus:ring-2 focus:ring-[#4D9830]/20">
+      </div>
+      <p id="anggota-lama-status" class="text-[11px] text-[#9AB880]">Masukkan minimal 2 huruf untuk mencari anggota lama.</p>
+      <div id="anggota-lama-results" class="space-y-2" aria-live="polite"></div>
+      <input type="hidden" id="anggota-lama-csrf" value="{{ csrf_token() }}">
+      <div class="flex justify-end border-t border-[#E4F0D6] pt-3">
+        <button type="button" onclick="closeModalTambahAnggota()" class="rounded-xl border border-[#C5DFB0] px-4 py-2.5 text-xs font-semibold text-[#4A6030] hover:bg-[#F5F8F1]">Tutup</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -318,9 +548,118 @@
 
 <script>
   const anggotaModal = document.getElementById('modal-tambah-anggota');
-  const openModalTambahAnggota = () => { anggotaModal.classList.remove('hidden'); anggotaModal.classList.add('flex'); };
-  const closeModalTambahAnggota = () => { anggotaModal.classList.add('hidden'); anggotaModal.classList.remove('flex'); };
-  anggotaModal?.addEventListener('click', (event) => { if (event.target === anggotaModal) closeModalTambahAnggota(); });
+  window.openModalTambahAnggota = () => {
+    if (!anggotaModal) return;
+    anggotaModal.classList.remove('hidden');
+    anggotaModal.classList.add('flex');
+    window.setTambahAnggotaTab('baru');
+  };
+  window.closeModalTambahAnggota = () => {
+    if (!anggotaModal) return;
+    anggotaModal.classList.add('hidden');
+    anggotaModal.classList.remove('flex');
+  };
+  anggotaModal?.addEventListener('click', (event) => { if (event.target === anggotaModal) window.closeModalTambahAnggota(); });
+
+  // Tab tambah anggota: buat akun baru atau pilih kembali anggota yang pernah keluar.
+  const formerMemberSearchUrl = "{{ route('pengurus.anggota.search-former') }}";
+  const newMemberPanel = document.getElementById('panel-tambah-anggota-baru');
+  const formerMemberPanel = document.getElementById('panel-tambah-anggota-lama');
+  const newMemberTab = document.getElementById('tab-anggota-baru');
+  const formerMemberTab = document.getElementById('tab-anggota-lama');
+  const formerMemberSearch = document.getElementById('anggota-lama-search');
+  const formerMemberResults = document.getElementById('anggota-lama-results');
+  const formerMemberStatus = document.getElementById('anggota-lama-status');
+  let formerMemberTimer = null;
+  let formerMemberRequest = null;
+
+  window.setTambahAnggotaTab = (tab) => {
+    const showNew = tab !== 'lama';
+    newMemberPanel?.classList.toggle('hidden', !showNew);
+    formerMemberPanel?.classList.toggle('hidden', showNew);
+    newMemberTab?.classList.toggle('bg-[#4D9830]', showNew);
+    newMemberTab?.classList.toggle('text-white', showNew);
+    newMemberTab?.classList.toggle('text-[#4A6030]', !showNew);
+    formerMemberTab?.classList.toggle('bg-[#4D9830]', !showNew);
+    formerMemberTab?.classList.toggle('text-white', !showNew);
+    formerMemberTab?.classList.toggle('text-[#4A6030]', showNew);
+    if (!showNew) formerMemberSearch?.focus();
+  };
+
+  const activeGroupName = @json($kelompok->nama_kelompok);
+
+  function submitRestoreFormerMember(member) {
+    if (!confirm(`Masukkan kembali ${member.nama} ke kelompok ${activeGroupName}? Dokumen dan data sebelumnya akan tetap digunakan.`)) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `{{ url('/pengurus/anggota') }}/${encodeURIComponent(member.id_pengguna)}/masukkan-kembali`;
+    const token = document.createElement('input');
+    token.type = 'hidden';
+    token.name = '_token';
+    token.value = document.getElementById('anggota-lama-csrf')?.value || '';
+    form.appendChild(token);
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function renderFormerMemberResults(members) {
+    formerMemberResults.replaceChildren();
+    if (!members.length) {
+      formerMemberStatus.textContent = 'Tidak ada anggota lama yang cocok. Periksa kembali nama yang dicari.';
+      return;
+    }
+    formerMemberStatus.textContent = `${members.length} anggota lama ditemukan.`;
+    members.forEach((member) => {
+      const card = document.createElement('div');
+      card.className = 'flex flex-col gap-3 rounded-xl border border-[#E4F0D6] bg-white p-3 sm:flex-row sm:items-center sm:justify-between';
+      const detail = document.createElement('div');
+      detail.className = 'min-w-0';
+      const name = document.createElement('p');
+      name.className = 'truncate text-sm font-bold text-[#1A2D10]';
+      name.textContent = member.nama || 'Nama tidak tersedia';
+      const identity = document.createElement('p');
+      identity.className = 'mt-1 text-[11px] text-[#6B7F5B]';
+      identity.textContent = `NIK: ${member.nik || '-'} · Kelompok sebelumnya: ${member.kelompok_sebelumnya || '-'}`;
+      detail.append(name, identity);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'shrink-0 rounded-lg bg-[#4D9830] px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-[#3D8024]';
+      button.textContent = 'Masukkan ke Kelompok';
+      button.addEventListener('click', () => submitRestoreFormerMember(member));
+      card.append(detail, button);
+      formerMemberResults.appendChild(card);
+    });
+  }
+
+  async function searchFormerMembers() {
+    const query = formerMemberSearch?.value.trim() || '';
+    if (query.length < 2) {
+      formerMemberResults?.replaceChildren();
+      if (formerMemberStatus) formerMemberStatus.textContent = 'Masukkan minimal 2 huruf untuk mencari anggota lama.';
+      return;
+    }
+    if (formerMemberStatus) formerMemberStatus.textContent = 'Sedang mencari anggota...';
+    if (formerMemberRequest) formerMemberRequest.abort();
+    formerMemberRequest = new AbortController();
+    try {
+      const response = await fetch(`${formerMemberSearchUrl}?q=${encodeURIComponent(query)}`, {
+        headers: { 'Accept': 'application/json' },
+        signal: formerMemberRequest.signal,
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.message || 'Pencarian gagal.');
+      renderFormerMemberResults(Array.isArray(payload.data) ? payload.data : []);
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      formerMemberResults?.replaceChildren();
+      if (formerMemberStatus) formerMemberStatus.textContent = 'Pencarian gagal. Periksa koneksi lalu coba lagi.';
+    }
+  }
+
+  formerMemberSearch?.addEventListener('input', () => {
+    clearTimeout(formerMemberTimer);
+    formerMemberTimer = setTimeout(searchFormerMembers, 350);
+  });
 
   // Real-time username availability check
   const usernameCheckUrl = "{{ route('ajax.check-username') }}";
