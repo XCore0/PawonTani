@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\TipsController;
 use App\Models\Tip;
 use App\Models\Artikel;
 use App\Models\Panduan;
+use App\Http\Controllers\Customer\MarketplaceController;
 
 /* ============================================================
    AUTH ROUTES
@@ -68,6 +69,16 @@ Route::prefix('edukasi')->name('edukasi.')->group(function () {
     Route::get('/tips', [PublicEdukasiController::class, 'indexTips'])->name('tips');
     Route::get('/artikel', [PublicEdukasiController::class, 'indexArtikel'])->name('artikel');
     Route::get('/panduan', [PublicEdukasiController::class, 'indexPanduan'])->name('panduan');
+});
+
+/* ============================================================
+   CUSTOMER MARKETPLACE ROUTES
+   ============================================================ */
+Route::prefix('marketplace')->name('marketplace.')->group(function () {
+    Route::get('/', [MarketplaceController::class, 'home'])->name('home');
+    Route::get('/katalog', [MarketplaceController::class, 'katalog'])->name('katalog');
+    Route::get('/produk/{id}', [MarketplaceController::class, 'detail'])->name('detail');
+    Route::get('/penjual/{id}', [MarketplaceController::class, 'penjual'])->name('penjual');
 });
 
 /* ============================================================
@@ -472,7 +483,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/media/{path}', function (string $path) {
     $path = ltrim(str_replace('\\', '/', $path), '/');
     abort_if(str_contains($path, '..') || str_contains($path, "\0"), 404);
-    abort_unless(preg_match('/^(lahan|aktivitas|panen)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
+    abort_unless(preg_match('/^(lahan|aktivitas|panen|pawontani\/produk)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
 
     $root = realpath(storage_path('app/public'));
     $fullPath = realpath(storage_path('app/public/' . $path));

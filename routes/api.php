@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\BerandaController;
 use App\Http\Controllers\Api\V1\KomoditasController;
 use App\Http\Controllers\Api\V1\LahanController;
 use App\Http\Controllers\Api\V1\PanenController;
+use App\Http\Controllers\Api\V1\MarketplaceController;
+use App\Http\Controllers\Api\V1\PenjualanController;
 use App\Http\Controllers\Api\V1\PermintaanKeanggotaanController;
 use App\Http\Controllers\DokumenController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +72,22 @@ Route::prefix('v1')->group(function () {
             Route::get('/lahan/{idLahan}/sppt', [DokumenController::class, 'apiDownloadSppt'])->name('api.v1.documents.sppt.download');
             Route::get('/documents/sppt/{idDokumen}', [DokumenController::class, 'apiDownloadSpptDocument'])->name('api.v1.documents.sppt.document.download');
             Route::delete('/documents/sppt/{idDokumen}', [DokumenController::class, 'apiDeleteSppt'])->name('api.v1.documents.sppt.delete');
+
+            // --- Marketplace Produk Saya ---
+            Route::get('/marketplace/produk', [MarketplaceController::class, 'indexProdukSaya'])->name('api.v1.marketplace.produk.index');
+            Route::post('/marketplace/produk', [MarketplaceController::class, 'storeProduk'])->name('api.v1.marketplace.produk.store');
+            Route::get('/marketplace/produk/{id}', [MarketplaceController::class, 'showProduk'])->name('api.v1.marketplace.produk.show');
+            Route::post('/marketplace/produk/{id}', [MarketplaceController::class, 'updateProduk'])->name('api.v1.marketplace.produk.update');
+            Route::delete('/marketplace/produk/{id}', [MarketplaceController::class, 'destroyProduk'])->name('api.v1.marketplace.produk.destroy');
+
+            // --- Transaksi Penjualan ---
+            Route::get('/penjualan', [PenjualanController::class, 'index'])->name('api.v1.penjualan.index');
+            Route::post('/penjualan', [PenjualanController::class, 'store'])->name('api.v1.penjualan.store');
+            Route::get('/penjualan/{id}', [PenjualanController::class, 'show'])->name('api.v1.penjualan.show');
+            Route::post('/penjualan/{id}/pembayaran', [PenjualanController::class, 'tambahPembayaran'])->name('api.v1.penjualan.pembayaran');
+            Route::post('/penjualan/{id}/lunas', [PenjualanController::class, 'tandaiLunas'])->name('api.v1.penjualan.lunas');
+            Route::post('/penjualan/{id}/batalkan', [PenjualanController::class, 'batalkan'])->name('api.v1.penjualan.batalkan');
+            Route::post('/penjualan/{id}/serahkan', [PenjualanController::class, 'tandaiDiserahkan'])->name('api.v1.penjualan.serahkan');
         });
     });
 });

@@ -42,6 +42,12 @@
         <!-- Desktop Navigation Links -->
         <nav class="hidden md:flex items-center space-x-8 text-[15px]">
           <a href="#beranda" class="nav-link active">Beranda</a>
+          <a href="{{ route('marketplace.home') }}" class="nav-link text-pawon-700 font-semibold hover:text-pawon-800 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            Marketplace
+          </a>
           <a href="#tentang" class="nav-link">Tentang PawonTani</a>
           <a href="#fitur" class="nav-link">Fitur</a>
           <a href="#cara-kerja" class="nav-link">Cara Kerja</a>
@@ -78,6 +84,12 @@
     <div id="mobile-menu"
       class="hidden md:hidden border-b border-slate-100 bg-white px-4 pt-3 pb-6 space-y-2 shadow-xl">
       <a href="#beranda" class="mobile-nav-link active">Beranda</a>
+      <a href="{{ route('marketplace.home') }}" class="mobile-nav-link font-semibold text-pawon-700 flex items-center gap-2">
+        <svg class="w-4 h-4 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        Marketplace Customer
+      </a>
       <a href="#tentang" class="mobile-nav-link">Tentang PawonTani</a>
       <a href="#fitur" class="mobile-nav-link">Fitur</a>
       <a href="#cara-kerja" class="mobile-nav-link">Cara Kerja</a>
@@ -127,17 +139,24 @@
             </p>
 
             <!-- Hero Action Buttons -->
-            <div class="flex flex-wrap items-center gap-4 pt-2">
-              <a href="javascript:void(0)" onclick="openRegistrationModal()"
-                class="inline-flex items-center gap-2.5 px-7 py-3.5 text-base font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-lg shadow-pawon-700/25 transition-all hover:translate-y-[-1px]">
-                <span>Daftar untuk Kelompok</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
+              <a href="{{ route('login') }}"
+                class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-base font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-lg shadow-pawon-700/25 transition-all hover:translate-y-[-1px]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
+                <span>Login Sistem</span>
               </a>
-              <a href="#fitur"
-                class="inline-flex items-center gap-2 px-7 py-3.5 text-base font-semibold text-slate-700 bg-sky-50/80 hover:bg-sky-100/90 border border-sky-200/70 rounded-full transition-all">
-                <span>Pelajari Fitur</span>
+              <a href="{{ route('marketplace.home') }}"
+                class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-base font-bold text-pawon-900 bg-pawon-100 hover:bg-pawon-50 border border-pawon-600/40 rounded-full shadow-sm hover:shadow-md transition-all hover:translate-y-[-1px]">
+                <svg class="w-5 h-5 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span>Kunjungi Marketplace</span>
+              </a>
+              <a href="javascript:void(0)" onclick="openRegistrationModal()"
+                class="inline-flex items-center justify-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 rounded-full transition-all">
+                <span>Daftar Kelompok</span>
               </a>
             </div>
 

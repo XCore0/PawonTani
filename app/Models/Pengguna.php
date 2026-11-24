@@ -37,6 +37,7 @@ class Pengguna extends Authenticatable
         'lokasi_nama',
         'latitude',
         'longitude',
+        'kontak_publik_aktif',
     ];
 
     /**
@@ -103,6 +104,22 @@ class Pengguna extends Authenticatable
     public function aktivitas()
     {
         return $this->hasMany(AktivitasTanam::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Marketplace Products
+     */
+    public function produk()
+    {
+        return $this->hasMany(Produk::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    /**
+     * Relationship to Sales Transactions
+     */
+    public function penjualan()
+    {
+        return $this->hasMany(TransaksiPenjualan::class, 'id_pengguna', 'id_pengguna');
     }
 
     protected $hidden = [

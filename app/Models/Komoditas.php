@@ -28,6 +28,14 @@ class Komoditas extends Model
         return $this->hasMany(Lahan::class, 'id_komoditas', 'id_komoditas');
     }
 
+    /**
+     * Relationship to Marketplace Products
+     */
+    public function produk()
+    {
+        return $this->hasMany(Produk::class, 'id_komoditas', 'id_komoditas');
+    }
+
     protected static function boot()
     {
         parent::boot();
