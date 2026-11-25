@@ -20,6 +20,11 @@ class StoreAktivitasRequest extends FormRequest
             $this->merge(['id_lahan' => $this->input('lahan_id')]);
         }
 
+        // Support alias siklus_id
+        if (!$this->has('id_siklus') && $this->has('siklus_id')) {
+            $this->merge(['id_siklus' => $this->input('siklus_id')]);
+        }
+
         // Support alias condition -> kondisi_tanaman
         if (!$this->has('kondisi_tanaman') && $this->has('condition')) {
             $this->merge(['kondisi_tanaman' => $this->input('condition')]);
@@ -49,6 +54,7 @@ class StoreAktivitasRequest extends FormRequest
     {
         return [
             'id_lahan' => ['required', 'string', 'exists:lahan,id_lahan'],
+            'id_siklus' => ['required', 'string', 'exists:siklus_tanam,id_siklus'],
             'kategori' => ['required', 'string', 'max:50'],
             'judul' => ['nullable', 'string', 'max:150'],
             'kondisi_tanaman' => ['nullable', 'string', 'max:50'],
@@ -70,6 +76,8 @@ class StoreAktivitasRequest extends FormRequest
         return [
             'id_lahan.required' => 'Lahan wajib dipilih.',
             'id_lahan.exists' => 'Lahan yang dipilih tidak valid.',
+            'id_siklus.required' => 'Siklus tanam aktif wajib dipilih untuk mencatat aktivitas.',
+            'id_siklus.exists' => 'Data siklus tanam tidak valid atau tidak ditemukan.',
             'kategori.required' => 'Kategori aktivitas wajib dipilih.',
             'tanggal.required' => 'Tanggal pelaksanaan aktivitas wajib diisi.',
         ];

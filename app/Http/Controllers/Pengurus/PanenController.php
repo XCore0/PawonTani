@@ -146,6 +146,18 @@ class PanenController extends Controller
         $panen->catatan_verifikasi = $request->input('catatan_verifikasi');
         $panen->save();
 
+        // Dispatch notifikasi hasil verifikasi panen setelah commit
+        $notificationService = app(\App\Services\NotificationService::class);
+        if ($statusBaru === 'disetujui') {
+            $notificationService->afterCommit(function () use ($notificationService, $panen, $pengurus) {
+                $notificationService->notifyPanenDisetujui($panen, $pengurus, $panen->catatan_verifikasi);
+            });
+        } elseif ($statusBaru === 'ditolak') {
+            $notificationService->afterCommit(function () use ($notificationService, $panen, $pengurus) {
+                $notificationService->notifyPanenDitolak($panen, $pengurus, $panen->catatan_verifikasi);
+            });
+        }
+
         AuditLogger::log(
             'panen.diverifikasi',
             "Memverifikasi hasil panen {$panen->kode_panen} dari '{$statusLama}' menjadi '{$statusBaru}'.",

@@ -22,6 +22,7 @@ class AktivitasTanam extends Model
     protected $fillable = [
         'id_aktivitas',
         'id_lahan',
+        'id_siklus',
         'id_pengguna',
         'id_kelompok',
         'kategori',
@@ -115,6 +116,21 @@ class AktivitasTanam extends Model
     public function kelompokTani(): BelongsTo
     {
         return $this->belongsTo(KelompokTani::class, 'id_kelompok', 'id_kelompok');
+    }
+
+    public function siklusTanam(): BelongsTo
+    {
+        return $this->belongsTo(SiklusTanam::class, 'id_siklus', 'id_siklus');
+    }
+
+    public function scopeForSiklus($query, string $idSiklus)
+    {
+        return $query->where('id_siklus', $idSiklus);
+    }
+
+    public function scopeLegacy($query)
+    {
+        return $query->whereNull('id_siklus');
     }
 }
 

@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\V1\BerandaController;
 use App\Http\Controllers\Api\V1\KomoditasController;
 use App\Http\Controllers\Api\V1\LahanController;
 use App\Http\Controllers\Api\V1\PanenController;
+use App\Http\Controllers\Api\V1\SiklusTanamController;
 use App\Http\Controllers\Api\V1\MarketplaceController;
+use App\Http\Controllers\Api\V1\NotifikasiController;
 use App\Http\Controllers\Api\V1\PenjualanController;
 use App\Http\Controllers\Api\V1\PermintaanKeanggotaanController;
 use App\Http\Controllers\DokumenController;
@@ -30,6 +32,12 @@ Route::prefix('v1')->group(function () {
         // Ringkasan Dashboard Beranda Mobile
         Route::get('/beranda/ringkasan', [BerandaController::class, 'ringkasan'])->name('api.v1.beranda.ringkasan');
 
+        // Notifikasi In-App
+        Route::get('/notifikasi/unread-count', [NotifikasiController::class, 'unreadCount'])->name('api.v1.notifikasi.unread-count');
+        Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('api.v1.notifikasi.baca-semua');
+        Route::patch('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('api.v1.notifikasi.baca');
+        Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('api.v1.notifikasi.index');
+
         // Master komoditas dapat dibaca oleh pengguna mobile yang sudah login.
         Route::get('/komoditas', [KomoditasController::class, 'index'])->name('api.v1.komoditas.index');
         Route::get('/kelompok', [PermintaanKeanggotaanController::class, 'groups'])->name('api.v1.kelompok.index');
@@ -39,6 +47,10 @@ Route::prefix('v1')->group(function () {
         // Data lahan, aktivitas, dan dokumen hanya untuk anggota dengan keanggotaan aktif.
         Route::middleware('membership.active')->group(function () {
             Route::post('/lahan/{lahan}', [LahanController::class, 'update'])->name('api.v1.lahan.update.post');
+            Route::post('/lahan/{id}/mulai-persiapan', [LahanController::class, 'mulaiPersiapan'])->name('api.v1.lahan.mulai-persiapan');
+            Route::post('/lahan/{id}/batalkan-persiapan', [LahanController::class, 'batalkanPersiapan'])->name('api.v1.lahan.batalkan-persiapan');
+            Route::get('/lahan/{id}/siklus', [SiklusTanamController::class, 'indexByLahan'])->name('api.v1.lahan.siklus.index');
+            Route::get('/lahan/{id}/siklus/berjalan', [SiklusTanamController::class, 'berjalan'])->name('api.v1.lahan.siklus.berjalan');
             Route::apiResource('lahan', LahanController::class)->names([
                 'index' => 'api.v1.lahan.index',
                 'store' => 'api.v1.lahan.store',
@@ -46,6 +58,18 @@ Route::prefix('v1')->group(function () {
                 'update' => 'api.v1.lahan.update',
                 'destroy' => 'api.v1.lahan.destroy',
             ]);
+
+            // --- Siklus Tanam ---
+            Route::apiResource('siklus-tanam', SiklusTanamController::class)->only(['index', 'store', 'show'])->names([
+                'index' => 'api.v1.siklus-tanam.index',
+                'store' => 'api.v1.siklus-tanam.store',
+                'show' => 'api.v1.siklus-tanam.show',
+            ]);
+            Route::post('/siklus-tanam/{siklus_tanam}/ajukan-selesai', [SiklusTanamController::class, 'ajukanSelesai'])->name('api.v1.siklus-tanam.ajukan-selesai');
+            Route::post('/siklus-tanam/{siklus_tanam}/ajukan-gagal', [SiklusTanamController::class, 'ajukanGagal'])->name('api.v1.siklus-tanam.ajukan-gagal');
+            Route::post('/siklus-tanam/{siklus_tanam}/batalkan', [SiklusTanamController::class, 'batalkan'])->name('api.v1.siklus-tanam.batalkan');
+            Route::post('/siklus-tanam/{siklus_tanam}/verifikasi-pengakhiran', [SiklusTanamController::class, 'verifikasiPengakhiran'])->name('api.v1.siklus-tanam.verifikasi-pengakhiran');
+            Route::get('/siklus-tanam/{siklus_tanam}/bukti-gagal', [SiklusTanamController::class, 'viewBuktiGagal'])->name('api.v1.siklus-tanam.bukti-gagal');
 
             Route::post('/aktivitas/{aktivita}', [AktivitasController::class, 'update'])->name('api.v1.aktivitas.update.post');
             Route::apiResource('aktivitas', AktivitasController::class)->names([
@@ -56,6 +80,7 @@ Route::prefix('v1')->group(function () {
                 'destroy' => 'api.v1.aktivitas.destroy',
             ]);
 
+            Route::post('/panen/{panen}/verifikasi', [PanenController::class, 'verifikasi'])->name('api.v1.panen.verifikasi');
             Route::post('/panen/{panen}', [PanenController::class, 'update'])->name('api.v1.panen.update.post');
             Route::apiResource('panen', PanenController::class)->names([
                 'index' => 'api.v1.panen.index',

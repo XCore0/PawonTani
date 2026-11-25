@@ -45,6 +45,9 @@ class LahanController extends Controller
             'menunggu_verifikasi' => (clone $metricsBase)->where('status_verifikasi', 'menunggu_verifikasi')->count(),
             'terverifikasi' => (clone $metricsBase)->where('status_verifikasi', 'terverifikasi')->count(),
             'perlu_perbaikan' => (clone $metricsBase)->where('status_verifikasi', 'perlu_perbaikan')->count(),
+            'pengajuan_siklus' => (clone $metricsBase)->whereHas('siklusBerjalan', function ($q) {
+                $q->whereIn('siklus_tanam.status', ['menunggu_selesai', 'menunggu_gagal']);
+            })->count(),
         ];
 
         // 3. Eager load relasi yang diperlukan untuk efisiensi tabel (anti N+1 query)
@@ -52,6 +55,7 @@ class LahanController extends Controller
             'pengguna:id_pengguna,nama,no_telepon',
             'komoditas:id_komoditas,nama_komoditas,kategori',
             'kelompokTani:id_kelompok,nama_kelompok',
+            'siklusBerjalan',
         ]);
 
         // 4. Filter status verifikasi
@@ -115,6 +119,9 @@ class LahanController extends Controller
                 'riwayatVerifikasi.pengguna:id_pengguna,nama,role,jabatan',
                 'aktivitas.pengguna:id_pengguna,nama,foto_profil',
                 'dokumenSppt',
+                'siklusBerjalan.komoditas',
+                'siklusBerjalan.pengguna:id_pengguna,nama',
+                'siklusBerjalan.riwayatPengakhiran.pengguna:id_pengguna,nama,role,jabatan',
             ]);
 
         // Evaluasi kewenangan Ketua aktif
@@ -161,6 +168,67 @@ class LahanController extends Controller
                 ->withInput();
         } catch (AuthorizationException $e) {
             abort(403, $e->getMessage());
+        }
+    }
+
+    /**
+     * Memproses verifikasi pengakhiran siklus tanam oleh Ketua Kelompok Tani.
+     */
+    public function verifikasiSiklus(Request $request, string $lahan, string $siklus): RedirectResponse
+    {
+        /** @var \App\Models\Pengguna $pengurus */
+        $pengurus = $request->user();
+
+        // Keamanan: Hanya Ketua aktif kelompok yang berhak
+        abort_unless(
+            $pengurus && $pengurus->status === 'Aktif' && $pengurus->role === 'Pengurus' && $pengurus->jabatan === 'Ketua' && !empty($pengurus->id_kelompok),
+            403,
+            'Akses ditolak. Hanya Ketua kelompok yang berhak memverifikasi siklus tanam.'
+        );
+
+        $keputusan = $request->input('keputusan') ?? $request->input('status_verifikasi');
+
+        $request->validate([
+            'keputusan' => ['required_without:status_verifikasi', 'string', 'in:disetujui,ditolak'],
+            'status_verifikasi' => ['required_without:keputusan', 'string', 'in:disetujui,ditolak'],
+            'catatan' => [$keputusan === 'ditolak' ? 'required' : 'nullable', 'string', 'max:1000'],
+        ], [
+            'keputusan.required_without' => 'Keputusan verifikasi wajib dipilih.',
+            'keputusan.in' => 'Keputusan verifikasi harus disetujui atau ditolak.',
+            'status_verifikasi.required_without' => 'Keputusan verifikasi wajib dipilih.',
+            'status_verifikasi.in' => 'Keputusan verifikasi harus disetujui atau ditolak.',
+            'catatan.required' => 'Catatan alasan penolakan pengakhiran wajib diisi.',
+            'catatan.max' => 'Catatan maksimal 1000 karakter.',
+        ]);
+
+        $catatan = $request->input('catatan');
+
+        try {
+            $siklusTanamService = app(\App\Services\SiklusTanamService::class);
+            $siklusTanamService->verifikasiPengakhiran($pengurus, $siklus, [
+                'keputusan' => $keputusan,
+                'status_verifikasi' => $keputusan,
+                'catatan' => $catatan,
+            ]);
+
+            AuditLogger::log(
+                'siklus_tanam.verifikasi',
+                'Ketua memverifikasi pengakhiran siklus tanam: ' . $keputusan . '.',
+                'SiklusTanam',
+                $siklus,
+                $pengurus->id_kelompok,
+                $request
+            );
+
+            $pesan = $keputusan === 'disetujui'
+                ? 'Pengajuan pengakhiran siklus tanam berhasil disetujui.'
+                : 'Pengajuan pengakhiran siklus tanam telah ditolak. Siklus kembali aktif.';
+
+            return redirect()->route('pengurus.lahan.show', $lahan)->with('success', $pesan);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->route('pengurus.lahan.show', $lahan)->withErrors($e->errors())->withInput();
+        } catch (\Throwable $e) {
+            return redirect()->route('pengurus.lahan.show', $lahan)->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
 }

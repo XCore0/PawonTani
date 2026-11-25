@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -177,5 +178,43 @@ class Lahan extends Model
     public function dokumenSppt()
     {
         return $this->hasMany(DokumenLahan::class, 'id_lahan', 'id_lahan')->latest();
+    }
+
+    /**
+     * Seluruh histori siklus tanam pada petak lahan ini.
+     */
+    public function siklusTanam(): HasMany
+    {
+        return $this->hasMany(SiklusTanam::class, 'id_lahan', 'id_lahan')->orderByDesc('tanggal_mulai')->orderByDesc('created_at');
+    }
+
+    /**
+     * Siklus tanam yang sedang berjalan (status: aktif, menunggu_selesai, atau menunggu_gagal).
+     * Selama relasi ini ada, lahan tidak dapat memulai siklus tanam baru.
+     */
+    public function siklusBerjalan(): HasOne
+    {
+        return $this->hasOne(SiklusTanam::class, 'id_lahan', 'id_lahan')
+            ->whereIn('siklus_tanam.status', SiklusTanam::STATUSES_BERJALAN)
+            ->latestOfMany('created_at');
+    }
+
+    /**
+     * Siklus tanam aktif yang boleh menerima pencatatan Aktivitas atau Panen baru (status: aktif).
+     * Jika siklus sedang berstatus 'menunggu_selesai' atau 'menunggu_gagal', input baru dikunci.
+     */
+    public function siklusAktif(): HasOne
+    {
+        return $this->hasOne(SiklusTanam::class, 'id_lahan', 'id_lahan')
+            ->where('siklus_tanam.status', SiklusTanam::STATUS_AKTIF)
+            ->latestOfMany('created_at');
+    }
+
+    /**
+     * Catatan panen yang dihasilkan dari petak lahan ini.
+     */
+    public function panen(): HasMany
+    {
+        return $this->hasMany(Panen::class, 'id_lahan', 'id_lahan')->orderByDesc('tanggal_panen')->orderByDesc('created_at');
     }
 }

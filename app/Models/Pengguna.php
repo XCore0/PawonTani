@@ -122,6 +122,14 @@ class Pengguna extends Authenticatable
         return $this->hasMany(TransaksiPenjualan::class, 'id_pengguna', 'id_pengguna');
     }
 
+    /**
+     * Relationship to Siklus Tanam
+     */
+    public function siklusTanam()
+    {
+        return $this->hasMany(SiklusTanam::class, 'id_pengguna', 'id_pengguna');
+    }
+
     protected $hidden = [
         'password',
     ];

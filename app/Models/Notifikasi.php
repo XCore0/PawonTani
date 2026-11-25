@@ -132,4 +132,28 @@ class Notifikasi extends Model
     {
         return $this->belongsTo(RiwayatVerifikasiLahan::class, 'id_riwayat', 'id_riwayat');
     }
+
+    /**
+     * Scope untuk notifikasi yang belum dibaca.
+     */
+    public function scopeBelumDibaca($query)
+    {
+        return $query->where('sudah_dibaca', false);
+    }
+
+    /**
+     * Scope untuk notifikasi yang sudah dibaca.
+     */
+    public function scopeSudahDibaca($query)
+    {
+        return $query->where('sudah_dibaca', true);
+    }
+
+    /**
+     * Scope untuk menyaring notifikasi milik pengguna tertentu.
+     */
+    public function scopeUntukPengguna($query, string $idPengguna)
+    {
+        return $query->where('id_penerima', $idPengguna);
+    }
 }

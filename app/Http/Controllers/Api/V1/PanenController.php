@@ -8,7 +8,9 @@ use App\Http\Requests\Api\UpdatePanenRequest;
 use App\Http\Resources\PanenResource;
 use App\Models\Lahan;
 use App\Models\Panen;
+use App\Models\SiklusTanam;
 use App\Services\AuditLogger;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -27,9 +29,14 @@ class PanenController extends Controller
         $user = $request->user();
         abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        $query = Panen::with(['lahan.komoditas', 'kelompokTani'])
+        $query = Panen::with(['lahan.komoditas', 'kelompokTani', 'siklusTanam.komoditas'])
             ->where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok);
+
+        // Filter siklus tanam (Phase 4)
+        if ($idSiklus = $request->query('id_siklus')) {
+            $query->where('id_siklus', $idSiklus);
+        }
 
         // Filter status (menunggu, disetujui, ditolak)
         if ($status = $request->query('status')) {
@@ -80,6 +87,58 @@ class PanenController extends Controller
             ->where('id_kelompok', $user->id_kelompok)
             ->firstOrFail();
 
+        $siklus = SiklusTanam::with('komoditas')
+            ->where('id_siklus', $request->input('id_siklus'))
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        // 1. Otorisasi kepemilikan siklus (BOLA / IDOR protection)
+        if ($siklus->id_kelompok !== $user->id_kelompok || $siklus->id_pengguna !== $user->id_pengguna) {
+            abort(403, 'Akses ditolak. Siklus tanam ini bukan milik Anda.');
+        }
+
+        // 2. Konsistensi relasi Lahan <-> Siklus
+        if ($siklus->id_lahan !== $land->id_lahan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siklus tanam tidak sesuai dengan lahan yang dipilih.',
+                'errors' => [
+                    'id_siklus' => ['Siklus tanam tidak sesuai dengan lahan yang dipilih.']
+                ],
+            ], 422);
+        }
+
+        // 3. Validasi status siklus: hanya status 'aktif' yang boleh menerima pencatatan panen baru
+        if ($siklus->isMenungguPengakhiran()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siklus tanam sedang dalam proses pengakhiran dan tidak dapat menerima catatan panen baru.',
+                'errors' => [
+                    'id_siklus' => ['Siklus tanam sedang dalam proses pengakhiran dan tidak dapat menerima catatan panen baru.']
+                ],
+            ], 422);
+        }
+
+        if (in_array($siklus->status, ['selesai', 'gagal', 'dibatalkan'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siklus tanam sudah berakhir dan tidak dapat menerima catatan panen baru.',
+                'errors' => [
+                    'id_siklus' => ['Siklus tanam sudah berakhir dan tidak dapat menerima catatan panen baru.']
+                ],
+            ], 422);
+        }
+
+        if ($siklus->status !== 'aktif') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Panen hanya dapat dicatat pada siklus tanam yang aktif.',
+                'errors' => [
+                    'id_siklus' => ['Panen hanya dapat dicatat pada siklus tanam yang aktif.']
+                ],
+            ], 422);
+        }
+
         try {
             $photoPath = $this->storeHarvestPhoto($request);
             $photoPathsList = $this->storeHarvestPhotoList($request);
@@ -89,22 +148,23 @@ class PanenController extends Controller
                 $photoPath = $photoPathsList[0];
             }
 
-            $komoditasNama = $request->input('komoditas_nama');
-            if (empty($komoditasNama)) {
-                $komoditasNama = $land->komoditas?->nama_komoditas ?? 'Padi';
-            }
+            // Komoditas dan varietas diambil dari Siklus Tanam sebagai source of truth
+            $komoditasNama = $siklus->komoditas?->nama_komoditas ?? $siklus->komoditas_nama ?? $land->komoditas?->nama_komoditas ?? 'Padi';
+            $varietas = $siklus->varietas ?? $request->input('varietas', 'Ciherang');
+            $musimTanam = $siklus->musim_tanam ?? $request->input('musim_tanam', 'Musim Rendeng');
 
             $panen = new Panen();
             $panen->id_lahan = $land->id_lahan;
+            $panen->id_siklus = $siklus->id_siklus;
             $panen->id_pengguna = $user->id_pengguna;
             $panen->id_kelompok = $user->id_kelompok;
-            $panen->id_komoditas = $land->id_komoditas;
+            $panen->id_komoditas = $siklus->id_komoditas;
             $panen->komoditas_nama = $komoditasNama;
-            $panen->varietas = $request->input('varietas');
+            $panen->varietas = $varietas;
             $panen->jenis_panen = $request->input('jenis_panen', 'Gabah Kering Panen (GKP)');
             $panen->tanggal_panen = $request->input('tanggal_panen');
             $panen->waktu_panen = $request->input('waktu_panen', '09:00 WIB');
-            $panen->musim_tanam = $request->input('musim_tanam', 'Musim Rendeng');
+            $panen->musim_tanam = $musimTanam;
             $panen->berat_kg = $request->input('berat_kg');
             $panen->kualitas_grade = $request->input('kualitas_grade', 'Grade A');
             $panen->kadar_air = $request->input('kadar_air');
@@ -120,6 +180,12 @@ class PanenController extends Controller
             $panen->status = 'menunggu';
 
             $panen->saveWithUniqueRetry();
+
+            // Dispatch notifikasi panen baru diajukan setelah commit
+            $notificationService = app(NotificationService::class);
+            $notificationService->afterCommit(function () use ($notificationService, $panen) {
+                $notificationService->notifyPanenDiajukan($panen, false);
+            });
 
             AuditLogger::log(
                 'panen.dibuat',
@@ -152,7 +218,7 @@ class PanenController extends Controller
         $user = $request->user();
         abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        $panen = Panen::with(['lahan.komoditas', 'kelompokTani'])
+        $panen = Panen::with(['lahan.komoditas', 'kelompokTani', 'siklusTanam.komoditas'])
             ->where('id_panen', $id)
             ->where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok)
@@ -178,13 +244,51 @@ class PanenController extends Controller
             ->where('id_kelompok', $user->id_kelompok)
             ->firstOrFail();
 
-        // Hanya boleh edit jika belum disetujui atau masih menunggu
+        // Hanya boleh edit jika belum disetujui
         if ($panen->status === 'disetujui') {
             return response()->json([
                 'success' => false,
                 'message' => 'Catatan panen yang sudah disetujui tidak dapat diubah.',
             ], 422);
         }
+
+        // Proteksi relasi siklus tanam: tidak boleh dipindahkan ke siklus lain
+        if ($request->has('id_siklus') && $request->input('id_siklus') !== $panen->id_siklus) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siklus tanam pada catatan panen ini tidak dapat diubah atau dipindahkan.',
+                'errors' => [
+                    'id_siklus' => ['Siklus tanam pada catatan panen ini tidak dapat diubah atau dipindahkan.']
+                ],
+            ], 422);
+        }
+
+        // Proteksi relasi petak lahan: tidak boleh dipindahkan ke lahan lain
+        if ($request->filled('id_lahan') && $request->input('id_lahan') !== $panen->id_lahan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lahan pada catatan panen ini tidak dapat dipindahkan.',
+                'errors' => [
+                    'id_lahan' => ['Lahan pada catatan panen ini tidak dapat dipindahkan.']
+                ],
+            ], 422);
+        }
+
+        // Locking jika siklus tanam sedang dalam proses pengakhiran atau telah berakhir
+        if ($panen->id_siklus !== null) {
+            $siklus = \App\Models\SiklusTanam::find($panen->id_siklus);
+            if ($siklus && ($siklus->isMenungguVerifikasiPengakhiran() || in_array($siklus->status, \App\Models\SiklusTanam::STATUSES_TERMINAL, true))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Catatan panen tidak dapat diubah karena siklus tanam sedang dalam proses pengakhiran atau telah berakhir.',
+                    'errors' => [
+                        'id_siklus' => ['Siklus tanam sedang dalam proses pengakhiran atau telah berakhir.']
+                    ],
+                ], 422);
+            }
+        }
+
+        $isRevision = $panen->status === 'ditolak';
 
         try {
             // Foto lama yang dipertahankan dikirim klien lewat `existing_photos`.
@@ -220,15 +324,12 @@ class PanenController extends Controller
                 $panen->foto_panen = $finalPhotos[0] ?? null;
             }
 
-            if ($request->filled('id_lahan')) {
-                $land = Lahan::where('id_lahan', $request->input('id_lahan'))
-                    ->where('id_pengguna', $user->id_pengguna)
-                    ->firstOrFail();
-                $panen->id_lahan = $land->id_lahan;
+            if ($isRevision) {
+                $panen->status = 'menunggu';
             }
 
             foreach ([
-                'komoditas_nama', 'varietas', 'jenis_panen', 'tanggal_panen', 'waktu_panen',
+                'varietas', 'jenis_panen', 'tanggal_panen', 'waktu_panen',
                 'musim_tanam', 'berat_kg', 'kualitas_grade', 'kadar_air', 'persen_butir_utuh',
                 'persen_hampa_kotoran', 'metode_panen', 'biaya_panen', 'keterangan_tenaga_kerja',
                 'harga_per_kg', 'catatan',
@@ -239,6 +340,14 @@ class PanenController extends Controller
             }
 
             $panen->save();
+
+            // Dispatch notifikasi pengajuan ulang panen jika berupa revisi
+            if ($isRevision) {
+                $notificationService = app(NotificationService::class);
+                $notificationService->afterCommit(function () use ($notificationService, $panen) {
+                    $notificationService->notifyPanenDiajukan($panen, true);
+                });
+            }
 
             // Setelah perubahan tersimpan, hapus berkas lama yang benar-benar
             // tidak lagi dipertahankan pengguna (dihapus satu per satu di UI).
@@ -252,8 +361,10 @@ class PanenController extends Controller
             }
 
             AuditLogger::log(
-                'panen.diperbarui',
-                "Memperbarui catatan panen {$panen->kode_panen}.",
+                $isRevision ? 'panen.direvisi' : 'panen.diperbarui',
+                $isRevision
+                    ? "Merevisi catatan panen {$panen->kode_panen} dan mengajukan ulang verifikasi."
+                    : "Memperbarui catatan panen {$panen->kode_panen}.",
                 'Panen',
                 $panen->id_panen,
                 $user->id_kelompok,
@@ -262,8 +373,10 @@ class PanenController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Catatan panen berhasil diperbarui.',
-                'data' => new PanenResource($panen->load(['lahan', 'kelompokTani'])),
+                'message' => $isRevision
+                    ? 'Catatan panen berhasil direvisi dan diajukan ulang untuk verifikasi.'
+                    : 'Catatan panen berhasil diperbarui.',
+                'data' => new PanenResource($panen->load(['lahan', 'kelompokTani', 'siklusTanam.komoditas'])),
             ]);
         } catch (Throwable $e) {
             return response()->json([
@@ -285,6 +398,16 @@ class PanenController extends Controller
             ->where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok)
             ->firstOrFail();
+
+        if ($panen->id_siklus !== null) {
+            $siklus = \App\Models\SiklusTanam::find($panen->id_siklus);
+            if ($siklus && ($siklus->isMenungguVerifikasiPengakhiran() || in_array($siklus->status, \App\Models\SiklusTanam::STATUSES_TERMINAL, true))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Catatan panen tidak dapat dihapus karena siklus tanam sedang dalam proses pengakhiran atau telah berakhir.',
+                ], 422);
+            }
+        }
 
         $panen->delete();
 
@@ -437,5 +560,63 @@ class PanenController extends Controller
             }
         }
         return $paths;
+    }
+
+    /**
+     * Verifikasi catatan panen oleh Pengurus (Ketua) via API.
+     */
+    public function verifikasi(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless(
+            $user && $user->role === 'Pengurus' && $user->status === 'Aktif' && !empty($user->id_kelompok),
+            403,
+            'Akses ditolak. Anda harus menjadi Pengurus aktif yang terdaftar dalam kelompok tani.'
+        );
+
+        $request->validate([
+            'status' => ['required', 'in:disetujui,ditolak,menunggu'],
+            'catatan_verifikasi' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $panen = Panen::where('id_kelompok', $user->id_kelompok)
+            ->where('id_panen', $id)
+            ->firstOrFail();
+
+        $statusLama = $panen->status;
+        $statusBaru = $request->input('status');
+
+        $panen->status = $statusBaru;
+        $panen->diverifikasi_oleh = $user->nama;
+        $panen->tanggal_verifikasi = now();
+        $panen->catatan_verifikasi = $request->input('catatan_verifikasi');
+        $panen->save();
+
+        // Dispatch notifikasi hasil verifikasi panen setelah commit
+        $notificationService = app(NotificationService::class);
+        if ($statusBaru === 'disetujui') {
+            $notificationService->afterCommit(function () use ($notificationService, $panen, $user) {
+                $notificationService->notifyPanenDisetujui($panen, $user, $panen->catatan_verifikasi);
+            });
+        } elseif ($statusBaru === 'ditolak') {
+            $notificationService->afterCommit(function () use ($notificationService, $panen, $user) {
+                $notificationService->notifyPanenDitolak($panen, $user, $panen->catatan_verifikasi);
+            });
+        }
+
+        AuditLogger::log(
+            'panen.diverifikasi',
+            "Memverifikasi hasil panen {$panen->kode_panen} dari '{$statusLama}' menjadi '{$statusBaru}'.",
+            'Panen',
+            $panen->id_panen,
+            $user->id_kelompok,
+            $request
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Hasil panen ({$panen->kode_panen}) berhasil diverifikasi menjadi {$statusBaru}.",
+            'data' => new PanenResource($panen->load(['lahan', 'kelompokTani', 'siklusTanam.komoditas'])),
+        ]);
     }
 }

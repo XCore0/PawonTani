@@ -23,6 +23,7 @@ class Panen extends Model
         'id_panen',
         'kode_panen',
         'id_lahan',
+        'id_siklus',
         'id_pengguna',
         'id_kelompok',
         'id_komoditas',
@@ -142,5 +143,20 @@ class Panen extends Model
     public function komoditas(): BelongsTo
     {
         return $this->belongsTo(Komoditas::class, 'id_komoditas', 'id_komoditas');
+    }
+
+    public function siklusTanam(): BelongsTo
+    {
+        return $this->belongsTo(SiklusTanam::class, 'id_siklus', 'id_siklus');
+    }
+
+    public function scopeForSiklus($query, string $idSiklus)
+    {
+        return $query->where('id_siklus', $idSiklus);
+    }
+
+    public function scopeLegacy($query)
+    {
+        return $query->whereNull('id_siklus');
     }
 }

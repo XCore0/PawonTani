@@ -11,10 +11,18 @@ class UpdatePanenRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (!$this->has('id_siklus') && $this->has('siklus_id')) {
+            $this->merge(['id_siklus' => $this->input('siklus_id')]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'id_lahan' => ['nullable', 'string', 'exists:lahan,id_lahan'],
+            'id_siklus' => ['nullable', 'string', 'exists:siklus_tanam,id_siklus'],
             'komoditas_nama' => ['nullable', 'string', 'max:100'],
             'varietas' => ['nullable', 'string', 'max:100'],
             'jenis_panen' => ['nullable', 'string', 'max:100'],

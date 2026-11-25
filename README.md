@@ -305,6 +305,53 @@ Jangan pernah:
 
 Gunakan `.env.example` sebagai template konfigurasi dan isi nilai rahasia hanya pada environment lokal atau server deployment.
 
+## Dokumentasi Fitur Siklus Tanam (November 2026)
+
+Pembaruan besar ini menghadirkan sistem pengelolaan dan digitalisasi **Siklus Tanam** secara terintegrasi antara Web Backend Laravel dan Flutter Mobile.
+
+### 1. Arsitektur & Model Data
+- **`App\Models\SiklusTanam` (`siklus_tanam`):**
+  - Mengelola siklus berjalan (`isBerjalan()`) dan riwayat siklus tanam suatu petak lahan.
+  - Atribut utama: `id_siklus` (SKL-YYYYMMDD-XXXX), `id_lahan`, `id_pengguna`, `id_kelompok`, `id_komoditas`, `komoditas_nama`, `varietas`, `musim_tanam`, `tanggal_mulai`, `estimasi_panen`, `status` (`aktif`, `menunggu_selesai`, `menunggu_gagal`, `selesai`, `gagal`, `dibatalkan`).
+- **`App\Models\RiwayatPengakhiranSiklus` (`riwayat_pengakhiran_siklus`):**
+  - Audit trail komprehensif saat pengakhiran diajukan dan diputuskan (snapshot realisasi panen, alasan, foto bukti, verifikator, catatan verifikasi, tanggal keputusan).
+- **Relasi Entitas Terikat:**
+  - `Lahan` memiliki `hasOne` `siklusBerjalan` dan `hasMany` `riwayatSiklus`.
+  - `AktivitasTanam` dan `Panen` memiliki `belongsTo` `siklusTanam` via foreign key `id_siklus`.
+  - Dukungan data lama/legacy (`id_siklus` nullable) tanpa memutus data historis yang sudah ada.
+
+### 2. Status Operasional Lahan & Siklus
+Status lahan disinkronkan secara ketat:
+- **`aktif`:** Lahan memiliki siklus tanam berjalan.
+- **`persiapan`:** Lahan sedang dalam masa olah tanah / persiapan sebelum mulai tanam.
+- **`istirahat`:** Pasca pengakhiran siklus (selesai/gagal) lahan masuk masa istirahat sebelum siklus berikutnya.
+
+### 3. Aturan Bisnis (Business Rules)
+1. **Satu Siklus Berjalan per Lahan:** Satu petak lahan hanya boleh memiliki tepat 1 siklus tanam aktif atau menunggu keputusan verifikasi dalam satu waktu.
+2. **Keterikatan Budidaya:** Pencatatan aktivitas dan panen baru pada mobile secara otomatis mewajibkan binding `id_siklus` siklus berjalan.
+3. **Persyaratan Pengakhiran Berhasil (Selesai):** Wajib memiliki minimal 1 catatan panen, dan seluruh catatan panen pada siklus tersebut harus telah berstatus `disetujui` oleh pengurus.
+4. **Persyaratan Pengakhiran Gagal:** Tanaman puso/rusak, wajib menyertakan alasan kegagalan dan unggah foto bukti lapangan.
+5. **Pembatalan Siklus:** Hanya dapat dilakukan jika siklus belum memiliki catatan aktivitas budidaya maupun catatan panen.
+
+### 4. Alur Verifikasi & Otorisasi
+- **Pengajuan oleh Anggota:** Anggota mengajukan pengakhiran selesai atau gagal via Mobile / API. Status siklus berubah menjadi `menunggu_selesai` atau `menunggu_gagal`. Status operasional lahan tetap `aktif` selama masa tunggu.
+- **Keputusan oleh Pengurus:** Pengurus memeriksa pengajuan pada halaman Web Kelola Lahan (`/pengurus/lahan/{id}`).
+  - Jika **Disetujui:** Status siklus berubah menjadi `selesai` atau `gagal`, dan status operasional lahan berubah menjadi `istirahat`.
+  - Jika **Ditolak:** Wajib menyertakan catatan penolakan. Status siklus dipulihkan kembali menjadi `aktif` agar anggota dapat memperbaiki data atau melanjutkan masa tanam.
+
+### 5. Rute & Endpoint API
+- `POST /api/v1/siklus-tanam` — Mulai siklus tanam baru.
+- `GET /api/v1/siklus-tanam/{id}` — Detail siklus tanam.
+- `GET /api/v1/lahan/{id}/siklus/berjalan` — Mengambil siklus yang sedang berjalan pada lahan.
+- `GET /api/v1/lahan/{id}/siklus` — Mengambil daftar riwayat siklus tanam lahan.
+- `POST /api/v1/siklus-tanam/{id}/ajukan-selesai` — Pengajuan pengakhiran berhasil oleh anggota.
+- `POST /api/v1/siklus-tanam/{id}/ajukan-gagal` — Pelaporan kegagalan panen oleh anggota.
+- `POST /api/v1/siklus-tanam/{id}/batalkan` — Pembatalan siklus oleh anggota.
+- `POST /api/v1/siklus-tanam/{id}/verifikasi` — Verifikasi keputusan oleh Pengurus.
+- `GET /api/v1/notifikasi` — Mengambil daftar notifikasi status siklus dan lahan.
+
+---
+
 ## Lisensi
 
 Project ini menggunakan lisensi MIT.

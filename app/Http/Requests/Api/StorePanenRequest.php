@@ -11,12 +11,20 @@ class StorePanenRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (!$this->has('id_siklus') && $this->has('siklus_id')) {
+            $this->merge(['id_siklus' => $this->input('siklus_id')]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'id_lahan' => ['required', 'string', 'exists:lahan,id_lahan'],
+            'id_siklus' => ['required', 'string', 'exists:siklus_tanam,id_siklus'],
             'komoditas_nama' => ['nullable', 'string', 'max:100'],
-            'varietas' => ['required', 'string', 'max:100'],
+            'varietas' => ['nullable', 'string', 'max:100'],
             'jenis_panen' => ['nullable', 'string', 'max:100'],
             'tanggal_panen' => ['required', 'date'],
             'waktu_panen' => ['nullable', 'string', 'max:20'],
@@ -42,6 +50,8 @@ class StorePanenRequest extends FormRequest
         return [
             'id_lahan.required' => 'Petak lahan wajib dipilih.',
             'id_lahan.exists' => 'Petak lahan tidak valid atau tidak ditemukan.',
+            'id_siklus.required' => 'Siklus tanam wajib dipilih.',
+            'id_siklus.exists' => 'Siklus tanam tidak valid atau tidak ditemukan.',
             'varietas.required' => 'Varietas / jenis komoditas wajib diisi.',
             'tanggal_panen.required' => 'Tanggal pelaksanaan panen wajib diisi.',
             'berat_kg.required' => 'Total berat hasil panen wajib diisi.',

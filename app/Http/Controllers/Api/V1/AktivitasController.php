@@ -8,6 +8,7 @@ use App\Http\Requests\Api\UpdateAktivitasRequest;
 use App\Http\Resources\AktivitasResource;
 use App\Models\AktivitasTanam;
 use App\Models\Lahan;
+use App\Models\SiklusTanam;
 use App\Services\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -24,12 +25,15 @@ class AktivitasController extends Controller
         $user = $request->user();
         abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        $query = AktivitasTanam::with(['lahan.komoditas', 'pengguna'])
+        $query = AktivitasTanam::with(['lahan.komoditas', 'pengguna', 'siklusTanam'])
             ->where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok);
 
         if ($lahanId = ($request->query('id_lahan') ?? $request->query('lahan_id'))) {
             $query->where('id_lahan', $lahanId);
+        }
+        if ($siklusId = ($request->query('id_siklus') ?? $request->query('siklus_id'))) {
+            $query->where('id_siklus', $siklusId);
         }
         if ($kategori = $request->query('kategori')) {
             $query->where('kategori', strtolower($kategori));
@@ -67,42 +71,88 @@ class AktivitasController extends Controller
             ->firstOrFail();
 
         try {
-            $photoPath = $this->storeActivityPhoto($request);
-            $photoList = $this->storeActivityPhotoList($request);
-            if ($photoPath && empty($photoList)) {
-                $photoList = [$photoPath];
-            } elseif (empty($photoPath) && !empty($photoList)) {
-                $photoPath = $photoList[0];
-            }
+            return DB::transaction(function () use ($request, $user, $land) {
+                // 1. Validasi Siklus Tanam dengan row locking
+                $siklus = SiklusTanam::where('id_siklus', $request->input('id_siklus'))
+                    ->lockForUpdate()
+                    ->first();
 
-            $category = strtolower($request->input('kategori'));
-            $condition = match (strtolower((string) $request->input('kondisi_tanaman', 'sehat'))) {
-                'sehat' => 'sehat',
-                'perluperhatian', 'perlu_perhatian' => 'perluPerhatian',
-                'terseranghama', 'terserang_hama' => 'terserangHama',
-                default => 'sehat',
-            };
+                if (!$siklus) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siklus tanam tidak ditemukan.',
+                    ], 404);
+                }
 
-            $activity = new AktivitasTanam();
-            $activity->id_lahan = $land->id_lahan;
-            $activity->id_pengguna = $user->id_pengguna;
-            $activity->id_kelompok = $land->id_kelompok;
-            $activity->kategori = $category;
-            $activity->judul = $request->input('judul') ?: ucfirst($category);
-            $activity->kondisi_tanaman = $condition;
-            $activity->tanggal = Carbon::parse($request->input('tanggal'))->toDateString();
-            $activity->waktu = $request->input('waktu', now()->format('H:i') . ' WIB');
-            $activity->hari_setelah_tanam = $request->input('hari_setelah_tanam', 30);
-            $activity->catatan = $request->input('catatan');
-            $activity->foto_aktivitas = $photoPath;
-            $activity->foto_aktivitas_list = !empty($photoList) ? $photoList : null;
-            $activity->biaya = (float) $request->input('biaya', 0);
-            $activity->saveWithUniqueRetry();
-            $activity->load(['lahan.komoditas', 'pengguna']);
+                // 2. Validasi konsistensi Lahan: Lahan Aktivitas harus sama dengan Lahan Siklus
+                if ($siklus->id_lahan !== $land->id_lahan) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siklus tanam tidak sesuai dengan lahan yang dipilih.',
+                    ], 422);
+                }
 
-            AuditLogger::log('aktivitas.tambah', 'Anggota menambahkan aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $land->id_kelompok, $request);
+                // 3. Validasi otorisasi kepemilikan siklus oleh anggota sah
+                if ($siklus->id_pengguna !== $user->id_pengguna || $siklus->id_kelompok !== $land->id_kelompok) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Anda tidak memiliki hak akses terhadap siklus tanam ini.',
+                    ], 403);
+                }
 
-            return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil dicatat.', 'data' => new AktivitasResource($activity)], 201);
+                // 4. Validasi status siklus: hanya status 'aktif' yang boleh menerima pencatatan aktivitas
+                if (in_array($siklus->status, [SiklusTanam::STATUS_MENUNGGU_SELESAI, SiklusTanam::STATUS_MENUNGGU_GAGAL], true)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siklus tanam sedang dalam proses pengakhiran dan tidak dapat menerima aktivitas baru.',
+                    ], 422);
+                }
+
+                if ($siklus->status !== SiklusTanam::STATUS_AKTIF) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siklus tanam sudah berakhir dan tidak dapat menerima aktivitas baru.',
+                    ], 422);
+                }
+
+                $photoPath = $this->storeActivityPhoto($request);
+                $photoList = $this->storeActivityPhotoList($request);
+                if ($photoPath && empty($photoList)) {
+                    $photoList = [$photoPath];
+                } elseif (empty($photoPath) && !empty($photoList)) {
+                    $photoPath = $photoList[0];
+                }
+
+                $category = strtolower($request->input('kategori'));
+                $condition = match (strtolower((string) $request->input('kondisi_tanaman', 'sehat'))) {
+                    'sehat' => 'sehat',
+                    'perluperhatian', 'perlu_perhatian' => 'perluPerhatian',
+                    'terseranghama', 'terserang_hama' => 'terserangHama',
+                    default => 'sehat',
+                };
+
+                $activity = new AktivitasTanam();
+                $activity->id_lahan = $land->id_lahan;
+                $activity->id_siklus = $siklus->id_siklus;
+                $activity->id_pengguna = $user->id_pengguna;
+                $activity->id_kelompok = $land->id_kelompok;
+                $activity->kategori = $category;
+                $activity->judul = $request->input('judul') ?: ucfirst($category);
+                $activity->kondisi_tanaman = $condition;
+                $activity->tanggal = Carbon::parse($request->input('tanggal'))->toDateString();
+                $activity->waktu = $request->input('waktu', now()->format('H:i') . ' WIB');
+                $activity->hari_setelah_tanam = $request->input('hari_setelah_tanam', 30);
+                $activity->catatan = $request->input('catatan');
+                $activity->foto_aktivitas = $photoPath;
+                $activity->foto_aktivitas_list = !empty($photoList) ? $photoList : null;
+                $activity->biaya = (float) $request->input('biaya', 0);
+                $activity->saveWithUniqueRetry();
+                $activity->load(['lahan.komoditas', 'pengguna', 'siklusTanam']);
+
+                AuditLogger::log('aktivitas.tambah', 'Anggota menambahkan aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $land->id_kelompok, $request);
+
+                return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil dicatat.', 'data' => new AktivitasResource($activity)], 201);
+            });
         } catch (Throwable $exception) {
             Log::error('Gagal menyimpan aktivitas tanam.', ['exception' => $exception]);
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem saat menyimpan aktivitas.'], 500);
@@ -114,7 +164,7 @@ class AktivitasController extends Controller
         $user = $request->user();
         abort_unless($user && $user->role === 'Anggota' && $user->status === 'Aktif' && $user->anggota?->status_keanggotaan === 'Aktif', 403);
 
-        $activity = AktivitasTanam::with(['lahan.komoditas', 'pengguna'])
+        $activity = AktivitasTanam::with(['lahan.komoditas', 'pengguna', 'siklusTanam'])
             ->where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok)
             ->findOrFail($id);
@@ -130,6 +180,28 @@ class AktivitasController extends Controller
         $activity = AktivitasTanam::where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok)
             ->findOrFail($id);
+
+        // Jangan izinkan pemindahan siklus tanam secara bebas antar siklus
+        if ($request->filled('id_siklus') && $activity->id_siklus !== null && $request->input('id_siklus') !== $activity->id_siklus) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aktivitas tanam tidak dapat dipindahkan ke siklus tanam lain.',
+            ], 422);
+        }
+
+        // Locking jika siklus tanam sedang dalam proses pengakhiran atau telah berakhir
+        if ($activity->id_siklus !== null) {
+            $siklus = \App\Models\SiklusTanam::find($activity->id_siklus);
+            if ($siklus && ($siklus->isMenungguVerifikasiPengakhiran() || in_array($siklus->status, \App\Models\SiklusTanam::STATUSES_TERMINAL, true))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aktivitas tanam tidak dapat diubah karena siklus tanam sedang dalam proses pengakhiran atau telah berakhir.',
+                    'errors' => [
+                        'id_siklus' => ['Siklus tanam sedang dalam proses pengakhiran atau telah berakhir.']
+                    ],
+                ], 422);
+            }
+        }
 
         try {
             if ($request->filled('id_lahan')) {
@@ -203,7 +275,7 @@ class AktivitasController extends Controller
             }
 
             $activity->save();
-            $activity->load(['lahan.komoditas', 'pengguna']);
+            $activity->load(['lahan.komoditas', 'pengguna', 'siklusTanam']);
 
             AuditLogger::log('aktivitas.ubah', 'Anggota memperbarui aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $activity->id_kelompok, $request);
             return response()->json(['success' => true, 'message' => 'Aktivitas tanam berhasil diperbarui.', 'data' => new AktivitasResource($activity)]);
@@ -220,6 +292,17 @@ class AktivitasController extends Controller
         $activity = AktivitasTanam::where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok)
             ->findOrFail($id);
+
+        if ($activity->id_siklus !== null) {
+            $siklus = \App\Models\SiklusTanam::find($activity->id_siklus);
+            if ($siklus && ($siklus->isMenungguVerifikasiPengakhiran() || in_array($siklus->status, \App\Models\SiklusTanam::STATUSES_TERMINAL, true))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aktivitas tanam tidak dapat dihapus karena siklus tanam sedang dalam proses pengakhiran atau telah berakhir.',
+                ], 422);
+            }
+        }
+
         $activity->delete();
 
         AuditLogger::log('aktivitas.hapus', 'Anggota menghapus aktivitas ' . $activity->judul, 'AktivitasTanam', $activity->id_aktivitas, $activity->id_kelompok, $request);

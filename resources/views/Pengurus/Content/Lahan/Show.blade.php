@@ -27,7 +27,7 @@
     <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm space-y-1 animate-in fade-in duration-200">
       <div class="flex items-center gap-2 font-bold text-red-900">
         <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
-        <span>Gagal memproses verifikasi lahan:</span>
+        <span>Gagal memproses verifikasi:</span>
       </div>
       <ul class="list-disc list-inside pl-6 text-red-700 space-y-0.5">
         @foreach($errors->all() as $error)
@@ -269,6 +269,185 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Card Siklus Tanam & Operasional -->
+      <div class="rounded-[22px] bg-white border border-[#E4F0D6] shadow-2xs overflow-hidden">
+        <div class="p-5 border-b border-[#E4F0D6] flex items-center justify-between bg-[#F5F8F1]/40">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-[#EBF6E0] text-[#4D9830] flex items-center justify-center">
+              <i data-lucide="sprout" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-sm sm:text-base font-bold text-[#1A2D10]">Siklus Tanam & Operasional</h2>
+              <p class="text-[11px] text-[#9AB880]">Status penanaman berjalan dan persetujuan pengakhiran siklus</p>
+            </div>
+          </div>
+          @if($lahan->siklusBerjalan)
+            @php
+              $sb = $lahan->siklusBerjalan;
+              $isMenunggu = in_array($sb->status, ['menunggu_selesai', 'menunggu_gagal']);
+            @endphp
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-2xs {{ $isMenunggu ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
+              <span class="w-2 h-2 rounded-full {{ $isMenunggu ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500' }}"></span>
+              {{ $isMenunggu ? ($sb->status === 'menunggu_gagal' ? 'Menunggu Gagal' : 'Menunggu Selesai') : 'Siklus Aktif' }}
+            </span>
+          @else
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+              Tidak Ada Siklus Aktif ({{ ucfirst($lahan->status_operasional) }})
+            </span>
+          @endif
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-5">
+          @if($lahan->siklusBerjalan)
+            @php
+              $sb = $lahan->siklusBerjalan;
+              $isMenunggu = in_array($sb->status, ['menunggu_selesai', 'menunggu_gagal']);
+            @endphp
+
+            <!-- Ringkasan Data Siklus -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+              <div class="p-3.5 rounded-xl bg-[#F5F8F1]/60 border border-[#E4F0D6]">
+                <span class="text-[11px] font-semibold text-[#9AB880] uppercase tracking-wider block">Komoditas & Varietas</span>
+                <span class="text-sm font-bold text-[#1A2D10] block mt-0.5">
+                  {{ $sb->komoditas?->nama_komoditas ?? '-' }}
+                  @if(!empty($sb->varietas))
+                    <span class="font-normal text-xs text-[#4A6030]">({{ $sb->varietas }})</span>
+                  @endif
+                </span>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-[#F5F8F1]/60 border border-[#E4F0D6]">
+                <span class="text-[11px] font-semibold text-[#9AB880] uppercase tracking-wider block">Musim Tanam</span>
+                <span class="text-sm font-bold text-[#1A2D10] block mt-0.5">{{ $sb->musim_tanam ?: '-' }}</span>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-[#F5F8F1]/60 border border-[#E4F0D6]">
+                <span class="text-[11px] font-semibold text-[#9AB880] uppercase tracking-wider block">Tanggal Mulai Tanam</span>
+                <span class="text-sm font-bold text-[#1A2D10] block mt-0.5">
+                  {{ $sb->tanggal_mulai ? \Carbon\Carbon::parse($sb->tanggal_mulai)->translatedFormat('d F Y') : '-' }}
+                </span>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-[#F5F8F1]/60 border border-[#E4F0D6]">
+                <span class="text-[11px] font-semibold text-[#9AB880] uppercase tracking-wider block">Estimasi Waktu Panen</span>
+                <span class="text-sm font-bold text-[#1A2D10] block mt-0.5">
+                  {{ $sb->estimasi_panen ? \Carbon\Carbon::parse($sb->estimasi_panen)->translatedFormat('d F Y') : '-' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Panel Pengajuan Pengakhiran (Jika sedang menunggu approval) -->
+            @if($isMenunggu)
+              <div class="p-4 sm:p-5 rounded-2xl border-2 {{ $sb->status === 'menunggu_gagal' ? 'border-rose-300 bg-rose-50/40' : 'border-amber-300 bg-amber-50/40' }} space-y-4">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-xl {{ $sb->status === 'menunggu_gagal' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600' }} flex items-center justify-center shrink-0">
+                    <i data-lucide="{{ $sb->status === 'menunggu_gagal' ? 'alert-triangle' : 'flag' }}" class="w-5 h-5"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <h3 class="text-sm font-bold text-[#1A2D10]">
+                        Pengajuan Pengakhiran: {{ $sb->status === 'menunggu_gagal' ? 'Panen Gagal' : 'Panen Berhasil / Selesai' }}
+                      </h3>
+                      <span class="text-[11px] font-medium text-[#9AB880]">
+                        Diajukan {{ ($sb->tanggal_pengajuan ?? $sb->tanggal_pengajuan_pengakhiran) ? \Carbon\Carbon::parse($sb->tanggal_pengajuan ?? $sb->tanggal_pengajuan_pengakhiran)->translatedFormat('d M Y, H:i') : '-' }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-[#6B7F5B] mt-0.5">
+                      Diajukan oleh: <strong class="text-[#1A2D10]">{{ $sb->pengguna?->nama ?? $lahan->pengguna?->nama ?? 'Anggota' }}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Alasan Pengajuan -->
+                <div class="p-3.5 rounded-xl bg-white border border-[#E4F0D6] space-y-1">
+                  <span class="text-[11px] font-bold text-[#1A2D10] uppercase tracking-wider block">Alasan Pengakhiran:</span>
+                  <p class="text-xs text-[#4A6030] leading-relaxed italic">
+                    "{{ $sb->alasan_pengakhiran ?: 'Tidak ada alasan yang dicantumkan.' }}"
+                  </p>
+                </div>
+
+                <!-- Foto Bukti (Khusus jika gagal) -->
+                @if(!empty($sb->foto_bukti_gagal))
+                  @php
+                    $buktiUrl = str_starts_with($sb->foto_bukti_gagal, 'http')
+                      ? $sb->foto_bukti_gagal
+                      : url('/api/v1/siklus-tanam/' . $sb->id_siklus . '/bukti-gagal');
+                  @endphp
+                  <div class="space-y-1.5">
+                    <span class="text-[11px] font-bold text-[#1A2D10] uppercase tracking-wider block">Foto Bukti Kegagalan:</span>
+                    <div class="w-48 rounded-xl overflow-hidden border border-[#E4F0D6] bg-slate-900/5">
+                      <a href="{{ $buktiUrl }}" target="_blank" rel="noopener noreferrer" class="group block relative">
+                        <img src="{{ $buktiUrl }}" alt="Foto Bukti Gagal" class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200">
+                        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity">
+                          <i data-lucide="zoom-in" class="w-4 h-4 mr-1"></i> Perbesar
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                @endif
+
+                <!-- Form Verifikasi Khusus Ketua -->
+                @if($isKetua)
+                  <form action="{{ route('pengurus.lahan.siklus.verifikasi', [$lahan->id_lahan, $sb->id_siklus]) }}" method="POST" class="pt-3 border-t border-[#E4F0D6] space-y-4">
+                    @csrf
+
+                    <div>
+                      <label class="block text-xs font-bold text-[#1A2D10] mb-2 uppercase tracking-wider">
+                        Keputusan Verifikasi Ketua <span class="text-red-500">*</span>
+                      </label>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-[#C5DFB0] bg-white hover:bg-[#F5F8F1] cursor-pointer transition-colors has-[:checked]:border-[#4D9830] has-[:checked]:bg-[#EBF6E0]/60 has-[:checked]:ring-1 has-[:checked]:ring-[#4D9830]">
+                          <input type="radio" name="keputusan" value="disetujui" {{ old('keputusan', old('status_verifikasi', 'disetujui')) === 'disetujui' ? 'checked' : '' }} class="mt-0.5 text-[#4D9830] focus:ring-[#4D9830] cursor-pointer">
+                          <div class="text-xs">
+                            <span class="font-bold text-[#1A2D10] block">Setujui Pengakhiran</span>
+                            <span class="text-[#9AB880] text-[11px]">Siklus resmi diakhiri ({{ $sb->status === 'menunggu_gagal' ? 'Gagal' : 'Selesai' }}).</span>
+                          </div>
+                        </label>
+
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-[#C5DFB0] bg-white hover:bg-[#F5F8F1] cursor-pointer transition-colors has-[:checked]:border-rose-400 has-[:checked]:bg-rose-50/60 has-[:checked]:ring-1 has-[:checked]:ring-rose-400">
+                          <input type="radio" name="keputusan" value="ditolak" {{ old('keputusan', old('status_verifikasi')) === 'ditolak' ? 'checked' : '' }} class="mt-0.5 text-rose-600 focus:ring-rose-500 cursor-pointer">
+                          <div class="text-xs">
+                            <span class="font-bold text-[#1A2D10] block">Tolak Pengajuan</span>
+                            <span class="text-[#9AB880] text-[11px]">Pengajuan ditolak, siklus dikembalikan ke status aktif berjalan.</span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label for="catatan_siklus" class="block text-xs font-bold text-[#1A2D10] mb-1.5 uppercase tracking-wider">
+                        Catatan Verifikasi Ketua (Opsional, Wajib jika ditolak)
+                      </label>
+                      <textarea name="catatan" id="catatan_siklus" rows="2"
+                        placeholder="Tuliskan catatan atau instruksi bagi anggota petani (wajib diisi jika ditolak)..."
+                        class="w-full p-3 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm text-slate-800 placeholder-[#9AB880] focus:outline-none focus:border-[#4D9830] focus:ring-2 focus:ring-[#4D9830]/20 transition-all leading-relaxed">{{ old('catatan') }}</textarea>
+                    </div>
+
+                    <button type="submit"
+                      onclick="return confirm('Apakah Anda yakin ingin menyimpan keputusan verifikasi siklus tanam ini?')"
+                      class="w-full h-10 inline-flex items-center justify-center gap-2 px-4 rounded-xl bg-[#4D9830] hover:bg-[#3D8024] active:scale-[0.99] text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer">
+                      <i data-lucide="check" class="w-4 h-4"></i>
+                      <span>Simpan Keputusan Verifikasi Siklus</span>
+                    </button>
+                  </form>
+                @else
+                  <div class="p-3 rounded-xl bg-white border border-[#E4F0D6] text-xs text-[#6B7F5B]">
+                    <i data-lucide="info" class="w-3.5 h-3.5 inline mr-1 text-[#4D9830]"></i>
+                    Hanya Ketua Kelompok Tani yang berwenang menyetujui atau menolak pengajuan pengakhiran siklus tanam.
+                  </div>
+                @endif
+
+              </div>
+            @endif
+
+          @else
+            <div class="py-6 text-center text-xs text-[#9AB880]">
+              Saat ini tidak ada siklus tanam yang sedang berjalan di lahan ini. Anggota dapat memulai siklus tanam baru setelah persiapan lahan selesai melalui aplikasi mobile.
+            </div>
+          @endif
         </div>
       </div>
 

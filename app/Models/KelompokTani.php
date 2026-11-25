@@ -53,6 +53,11 @@ class KelompokTani extends Model
         return $this->hasMany(Lahan::class, 'id_kelompok', 'id_kelompok');
     }
 
+    public function siklusTanam()
+    {
+        return $this->hasMany(SiklusTanam::class, 'id_kelompok', 'id_kelompok');
+    }
+
     /**
      * Auto-generate id_kelompok like PokTan-XXXX if not provided
      */

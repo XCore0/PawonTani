@@ -89,6 +89,16 @@ class AktivitasResource extends JsonResource
             'id_aktivitas' => $this->id_aktivitas,
             'id_lahan' => $this->id_lahan,
             'lahan_id' => $this->id_lahan,
+            'id_siklus' => $this->id_siklus,
+            'is_legacy' => $this->id_siklus === null,
+            'siklus' => $this->whenLoaded('siklusTanam', function () {
+                return $this->siklusTanam ? [
+                    'id_siklus' => $this->siklusTanam->id_siklus,
+                    'komoditas_nama' => $this->siklusTanam->komoditas_nama,
+                    'musim_tanam' => $this->siklusTanam->musim_tanam,
+                    'status' => $this->siklusTanam->status,
+                ] : null;
+            }),
             'title' => $this->judul ?? $kategoriLabel,
             'judul' => $this->judul ?? $kategoriLabel,
             'crop_name' => $namaKomoditas,

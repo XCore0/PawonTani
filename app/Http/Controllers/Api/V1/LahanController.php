@@ -8,6 +8,7 @@ use App\Http\Requests\Api\UpdateLahanRequest;
 use App\Http\Resources\LahanResource;
 use App\Services\LahanService;
 use App\Services\AuditLogger;
+use App\Services\SiklusTanamService;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -116,6 +117,8 @@ class LahanController extends Controller
                     'kelompokTani:id_kelompok,nama_kelompok',
                     'verifikator:id_pengguna,nama,jabatan',
                     'riwayatVerifikasi.pengguna:id_pengguna,nama,role,jabatan',
+                    'siklusBerjalan.komoditas',
+                    'siklusBerjalan.pengguna',
                 ]);
 
             return response()->json([
@@ -283,6 +286,108 @@ class LahanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan sistem saat menghapus lahan. Silakan coba beberapa saat lagi.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Memulai persiapan lahan oleh Anggota pemilik.
+     * Mengubah status operasional lahan dari 'istirahat' -> 'persiapan'.
+     */
+    public function mulaiPersiapan(Request $request, string $id, SiklusTanamService $siklusService): JsonResponse
+    {
+        try {
+            $lahan = $siklusService->mulaiPersiapanLahan($request->user(), $id);
+
+            AuditLogger::log(
+                'lahan.mulai_persiapan',
+                'Anggota memulai persiapan lahan.',
+                'Lahan',
+                $lahan->id_lahan,
+                $lahan->id_kelompok,
+                $request
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status operasional lahan berhasil diubah menjadi persiapan.',
+                'data' => new LahanResource($lahan->load(['komoditas', 'siklusBerjalan'])),
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data lahan tidak ditemukan atau Anda tidak memiliki akses.',
+            ], 404);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (DomainException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Gagal memulai persiapan lahan: ' . $e->getMessage(), [
+                'id_lahan' => $id,
+                'user_id' => $request->user()?->id_pengguna,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem saat memulai persiapan lahan.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Membatalkan persiapan lahan oleh Anggota pemilik.
+     * Mengembalikan status operasional lahan dari 'persiapan' -> 'istirahat'.
+     */
+    public function batalkanPersiapan(Request $request, string $id, SiklusTanamService $siklusService): JsonResponse
+    {
+        try {
+            $lahan = $siklusService->batalkanPersiapanLahan($request->user(), $id);
+
+            AuditLogger::log(
+                'lahan.batalkan_persiapan',
+                'Anggota membatalkan persiapan lahan.',
+                'Lahan',
+                $lahan->id_lahan,
+                $lahan->id_kelompok,
+                $request
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Persiapan lahan berhasil dibatalkan. Status operasional kembali istirahat.',
+                'data' => new LahanResource($lahan->load(['komoditas', 'siklusBerjalan'])),
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data lahan tidak ditemukan atau Anda tidak memiliki akses.',
+            ], 404);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (DomainException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Gagal membatalkan persiapan lahan: ' . $e->getMessage(), [
+                'id_lahan' => $id,
+                'user_id' => $request->user()?->id_pengguna,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem saat membatalkan persiapan lahan.',
             ], 500);
         }
     }

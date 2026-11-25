@@ -59,7 +59,7 @@
   </div>
 
   {{-- ==================== 2. SUMMARY METRICS CARDS ==================== --}}
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
 
     <!-- Card 1: Total Lahan -->
     <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
@@ -73,7 +73,7 @@
       </div>
     </div>
 
-    <!-- Card 2: Menunggu Verifikasi -->
+    <!-- Card 2: Menunggu Verifikasi Lahan -->
     <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
       <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
         <i data-lucide="clock" class="w-6 h-6"></i>
@@ -85,7 +85,21 @@
       </div>
     </div>
 
-    <!-- Card 3: Terverifikasi -->
+    <!-- Card 3: Pengajuan Siklus Tanam -->
+    <div class="p-5 rounded-[18px] bg-white border {{ ($stats['pengajuan_siklus'] ?? 0) > 0 ? 'border-amber-300 bg-amber-50/30' : 'border-[#E4F0D6]' }} shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl {{ ($stats['pengajuan_siklus'] ?? 0) > 0 ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-slate-100 text-slate-500' }} flex items-center justify-center shrink-0">
+        <i data-lucide="hourglass" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-[#9AB880] uppercase tracking-wider block">Pengajuan Siklus</span>
+        <span class="text-2xl font-extrabold text-[#1A2D10] tracking-tight">{{ $stats['pengajuan_siklus'] ?? 0 }}</span>
+        <span class="text-[11px] {{ ($stats['pengajuan_siklus'] ?? 0) > 0 ? 'text-amber-700 font-bold' : 'text-[#4A6030] font-medium' }} block mt-0.5">
+          {{ ($stats['pengajuan_siklus'] ?? 0) > 0 ? '● Menunggu approval Ketua' : 'Tidak ada antrean' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Card 4: Terverifikasi -->
     <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
       <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
         <i data-lucide="check-circle" class="w-6 h-6"></i>
@@ -97,7 +111,7 @@
       </div>
     </div>
 
-    <!-- Card 4: Perlu Perbaikan -->
+    <!-- Card 5: Perlu Perbaikan -->
     <div class="p-5 rounded-[18px] bg-white border border-[#E4F0D6] shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-4">
       <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
         <i data-lucide="alert-triangle" class="w-6 h-6"></i>
@@ -199,7 +213,15 @@
 
               <!-- Nama Lahan & Lokasi -->
               <td class="py-3.5 px-4">
-                <div class="font-bold text-[#1A2D10]">{{ $item->nama_lahan }}</div>
+                <div class="font-bold text-[#1A2D10] flex items-center gap-1.5 flex-wrap">
+                  <span>{{ $item->nama_lahan }}</span>
+                  @if($item->siklusBerjalan && in_array($item->siklusBerjalan->status, ['menunggu_selesai', 'menunggu_gagal']))
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Pengajuan {{ $item->siklusBerjalan->status === 'menunggu_gagal' ? 'Gagal' : 'Selesai' }} Siklus
+                    </span>
+                  @endif
+                </div>
                 <div class="text-[11px] text-[#9AB880] max-w-xs truncate mt-0.5" title="{{ $item->alamat_lahan }}">
                   <i data-lucide="map-pin" class="w-3 h-3 inline-block -mt-0.5 mr-0.5 text-[#9AB880]"></i>{{ $item->alamat_lahan ?? '-' }}
                 </div>

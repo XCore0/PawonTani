@@ -111,6 +111,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     Route::get('/lahan', [LahanController::class, 'index'])->name('lahan');
     Route::get('/lahan/{lahan}', [LahanController::class, 'show'])->name('lahan.show');
     Route::post('/lahan/{lahan}/verifikasi', [LahanController::class, 'verifikasi'])->name('lahan.verifikasi');
+    Route::post('/lahan/{lahan}/siklus/{siklus}/verifikasi', [LahanController::class, 'verifikasiSiklus'])->name('lahan.siklus.verifikasi');
 
     // Pages in development
 

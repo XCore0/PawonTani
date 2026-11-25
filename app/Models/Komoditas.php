@@ -36,6 +36,14 @@ class Komoditas extends Model
         return $this->hasMany(Produk::class, 'id_komoditas', 'id_komoditas');
     }
 
+    /**
+     * Relationship to Siklus Tanam
+     */
+    public function siklusTanam()
+    {
+        return $this->hasMany(SiklusTanam::class, 'id_komoditas', 'id_komoditas');
+    }
+
     protected static function boot()
     {
         parent::boot();
