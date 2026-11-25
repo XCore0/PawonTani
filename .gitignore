@@ -44,3 +44,9 @@ Thumbs.db
 *.md
 !README.md
 
+# Developer Scratch & Temporary Backup Files
+/scratch/
+*.bak
+*.bak_*
+
+
