@@ -20,7 +20,7 @@
             Marketplace Resmi Petani PawonTani
           </div>
 
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.12]">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-[1.15]">
             Kenali Hasil Tani Lokal, <br class="hidden sm:inline">
             <span class="text-pawon-700">Dukung Petani Indonesia.</span>
           </h1>
@@ -44,15 +44,15 @@
           <!-- Trust Badges -->
           <div class="pt-8 border-t border-[#E4F0D6] grid grid-cols-3 gap-4 max-w-lg">
             <div>
-              <div class="text-2xl sm:text-3xl font-extrabold text-pawon-900 tracking-tight">{{ $totalPetani > 0 ? $totalPetani : '100+' }}</div>
+              <div class="text-2xl sm:text-3xl font-bold text-pawon-900 tracking-tight">{{ $totalPetani > 0 ? $totalPetani : '100+' }}</div>
               <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Petani Anggota</div>
             </div>
             <div>
-              <div class="text-2xl sm:text-3xl font-extrabold text-pawon-900 tracking-tight">{{ $totalKelompok > 0 ? $totalKelompok : '10+' }}</div>
+              <div class="text-2xl sm:text-3xl font-bold text-pawon-900 tracking-tight">{{ $totalKelompok > 0 ? $totalKelompok : '10+' }}</div>
               <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Kelompok Tani</div>
             </div>
             <div>
-              <div class="text-2xl sm:text-3xl font-extrabold text-pawon-900 tracking-tight">100%</div>
+              <div class="text-2xl sm:text-3xl font-bold text-pawon-900 tracking-tight">100%</div>
               <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Langsung ke Petani</div>
             </div>
           </div>
@@ -89,7 +89,7 @@
                 <span class="text-[11px] font-bold uppercase tracking-wider block mb-1" style="color: #A7F3D0;">
                   Komoditas Pangan Lokal
                 </span>
-                <h3 class="text-xl sm:text-2xl font-black leading-tight drop-shadow-md" style="color: #ffffff;">
+                <h3 class="text-xl sm:text-2xl font-bold leading-tight drop-shadow-md" style="color: #ffffff;">
                   Gabah, Jagung, Sayur &amp; Hasil Bumi
                 </h3>
                 <p class="text-xs font-medium mt-1.5 flex items-center gap-1.5" style="color: #D1FAE5;">
@@ -163,7 +163,7 @@
       <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider text-pawon-700">Kategori Hasil Bumi</span>
-          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Komoditas Kelompok Tani</h2>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Komoditas Kelompok Tani</h2>
           <p class="text-sm text-slate-500 mt-1">
             Pilih jenis hasil bumi untuk menelusuri penawaran produk panen segar dari petani binaan di Jawa Timur dan sekitarnya.
           </p>
@@ -280,7 +280,7 @@
       <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider text-pawon-700">Katalog Unggulan</span>
-          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Produk Terbaru Petani</h2>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Produk Terbaru Petani</h2>
           <p class="text-sm text-slate-600 mt-1.5">
             Komoditas panen segar yang dipasarkan langsung oleh anggota kelompok tani binaan PawonTani.
           </p>
@@ -299,7 +299,7 @@
             🌱
           </div>
 
-          <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <h3 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Katalog Panen Baru Sedang Disiapkan
           </h3>
 
@@ -411,7 +411,7 @@
         <span class="text-xs font-bold uppercase tracking-wider text-pawon-700 bg-pawon-50 px-3.5 py-1.5 rounded-full border border-[#C5DFB0]">
           Tentang PawonTani
         </span>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-4 leading-tight tracking-tight">
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mt-4 leading-tight tracking-tight">
           Ekosistem Pertanian Digital untuk Petani Indonesia
         </h2>
         <p class="text-slate-600 mt-5 text-base sm:text-lg leading-relaxed font-normal">
@@ -492,7 +492,7 @@
                   style="background: rgba(255, 255, 255, 0.2); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(8px);">
               Portal Kelompok Tani
             </span>
-            <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight" style="color: #ffffff;">
+            <h3 class="text-2xl sm:text-3xl font-bold tracking-tight leading-tight" style="color: #ffffff;">
               Ingin Mengetahui Sistem Pengelolaan Kelompok Tani Secara Utuh?
             </h3>
             <p class="text-sm sm:text-base leading-relaxed font-normal" style="color: #D1FAE5;">

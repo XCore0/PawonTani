@@ -97,7 +97,7 @@
                   {{ $produk->komoditas->nama_komoditas }} &bull; {{ $produk->komoditas->kategori ?: 'Hasil Panen' }}
                 </span>
               @endif
-              <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+              <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-snug">
                 {{ $produk->nama_produk }}
               </h1>
             </div>
@@ -227,7 +227,7 @@
           <div class="flex items-center justify-between mb-8">
             <div>
               <span class="text-xs font-bold uppercase tracking-wider text-pawon-700">Etalase Petani</span>
-              <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">Produk Lain dari Penjual Ini</h3>
+              <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Produk Lain dari Penjual Ini</h3>
             </div>
             <a href="{{ route('marketplace.penjual', $produk->id_pengguna) }}" class="text-xs sm:text-sm font-bold text-pawon-700 hover:text-pawon-800">
               Lihat Profil Penjual &rarr;

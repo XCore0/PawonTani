@@ -18,78 +18,127 @@
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest" defer></script>
+
+  <!-- Custom Stylesheet (Nav-link underline animation) -->
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=2.0">
 </head>
 
 <body class="font-sans antialiased bg-[#F5F8F1] text-slate-800 selection:bg-pawon-100 selection:text-pawon-900 flex flex-col min-h-screen">
 
   <!-- ==================== 1. NAVBAR CUSTOMER ==================== -->
-  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E4F0D6] transition-all">
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E4F0D6]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
+      <div class="flex items-center justify-between gap-4 h-16 sm:h-18 lg:h-20">
 
-        <!-- Logo Brand -->
-        <a href="{{ route('marketplace.home') }}" class="flex items-center gap-3 group py-1">
-          <img src="{{ asset('images/Logo2.png') }}" alt="PawonTani Logo" class="h-10 sm:h-12 w-auto object-contain hover:opacity-95 transition-opacity">
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-pawon-100 text-pawon-800 border border-[#C5DFB0]">
+        {{-- Brand Logo --}}
+        <a href="{{ route('marketplace.home') }}" class="flex items-center gap-2.5 sm:gap-3 shrink-0 group">
+          <img src="{{ asset('images/Logo2.png') }}" alt="Logo PawonTani"
+            class="h-8 sm:h-10 lg:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]">
+          <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold leading-none whitespace-nowrap bg-pawon-100 text-pawon-800 border border-[#C5DFB0]">
             Marketplace
           </span>
         </a>
 
-        <!-- Desktop Navigation Links -->
-        <nav class="hidden md:flex items-center space-x-8 text-[15px]">
-          <a href="{{ route('marketplace.home') }}" class="font-medium text-slate-700 hover:text-pawon-700 transition-colors {{ request()->routeIs('marketplace.home') ? 'text-pawon-700 font-bold border-b-2 border-pawon-700 pb-1' : '' }}">
-            Beranda
+        @php
+          $isBeranda = request()->routeIs('marketplace.home');
+          $isKatalog = request()->routeIs('marketplace.katalog') || request()->routeIs('marketplace.detail');
+        @endphp
+
+        {{-- Navigasi Tengah (Desktop) dengan Animasi Garis Bawah seperti Home --}}
+        <nav class="hidden md:flex flex-1 items-center justify-center gap-7 lg:gap-9 text-[15px]" aria-label="Navigasi utama">
+          <a href="{{ route('marketplace.home') }}"
+             class="nav-link {{ $isBeranda ? 'active' : '' }}"
+             @if($isBeranda) aria-current="page" @endif>Beranda</a>
+
+          <a href="{{ route('marketplace.katalog') }}"
+             class="nav-link {{ $isKatalog ? 'active' : '' }}"
+             @if($isKatalog) aria-current="page" @endif>Katalog Hasil Bumi</a>
+
+          <a href="javascript:void(0)" onclick="openPanduanModal()"
+             class="nav-link gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4 shrink-0 text-pawon-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Alur Transaksi</span>
           </a>
-          <a href="{{ route('marketplace.katalog') }}" class="font-medium text-slate-700 hover:text-pawon-700 transition-colors {{ request()->routeIs('marketplace.katalog') || request()->routeIs('marketplace.detail') ? 'text-pawon-700 font-bold border-b-2 border-pawon-700 pb-1' : '' }}">
-            Marketplace
-          </a>
-          <a href="{{ request()->routeIs('marketplace.home') ? '#tentang-pawontani' : route('marketplace.home').'#tentang-pawontani' }}" class="font-medium text-slate-700 hover:text-pawon-700 transition-colors">
-            Tentang PawonTani
-          </a>
+
+          <a href="{{ route('home') }}"
+             class="nav-link">Tentang PawonTani</a>
         </nav>
 
-        <!-- CTA Buttons Desktop -->
-        <div class="hidden md:flex items-center gap-3">
-          <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 rounded-full transition-all">
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            Portal Utama
-          </a>
-          <a href="{{ route('marketplace.katalog') }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-sm hover:shadow-md hover:shadow-pawon-700/25 transition-all hover:translate-y-[-1px]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-            Jelajahi Produk
-          </a>
-        </div>
-
-        <!-- Mobile Menu Button -->
-        <div class="flex md:hidden">
-          <button id="customer-mobile-menu-btn" type="button" class="p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 focus:outline-none">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        {{-- Tombol Aksi Kanan (Desktop) - Hanya 1 CTA Fokus: Langsung ke Sistem / Daftar Kelompok --}}
+        <div class="hidden md:flex items-center gap-3 shrink-0">
+          <a href="{{ route('home') }}"
+             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-full transition-all duration-200">
+            <svg class="w-4 h-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
-          </button>
+            <span>Web Utama</span>
+          </a>
+
+          <a href="{{ route('login') }}"
+             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-sm hover:shadow-md hover:shadow-pawon-700/20 transition-all duration-200 whitespace-nowrap">
+            <span>Masuk Sistem</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </a>
         </div>
 
+        {{-- Tombol Menu (Mobile) --}}
+        <button id="customer-mobile-menu-btn" type="button"
+          class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0"
+          aria-label="Buka menu" aria-controls="customer-mobile-menu" aria-expanded="false">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
       </div>
     </div>
 
-    <!-- Mobile Menu Drawer -->
-    <div id="customer-mobile-menu" class="hidden md:hidden border-b border-[#E4F0D6] bg-white px-5 pt-4 pb-6 space-y-3 shadow-xl">
-      <a href="{{ route('marketplace.home') }}" class="block text-base font-semibold py-1.5 {{ request()->routeIs('marketplace.home') ? 'text-pawon-700 font-bold' : 'text-slate-700' }}">
-        Beranda Marketplace
-      </a>
-      <a href="{{ route('marketplace.katalog') }}" class="block text-base font-semibold py-1.5 {{ request()->routeIs('marketplace.katalog') ? 'text-pawon-700 font-bold' : 'text-slate-700' }}">
-        Katalog Produk
-      </a>
-      <a href="{{ route('marketplace.home') }}#tentang-pawontani" class="block text-base font-semibold py-1.5 text-slate-700">
-        Tentang PawonTani
-      </a>
-      <div class="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
-        <a href="{{ route('marketplace.katalog') }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-          Jelajahi Produk
+    {{-- Drawer Menu Mobile --}}
+    <div id="customer-mobile-menu" class="hidden md:hidden border-t border-[#E4F0D6] bg-white px-4 pt-2 pb-5 shadow-xl">
+      <nav class="flex flex-col divide-y divide-slate-100" aria-label="Navigasi mobile">
+        <a href="{{ route('marketplace.home') }}"
+           class="flex items-center justify-between gap-3 px-2 py-3.5 text-[15px] font-semibold {{ $isBeranda ? 'text-pawon-700 font-bold' : 'text-slate-700' }}">
+          <span>Beranda</span>
+          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </a>
-        <a href="{{ route('home') }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-full">
-          Kembali ke Portal PawonTani
+
+        <a href="{{ route('marketplace.katalog') }}"
+           class="flex items-center justify-between gap-3 px-2 py-3.5 text-[15px] font-semibold {{ $isKatalog ? 'text-pawon-700 font-bold' : 'text-slate-700' }}">
+          <span>Katalog Hasil Bumi</span>
+          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+
+        <a href="javascript:void(0)" onclick="openPanduanModal()"
+           class="flex items-center gap-2 px-2 py-3.5 text-[15px] font-semibold text-slate-700">
+          <svg class="w-4 h-4 shrink-0 text-pawon-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Alur Transaksi &amp; Cara Beli</span>
+          <svg class="w-4 h-4 text-slate-300 ml-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+
+        <a href="{{ route('home') }}"
+           class="flex items-center justify-between gap-3 px-2 py-3.5 text-[15px] font-semibold text-slate-700">
+          <span>Tentang PawonTani</span>
+          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </nav>
+
+      <div class="mt-3 pt-4 border-t border-slate-100 flex flex-col gap-2.5">
+        <a href="{{ route('login') }}"
+           class="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 shadow-sm hover:shadow-md hover:shadow-pawon-700/20 transition-all duration-200">
+          <span>Masuk Sistem</span>
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+        <a href="{{ route('home') }}"
+           class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors duration-200">
+          <svg class="w-4 h-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          Portal Utama
         </a>
       </div>
     </div>
@@ -184,6 +233,114 @@
 
     </div>
   </footer>
+
+  <!-- Modal Dialog: Alur Transaksi & Cara Membeli (Senada dengan Desain Home PawonTani) -->
+  <div id="modal-panduan-beli" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
+    <div class="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-10 shadow-2xl border border-slate-100 transform transition-all">
+      <!-- Close Button -->
+      <button onclick="closePanduanModal()" type="button" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors" aria-label="Tutup panduan">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Modal Header: Mengadopsi Badge & Header khas Home -->
+      <div class="text-left mb-8 space-y-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-pawon-800 text-xs font-bold uppercase tracking-wider border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Alur Transaksi Hasil Bumi
+        </span>
+        <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Tiga Langkah Belanja Langsung dari Petani
+        </h3>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Semua transaksi dilakukan langsung antara Anda dan petani kelompok tani binaan tanpa potongan tengkulak.
+        </p>
+      </div>
+
+      <!-- 3 Langkah Card: Persis Gaya Grid Step Home -->
+      <div class="space-y-4 mb-8">
+        
+        <!-- Step 01 -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#f8fafc] border border-slate-200/80 hover:border-pawon-600/40 hover:bg-white transition-all flex items-start gap-4">
+          <span class="w-11 h-11 rounded-2xl bg-[#0a5c2b] text-white font-extrabold text-base flex items-center justify-center shrink-0 shadow-md shadow-[#0a5c2b]/20">
+            01
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="font-extrabold text-base text-slate-900">Pilih Komoditas Hasil Panen</h4>
+              <span class="text-[11px] font-bold text-pawon-700 hidden sm:inline">Katalog Riil</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+              Buka katalog produk dan pilih komoditas yang diinginkan (beras, jagung, cabai, sayuran) yang status panennya sudah diverifikasi oleh pengurus kelompok tani.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 02 -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#f8fafc] border border-slate-200/80 hover:border-pawon-600/40 hover:bg-white transition-all flex items-start gap-4">
+          <span class="w-11 h-11 rounded-2xl bg-[#0a5c2b] text-white font-extrabold text-base flex items-center justify-center shrink-0 shadow-md shadow-[#0a5c2b]/20">
+            02
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="font-extrabold text-base text-slate-900">Hubungi Petani via WhatsApp</h4>
+              <span class="text-[11px] font-bold text-emerald-700 hidden sm:inline">WhatsApp Langsung</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+              Klik tombol WhatsApp di halaman detail produk. Pesan otomatis tersusun rapi berisi nama produk, kuantitas yang diinginkan, serta asal poktan.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 03 -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#f8fafc] border border-slate-200/80 hover:border-pawon-600/40 hover:bg-white transition-all flex items-start gap-4">
+          <span class="w-11 h-11 rounded-2xl bg-[#0a5c2b] text-white font-extrabold text-base flex items-center justify-center shrink-0 shadow-md shadow-[#0a5c2b]/20">
+            03
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="font-extrabold text-base text-slate-900">Kesepakatan &amp; Pengiriman</h4>
+              <span class="text-[11px] font-bold text-amber-700 hidden sm:inline">Harga Adil</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+              Sepakati jumlah kuantitas (kg/ton), opsi ambil langsung di gudang poktan atau dikirim lewat armada logistik, serta pembayaran langsung tanpa biaya perantara.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer Modal -->
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <button onclick="closePanduanModal()" type="button" class="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors">
+          Tutup
+        </button>
+        <a href="{{ route('marketplace.katalog') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-md shadow-pawon-700/20 transition-all hover:translate-y-[-1px]">
+          <span>Mulai Belanja di Katalog</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openPanduanModal() {
+      const modal = document.getElementById('modal-panduan-beli');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+    }
+
+    function closePanduanModal() {
+      const modal = document.getElementById('modal-panduan-beli');
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+  </script>
 
   <!-- Toast Notification Container for Copy Link & Feedback -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 pointer-events-none flex flex-col gap-2"></div>

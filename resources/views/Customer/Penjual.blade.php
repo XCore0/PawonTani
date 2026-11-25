@@ -21,7 +21,7 @@
         <!-- Details -->
         <div class="space-y-1.5 flex-grow">
           <div class="flex flex-wrap items-center gap-2.5">
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
               {{ $penjual['nama'] }}
             </h1>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-pawon-100 text-pawon-800 border border-[#C5DFB0]">

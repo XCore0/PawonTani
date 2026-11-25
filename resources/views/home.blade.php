@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link rel="icon" type="image/png" href="{{ asset('images/Logo.png') }}">
-  <title>PawonTani - Sistem Informasi untuk Kelompok Tani</title>
+  <title>PawonTani - Digitalisasi Kelompok Tani: Lahan, Panen Terverifikasi, Marketplace</title>
   <meta name="description"
-    content="PawonTani merupakan sistem informasi untuk kelompok tani yang membantu mengelola anggota, lahan, aktivitas pertanian, panen, hingga penjualan dalam satu platform digital.">
+    content="PawonTani menyatukan aplikasi mobile anggota, dashboard web pengurus dan PPL, serta marketplace hasil bumi. Catat lahan dan aktivitas tanam, verifikasi panen dengan bukti timbangan, lalu jual langsung ke pembeli.">
 
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -40,22 +40,23 @@
         </a>
 
         <!-- Desktop Navigation Links -->
-        <nav class="hidden md:flex items-center space-x-8 text-[15px]">
+        <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-[15px]">
           <a href="#beranda" class="nav-link active">Beranda</a>
-          <a href="{{ route('marketplace.home') }}" class="nav-link text-pawon-700 font-semibold hover:text-pawon-800 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            Marketplace
-          </a>
-          <a href="#tentang" class="nav-link">Tentang PawonTani</a>
+          <a href="#tentang" class="nav-link">Tentang</a>
           <a href="#fitur" class="nav-link">Fitur</a>
           <a href="#cara-kerja" class="nav-link">Cara Kerja</a>
           <a href="#edukasi" class="nav-link">Edukasi</a>
         </nav>
 
-        <!-- CTA Button Desktop -->
-        <div class="hidden md:flex items-center gap-4">
+        <!-- CTA Buttons Desktop -->
+        <div class="hidden md:flex items-center gap-3 shrink-0">
+          <a href="{{ route('marketplace.home') }}"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-pawon-800 bg-pawon-50 hover:bg-pawon-100 border border-[#C5DFB0] rounded-full transition-all hover:translate-y-[-1px]">
+            <svg class="w-4 h-4 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span>Marketplace</span>
+          </a>
           <a href="{{ route('login') }}"
             class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-sm hover:shadow-md hover:shadow-pawon-700/25 transition-all hover:translate-y-[-1px]">
             Masuk ke Sistem
@@ -84,17 +85,18 @@
     <div id="mobile-menu"
       class="hidden md:hidden border-b border-slate-100 bg-white px-4 pt-3 pb-6 space-y-2 shadow-xl">
       <a href="#beranda" class="mobile-nav-link active">Beranda</a>
-      <a href="{{ route('marketplace.home') }}" class="mobile-nav-link font-semibold text-pawon-700 flex items-center gap-2">
-        <svg class="w-4 h-4 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-        Marketplace Customer
-      </a>
       <a href="#tentang" class="mobile-nav-link">Tentang PawonTani</a>
       <a href="#fitur" class="mobile-nav-link">Fitur</a>
       <a href="#cara-kerja" class="mobile-nav-link">Cara Kerja</a>
       <a href="#edukasi" class="mobile-nav-link">Edukasi</a>
-      <div class="pt-2">
+      <div class="pt-3 space-y-2 border-t border-slate-100">
+        <a href="{{ route('marketplace.home') }}"
+          class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold text-pawon-800 bg-pawon-50 hover:bg-pawon-100 border border-[#C5DFB0] rounded-full shadow-xs">
+          <svg class="w-4 h-4 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span>Kunjungi Marketplace</span>
+        </a>
         <a href="{{ route('login') }}"
           class="w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow">
           Masuk ke Sistem
@@ -124,18 +126,21 @@
             <div
               class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold tracking-wide shadow-xs">
               <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Sistem Informasi Kelompok Tani
+              Ekosistem Digital Kelompok Tani
             </div>
 
             <!-- Hero Main Headline -->
             <h1 class="text-4xl sm:text-5xl lg:text-[54px] font-extrabold text-slate-900 tracking-tight leading-[1.12]">
-              Kelola Pertanian Lebih Mudah Bersama <br class="hidden sm:inline">
-              <span class="text-pawon-600 inline-block">PawonTani</span>
+              Dari Olah Lahan Sampai Panen Terjual, <br class="hidden sm:inline">
+              Semua Tercatat di <span class="text-pawon-600 inline-block">PawonTani</span>
             </h1>
 
             <!-- Subheading Description -->
             <p class="text-base sm:text-lg text-slate-600 max-w-2xl font-normal leading-relaxed">
-              PawonTani merupakan sistem informasi untuk kelompok tani yang membantu mengelola anggota, lahan, aktivitas pertanian, panen, hingga penjualan dalam satu platform digital.
+              Satu ekosistem, dua sisi kerja: <strong class="text-slate-800 font-semibold">aplikasi mobile untuk anggota</strong>
+              mencatat lahan, aktivitas tanam, dan hasil panen langsung dari sawah &mdash; sementara
+              <strong class="text-slate-800 font-semibold">dashboard web untuk pengurus dan PPL</strong> memverifikasi data
+              serta memantau statistik kelompok tani secara real-time.
             </p>
 
             <!-- Hero Action Buttons -->
@@ -145,14 +150,14 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                <span>Login Sistem</span>
+                <span>Masuk ke Sistem</span>
               </a>
               <a href="{{ route('marketplace.home') }}"
                 class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-base font-bold text-pawon-900 bg-pawon-100 hover:bg-pawon-50 border border-pawon-600/40 rounded-full shadow-sm hover:shadow-md transition-all hover:translate-y-[-1px]">
                 <svg class="w-5 h-5 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <span>Kunjungi Marketplace</span>
+                <span>Belanja Hasil Bumi</span>
               </a>
               <a href="javascript:void(0)" onclick="openRegistrationModal()"
                 class="inline-flex items-center justify-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 rounded-full transition-all">
@@ -163,16 +168,16 @@
             <!-- Stats Bar Row -->
             <div class="pt-8 border-t border-slate-100 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg">
               <div>
-                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">10rb+</div>
-                <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Petani Terdaftar</div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">2 Sisi</div>
+                <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Mobile Anggota &amp; Web Pengurus</div>
               </div>
               <div>
-                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">2.500+</div>
-                <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Hektar Lahan</div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">3 Tahap</div>
+                <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Verifikasi Panen</div>
               </div>
               <div>
-                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">99,4%</div>
-                <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Akurasi Catatan</div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">1 Pintu</div>
+                <div class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Marketplace Hasil Bumi</div>
               </div>
             </div>
 
@@ -194,40 +199,40 @@
                     </svg>
                   </div>
                   <div>
-                    <h3 class="text-sm font-bold text-slate-800 leading-none">Ringkasan Lahan Hari Ini</h3>
-                    <span class="text-[11px] text-slate-400">Blok A - Lahan Padi Pandanwangi</span>
+                    <h3 class="text-sm font-bold text-slate-800 leading-none">Panen Siap Diverifikasi</h3>
+                    <span class="text-[11px] text-slate-400">Gabah IR64 &bull; Poktan Makmur Jaya</span>
                   </div>
                 </div>
                 <span
                   class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                  ● Aktif
+                  &#9679; Terverifikasi
                 </span>
               </div>
 
               <!-- 3 Metric Boxes -->
               <div class="grid grid-cols-3 gap-2.5 mb-5">
                 <div class="bg-slate-50/90 rounded-2xl p-3 text-center border border-slate-100">
-                  <div class="text-[11px] font-medium text-slate-500 mb-1">Kelembaban</div>
-                  <div class="text-lg font-bold text-slate-900">64%</div>
-                  <span class="text-[10px] text-emerald-600 font-semibold">Optimal</span>
+                  <div class="text-[11px] font-medium text-slate-500 mb-1">Tonase</div>
+                  <div class="text-lg font-bold text-slate-900">4,2 Ton</div>
+                  <span class="text-[10px] text-emerald-600 font-semibold">Sesuai Catatan</span>
                 </div>
                 <div class="bg-slate-50/90 rounded-2xl p-3 text-center border border-slate-100">
-                  <div class="text-[11px] font-medium text-slate-500 mb-1">Suhu Udara</div>
-                  <div class="text-lg font-bold text-slate-900">28°C</div>
-                  <span class="text-[10px] text-slate-500 font-medium">Cerah</span>
+                  <div class="text-[11px] font-medium text-slate-500 mb-1">Kualitas</div>
+                  <div class="text-lg font-bold text-slate-900">Grade A</div>
+                  <span class="text-[10px] text-slate-500 font-medium">Kadar air 14%</span>
                 </div>
                 <div class="bg-slate-50/90 rounded-2xl p-3 text-center border border-slate-100">
-                  <div class="text-[11px] font-medium text-slate-500 mb-1">Est. Panen</div>
-                  <div class="text-lg font-bold text-pawon-700">12 Hari</div>
-                  <span class="text-[10px] text-pawon-600 font-medium">Musim Gadu</span>
+                  <div class="text-[11px] font-medium text-slate-500 mb-1">Foto Bukti</div>
+                  <div class="text-lg font-bold text-pawon-700">3</div>
+                  <span class="text-[10px] text-pawon-600 font-medium">Timbangan</span>
                 </div>
               </div>
 
               <!-- Growth Chart Widget -->
               <div class="bg-slate-50/90 rounded-2xl p-4 border border-slate-100 mb-4">
                 <div class="flex items-center justify-between mb-3">
-                  <div class="text-xs font-bold text-slate-700">Performa Pertumbuhan Tanaman</div>
-                  <span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Bulan
+                  <div class="text-xs font-bold text-slate-700">Produktivitas Panen 3 Musim</div>
+                  <span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Musim
                     Ini</span>
                 </div>
 
@@ -266,17 +271,17 @@
                   <div class="w-9 h-9 rounded-xl bg-pawon-100 text-pawon-700 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 8v2m0-6c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <div class="text-xs font-semibold text-slate-800">Transaksi Panen Terakhir</div>
-                    <div class="text-[11px] text-slate-400">Cabai Rawit Merah • 1.200 kg</div>
+                    <div class="text-xs font-semibold text-slate-800">Validasi Kuantitas Panen</div>
+                    <div class="text-[11px] text-slate-400">Gabah IR64 &bull; 4.200 kg</div>
                   </div>
                 </div>
                 <div class="text-right">
-                  <div class="text-xs font-bold text-slate-900">Rp 14.500.000</div>
-                  <span class="text-[10px] text-emerald-600 font-semibold">Selesai Dibayar</span>
+                  <div class="text-xs font-bold text-slate-900">Disetujui Pengurus</div>
+                  <span class="text-[10px] text-emerald-600 font-semibold">Siap terbit ke marketplace</span>
                 </div>
               </div>
 
@@ -291,8 +296,8 @@
                 </svg>
               </div>
               <div class="text-xs">
-                <p class="font-bold text-slate-800">Sinkronisasi Cloud Aktif</p>
-                <p class="text-slate-400 text-[10px]">Pembaruan otomatis tiap 5 menit</p>
+                <p class="font-bold text-slate-800">Web &amp; Mobile Tersinkron</p>
+                <p class="text-slate-400 text-[10px]">Catatan lapangan langsung masuk dashboard</p>
               </div>
             </div>
 
@@ -302,7 +307,7 @@
       </div>
     </section>
 
-    <!-- ==================== 3. SECTION: APA ITU PAWONTANI ==================== -->
+    <!-- ==================== 3. SECTION: TENTANG PAWONTANI ==================== -->
     <section id="tentang" class="py-10 bg-gradient-to-b from-skycard/60 via-softblue/40 to-white relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -310,35 +315,40 @@
         <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <span class="badge-pill">Tentang Kami</span>
           <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Apa itu PawonTani?
+            Kenapa PawonTani Hadir?
           </h2>
           <p class="text-base text-slate-600 leading-relaxed">
-            PawonTani merupakan sistem informasi yang dirancang untuk membantu kelompok tani dalam mengelola dan memantau kegiatan pertanian secara digital.
+            Selama ini catatan tani berhenti di buku tulis, angka timbangan panen sulit dibuktikan, dan harga
+            ditentukan pembeli perantara. PawonTani menyatukan ketiganya dalam satu sistem digital yang bisa
+            dipakai petani, pengurus, dan pembeli.
           </p>
         </div>
 
-        <!-- 7 Feature Cards Grid (Row 1: 4 Cards, Row 2: 2 Cards + 1 Standout Hero Card) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- 3 Masalah Nyata & Solusinya -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          <!-- Card 1: Langkah 01 - Kelompok Tani -->
+          <!-- Masalah 1: Pencatatan Manual -->
           <div
             class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
             <div>
               <div class="w-11 h-11 rounded-xl bg-sky-50 text-pawon-700 flex items-center justify-center mb-5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M11 11h2M11 15h2M16 11h2M16 15h2M12 3l9 4H3l9-4z" />
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  <path d="M8 7h8M8 11h5" />
                 </svg>
               </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">LANGKAH 01</span>
-              <h3 class="text-lg font-bold text-slate-900 mb-2">Kelompok Tani</h3>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">MASALAH 01</span>
+              <h3 class="text-lg font-bold text-slate-900 mb-2">Catatan Masih di Buku Tani</h3>
               <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Pusat kelembagaan, legalitas tani, dan agregasi data struktural poktan di tingkat desa.
+                Data lahan, pemupukan, dan panen ditulis tangan: mudah hilang, sulit direkap, dan tidak pernah
+                sampai ke pengurus kelompok.
               </p>
             </div>
             <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
               <a href="#fitur"
                 class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
-                <span>Fondasi Kolektif</span>
+                <span>Solusi: catatan digital tersinkron</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
@@ -346,120 +356,7 @@
             </div>
           </div>
 
-          <!-- Card 2: Langkah 02 - Anggota -->
-          <div
-            class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
-            <div>
-              <div class="w-11 h-11 rounded-xl bg-sky-50 text-pawon-700 flex items-center justify-center mb-5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M16 18H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2Z" />
-                  <path d="M12 3v3" />
-                  <circle cx="12" cy="10" r="2" />
-                  <path d="M9 15c0-1.5 1.5-2 3-2s3 .5 3 2" />
-                </svg>
-              </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">LANGKAH 02</span>
-              <h3 class="text-lg font-bold text-slate-900 mb-2">Anggota</h3>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Data petani terverifikasi dengan profil keahlian, status kepemilikan, dan rekam jejak garapan.
-              </p>
-            </div>
-            <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
-              <a href="#fitur"
-                class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
-                <span>Identitas Digital</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 3: Langkah 03 - Lahan -->
-          <div
-            class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
-            <div>
-              <div class="w-11 h-11 rounded-xl bg-sky-50 text-pawon-700 flex items-center justify-center mb-5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
-                  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
-                </svg>
-              </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">LANGKAH 03</span>
-              <h3 class="text-lg font-bold text-slate-900 mb-2">Lahan</h3>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Pemetaan poligon spasial, luas baku hamparan, ketinggian MDPL, dan status kesuburan tanah.
-              </p>
-            </div>
-            <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
-              <a href="#fitur"
-                class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
-                <span>Pemetaan Presisi</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 4: Langkah 04 - Musim Tanam -->
-          <div
-            class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
-            <div>
-              <div class="w-11 h-11 rounded-xl bg-sky-50 text-pawon-700 flex items-center justify-center mb-5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path
-                    d="M7 20h10M10 20c5.5-2.5.8-6.4 3-10M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4.1 5.5.8zM14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z" />
-                </svg>
-              </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">LANGKAH 04</span>
-              <h3 class="text-lg font-bold text-slate-900 mb-2">Musim Tanam</h3>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Penjadwalan komoditas tanaman, alokasi benih dan sarana, serta koordinasi jadwal tanam kelompok.
-              </p>
-            </div>
-            <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
-              <a href="#fitur"
-                class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
-                <span>Musim Tanam</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 5: Langkah 05 - Aktivitas & Kondisi -->
-          <div
-            class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
-            <div>
-              <div class="w-11 h-11 rounded-xl bg-sky-50 text-pawon-700 flex items-center justify-center mb-5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <rect width="16" height="18" x="4" y="4" rx="2" />
-                  <path d="M8 2h8v4H8zM8 10h8M8 14h5" />
-                </svg>
-              </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">LANGKAH 05</span>
-              <h3 class="text-lg font-bold text-slate-900 mb-2">Aktivitas & Kondisi</h3>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Log harian pemupukan presisi, pemantauan serangan hama/OPT, dan pencatatan cuaca lapangan.
-              </p>
-            </div>
-            <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
-              <a href="#fitur"
-                class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
-                <span>Monitoring Rutin</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 6: Langkah 06 - Panen -->
+          <!-- Masalah 2: Timbangan Panen -->
           <div
             class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
             <div>
@@ -470,16 +367,17 @@
                   <path d="M10 17h3M5 14H3V9h7l3 3v2M14 9V5h3l3 4v3" />
                 </svg>
               </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">LANGKAH 06</span>
-              <h3 class="text-lg font-bold text-slate-900 mb-2">Panen</h3>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">MASALAH 02</span>
+              <h3 class="text-lg font-bold text-slate-900 mb-2">Timbangan Panen Tanpa Bukti</h3>
               <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Verifikasi tonase riil, kadar air gabah, uji kualitas hasil panen, dan tanggal kesiapan tebas.
+                Klaim hasil panen sulit dicocokkan dengan kondisi lapangan karena tidak ada foto bukti dan angka
+                kuantitas yang tervalidasi pengurus.
               </p>
             </div>
             <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
-              <a href="#fitur"
+              <a href="#cara-kerja"
                 class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
-                <span>Validasi Hasil</span>
+                <span>Solusi: foto timbangan + verifikasi</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
@@ -487,36 +385,31 @@
             </div>
           </div>
 
-          <!-- Card 7: STANDOUT HERO CARD (Langkah 07 - Penjualan - Spans 2 Cols) -->
+          <!-- Masalah 3: Rantai Tengkulak -->
           <div
-            class="feature-card lg:col-span-2 bg-gradient-to-br from-[#0c6b32] to-[#074b21] rounded-2xl p-7 text-white shadow-xl shadow-pawon-900/15 flex flex-col justify-between relative overflow-hidden">
+            class="feature-card bg-white rounded-2xl p-6 border border-slate-100 shadow-xs flex flex-col justify-between">
             <div>
-              <div
-                class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur text-white flex items-center justify-center mb-5 border border-white/10">
+              <div class="w-11 h-11 rounded-xl bg-sky-50 text-pawon-700 flex items-center justify-center mb-5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <rect width="20" height="12" x="2" y="6" rx="2" />
-                  <circle cx="12" cy="12" r="2.5" />
-                  <line x1="6" x2="6.01" y1="12" y2="12" />
-                  <line x1="18" x2="18.01" y1="12" y2="12" />
+                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  <path d="M9 14l6 6M15 14l-6 6" />
                 </svg>
               </div>
-              <span class="text-[11px] font-bold text-emerald-200 uppercase tracking-wider block mb-1">LANGKAH 07 •
-                HASIL AKHIR</span>
-              <h3 class="text-xl font-bold text-white mb-2.5">Penjualan</h3>
-              <p class="text-xs sm:text-sm text-emerald-50/90 leading-relaxed max-w-xl">
-                Pencatatan dan pengelolaan hasil penjualan panen kelompok tani secara transparan, adil, dan terorganisir.
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">MASALAH 03</span>
+              <h3 class="text-lg font-bold text-slate-900 mb-2">Rantai Tengkulak Terlalu Panjang</h3>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Harga ditentukan pembeli perantara dan petani tidak punya kanal untuk menawarkan hasil panen
+                langsung kepada konsumen atau mitra.
               </p>
             </div>
-
-            <div class="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
-              <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-100">
-                <span>Pengelolaan Terpadu</span>
-                <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  stroke-width="2.5">
-                  <circle cx="12" cy="12" r="10" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4" />
+            <div class="mt-6 pt-3 flex items-center justify-between text-pawon-700 font-bold text-xs">
+              <a href="{{ route('marketplace.home') }}"
+                class="inline-flex items-center justify-between w-full hover:text-pawon-800 transition-colors">
+                <span>Solusi: marketplace hasil bumi</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </span>
+              </a>
             </div>
           </div>
 
@@ -525,98 +418,119 @@
       </div>
     </section>
 
-    <!-- ==================== 4. SECTION: MENGAPA PAWONTANI ==================== -->
+    <!-- ==================== 4. SECTION: EKOSISTEM DUA SISI ==================== -->
     <section id="keunggulan" class="py-10 bg-white relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Two Column Header -->
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div class="space-y-3 max-w-xl">
-            <span class="badge-pill">Keunggulan Utama</span>
+            <span class="badge-pill">Ekosistem Dua Sisi</span>
             <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Mengapa PawonTani?
+              Web untuk Pengurus, Mobile untuk Anggota
             </h2>
           </div>
           <div class="max-w-md">
             <p class="text-base text-slate-600 leading-relaxed">
-              Dirancang menjawab tantangan nyata kelompok tani pedesaan dengan kemudahan operasional yang nyata.
+              Satu basis data, dua antarmuka yang saling melengkapi. Anggota mencatat dari lapangan lewat
+              aplikasi mobile, pengurus memverifikasi dan memantau lewat dashboard web.
             </p>
           </div>
         </div>
 
-        <!-- 4 Grid Cards with 01, 02, 03, 04 numbers -->
+        <!-- 2 Kolom: Mobile & Web -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          <!-- Benefit 1: Mengelola Anggota -->
+          <!-- Sisi 1: Aplikasi Mobile Anggota -->
           <div class="bg-softblue/60 hover:bg-softblue rounded-3xl p-8 border border-sky-100/80 transition-all">
             <div class="flex items-start justify-between mb-6">
               <div class="w-12 h-12 rounded-2xl bg-white text-pawon-700 shadow-xs flex items-center justify-center">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                  <path d="M12 18h.01" />
                 </svg>
               </div>
               <span class="text-2xl font-extrabold text-slate-300">01</span>
             </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-2.5">Mengelola Anggota</h3>
-            <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Membantu kelompok tani mengelola data anggota secara lebih terorganisir.
+            <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">APLIKASI MOBILE</span>
+            <h3 class="text-xl font-bold text-slate-900 mb-2.5">Anggota Petani di Lapangan</h3>
+            <p class="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
+              Dibawa ke sawah, dipakai harian. Semua catatan langsung masuk ke sistem kelompok tanpa perlu
+              menyalin ulang di kertas.
             </p>
+
+            <ul class="space-y-3 text-sm text-slate-700 border-t border-slate-200/70 pt-5">
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Catat lahan garapan: luas, komoditas, dan titik koordinat GPS</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Log aktivitas harian: pemupukan, penyemprotan, pengairan</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Catat hasil panen lengkap dengan foto bukti timbangan</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Baca artikel, panduan, dan tips dari penyuluh (PPL)</span>
+              </li>
+            </ul>
           </div>
 
-          <!-- Benefit 2: Mengelola Lahan -->
+          <!-- Sisi 2: Dashboard Web Pengurus -->
           <div class="bg-softblue/60 hover:bg-softblue rounded-3xl p-8 border border-sky-100/80 transition-all">
             <div class="flex items-start justify-between mb-6">
               <div class="w-12 h-12 rounded-2xl bg-white text-pawon-700 shadow-xs flex items-center justify-center">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
+                  <rect width="20" height="14" x="2" y="3" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
                 </svg>
               </div>
               <span class="text-2xl font-extrabold text-slate-300">02</span>
             </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-2.5">Mengelola Lahan</h3>
-            <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Mencatat dan mengelola data lahan serta tanaman yang dikelola anggota.
+            <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">DASHBOARD WEB</span>
+            <h3 class="text-xl font-bold text-slate-900 mb-2.5">Pengurus &amp; Penyuluh (PPL)</h3>
+            <p class="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
+              Meja kerja kelompok tani: memeriksa data yang masuk dari lapangan, memberi catatan revisi, dan
+              membaca kondisi kelompok dalam satu layar.
             </p>
-          </div>
 
-          <!-- Benefit 3: Monitoring Pertanian -->
-          <div class="bg-softblue/60 hover:bg-softblue rounded-3xl p-8 border border-sky-100/80 transition-all">
-            <div class="flex items-start justify-between mb-6">
-              <div class="w-12 h-12 rounded-2xl bg-white text-pawon-700 shadow-xs flex items-center justify-center">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M3 3v18h18" />
-                  <path d="m19 9-5 5-4-4-3 3" />
+            <ul class="space-y-3 text-sm text-slate-700 border-t border-slate-200/70 pt-5">
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
-              </div>
-              <span class="text-2xl font-extrabold text-slate-300">03</span>
-            </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-2.5">Monitoring Pertanian</h3>
-            <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Membantu pengurus memantau aktivitas dan kondisi pertanian anggota.
-            </p>
-          </div>
-
-          <!-- Benefit 4: Mengelola Panen & Penjualan -->
-          <div class="bg-softblue/60 hover:bg-softblue rounded-3xl p-8 border border-sky-100/80 transition-all">
-            <div class="flex items-start justify-between mb-6">
-              <div class="w-12 h-12 rounded-2xl bg-white text-pawon-700 shadow-xs flex items-center justify-center">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <rect width="18" height="12" x="3" y="9" rx="2" />
-                  <path d="M7 9V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" />
-                  <circle cx="8" cy="15" r="1" />
-                  <circle cx="12" cy="15" r="1" />
-                  <circle cx="16" cy="15" r="1" />
+                <span>Verifikasi lahan beserta nomor revisi dan catatan perbaikan</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
-              </div>
-              <span class="text-2xl font-extrabold text-slate-300">04</span>
-            </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-2.5">Mengelola Panen & Penjualan</h3>
-            <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Mencatat hasil panen dan penjualan untuk membantu pengelolaan hasil pertanian.
-            </p>
+                <span>Validasi kuantitas hasil panen terhadap bukti lapangan</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Monitoring statistik kelompok tani secara real-time</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Kelola anggota, konten edukasi, dan data penjualan</span>
+              </li>
+            </ul>
           </div>
 
         </div>
@@ -624,252 +538,201 @@
       </div>
     </section>
 
-    <!-- ==================== 5. SECTION: FITUR & PAKET ==================== -->
+    <!-- ==================== 5. SECTION: 4 PILAR FITUR UTAMA ==================== -->
     <section id="fitur" class="py-10 bg-gradient-to-b from-skycard/50 to-softblue/80 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Header Text Centered -->
         <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
-          <span class="badge-pill">Fitur Sistem</span>
+          <span class="badge-pill">Fitur Utama</span>
           <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Fitur PawonTani
+            Empat Pilar PawonTani
           </h2>
           <p class="text-base text-slate-600">
-            Sistem informasi terintegrasi yang memudahkan operasional anggota, pengurus, dan admin kelompok tani.
+            Dari pencatatan lahan sampai hasil bumi terjual &mdash; setiap pilar sudah berjalan di sistem,
+            bukan sekadar rencana.
           </p>
         </div>
 
-        <!-- 3 Feature Cards by User Roles -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <!-- 4 Pilar Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
 
-          <!-- Card 1: Anggota / Petani -->
-          <div
-            class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between relative">
+          <!-- Pilar 1: Lahan & Geo-lokasi -->
+          <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between">
             <div>
-              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-4">
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
+                  <path d="M12 21s-7-5.686-7-11a7 7 0 1114 0c0 5.314-7 11-7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-1">Anggota / Petani</h3>
-              <p class="text-xs text-slate-500 mb-6">Digunakan oleh anggota kelompok tani untuk mengelola dan mencatat kegiatan pertanian.</p>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">PILAR 01</span>
+              <h3 class="text-xl font-bold text-slate-900 mb-2.5">Kelola Lahan &amp; Geo-lokasi</h3>
+              <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                Anggota mendaftarkan lahan garapan lengkap dengan luas, komoditas, alamat, dan titik koordinat.
+                Pengurus memverifikasi kelayakan data beserta nomor revisinya.
+              </p>
 
-              <!-- Features Checklist -->
-              <ul class="space-y-3.5 text-sm text-slate-700 mb-8">
+              <ul class="space-y-3 text-sm text-slate-700 border-t border-slate-100 pt-5">
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Lahan</span>
+                  <span>Luas, komoditas, dan musim tanam per petak</span>
                 </li>
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Aktivitas & Kondisi</span>
+                  <span>Titik koordinat dan foto lahan dari lokasi</span>
                 </li>
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Panen</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Penjualan</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Cuaca</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Harga Komoditas</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Prediksi Panen</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Prediksi Harga</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Edukasi</span>
+                  <span>Status verifikasi, catatan revisi, dan riwayatnya</span>
                 </li>
               </ul>
             </div>
-
-            <div>
-              <a href="#kontak"
-                class="w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-pawon-800 bg-emerald-50 hover:bg-emerald-100 rounded-full transition-colors">
-                Lihat Fitur Anggota
+            <div class="pt-6">
+              <a href="#cara-kerja" class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
+                <span>Lihat alur verifikasi lahan</span>
+                <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
           </div>
 
-          <!-- Card 2: Pengurus Kelompok Tani (Highlighted Role) -->
-          <div
-            class="bg-white rounded-3xl p-8 border-2 border-pawon-600 shadow-xl shadow-pawon-700/10 flex flex-col justify-between relative scale-105 z-10">
-
-            <!-- Role Badge -->
-            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span
-                class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-bold uppercase bg-pawon-700 text-white shadow-md">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Peran Pengurus
-              </span>
-            </div>
-
+          <!-- Pilar 2: Aktivitas & Panen Terverifikasi -->
+          <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between">
             <div>
-              <div class="w-10 h-10 rounded-xl bg-pawon-100 text-pawon-800 flex items-center justify-center mb-4 mt-2">
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  <path d="M3 3v18h18" />
+                  <path d="m19 9-5 5-4-4-3 3" />
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-1">Pengurus Kelompok Tani</h3>
-              <p class="text-xs text-slate-500 mb-6">Digunakan oleh pengurus untuk mengelola anggota dan memantau kegiatan pertanian kelompok.</p>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">PILAR 02</span>
+              <h3 class="text-xl font-bold text-slate-900 mb-2.5">Monitoring Aktivitas &amp; Panen Terverifikasi</h3>
+              <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                Setiap pemupukan dan penyemprotan tercatat per lahan. Hasil panen dilengkapi foto timbangan,
+                lalu divalidasi pengurus sebelum boleh masuk penjualan.
+              </p>
 
-              <!-- Features Checklist -->
-              <ul class="space-y-3.5 text-sm text-slate-700 mb-8">
+              <ul class="space-y-3 text-sm text-slate-700 border-t border-slate-100 pt-5">
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span class="font-medium text-slate-900">Anggota & Lahan</span>
+                  <span>Log aktivitas tanam harian per petak lahan</span>
                 </li>
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Lahan Tanaman</span>
+                  <span>Foto bukti timbangan dan kualitas hasil panen</span>
                 </li>
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Monitoring Pertanian</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span class="font-medium text-slate-900">Panen & Penjualan</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Laporan</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-pawon-700 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Informasi & Prediksi</span>
+                  <span>Validasi kuantitas oleh pengurus sebelum diterbitkan</span>
                 </li>
               </ul>
             </div>
-
-            <div>
-              <a href="#kontak"
-                class="w-full inline-flex items-center justify-center px-5 py-3.5 text-sm font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-lg shadow-pawon-700/25 transition-all">
-                Lihat Fitur Pengurus
+            <div class="pt-6">
+              <a href="#cara-kerja" class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
+                <span>Lihat alur panen transparan</span>
+                <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
           </div>
 
-          <!-- Card 3: Admin Sistem -->
-          <div
-            class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between relative">
+          <!-- Pilar 3: Marketplace -->
+          <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between">
             <div>
-              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-4">
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-1">Admin Sistem</h3>
-              <p class="text-xs text-slate-500 mb-6">Digunakan untuk mengelola data dan konten utama dalam sistem PawonTani.</p>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">PILAR 03</span>
+              <h3 class="text-xl font-bold text-slate-900 mb-2.5">Marketplace Hasil Bumi Terbuka</h3>
+              <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                Panen yang sudah terverifikasi tampil di marketplace publik dengan harga transparan, lengkap
+                dengan profil petani dan kelompok tani asalnya.
+              </p>
 
-              <!-- Features Checklist -->
-              <ul class="space-y-3.5 text-sm text-slate-700 mb-8">
+              <ul class="space-y-3 text-sm text-slate-700 border-t border-slate-100 pt-5">
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Kelompok Tani</span>
+                  <span>Katalog gabah, padi, jagung, cabai, dan komoditas lain</span>
                 </li>
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Pengguna</span>
+                  <span>Harga, satuan, dan stok tampil terbuka</span>
                 </li>
                 <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Artikel</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Tips</span>
-                </li>
-                <li class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Panduan</span>
+                  <span>Terhubung langsung ke petani via WhatsApp</span>
                 </li>
               </ul>
             </div>
+            <div class="pt-6">
+              <a href="{{ route('marketplace.home') }}" class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
+                <span>Buka marketplace</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+          </div>
 
+          <!-- Pilar 4: Edukasi & PPL -->
+          <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between">
             <div>
-              <a href="#kontak"
-                class="w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors">
-                Lihat Fitur Admin
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  <path d="M8 7h8M8 11h6" />
+                </svg>
+              </div>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">PILAR 04</span>
+              <h3 class="text-xl font-bold text-slate-900 mb-2.5">Edukasi &amp; Bimbingan Penyuluh (PPL)</h3>
+              <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                Artikel, panduan budidaya, dan tips lapangan dari penyuluh dapat dibaca di web maupun aplikasi
+                mobile anggota &mdash; kapan saja, di mana saja.
+              </p>
+
+              <ul class="space-y-3 text-sm text-slate-700 border-t border-slate-100 pt-5">
+                <li class="flex items-start gap-2.5">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Artikel pertanian dan tips lapangan</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Panduan budidaya seperti Jajar Legowo dan polybag</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Materi dari penyuluh, tersaji untuk web &amp; mobile</span>
+                </li>
+              </ul>
+            </div>
+            <div class="pt-6">
+              <a href="#edukasi" class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
+                <span>Baca materi edukasi</span>
+                <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
           </div>
@@ -879,198 +742,183 @@
       </div>
     </section>
 
-    <!-- ==================== 6. SECTION: BAGAIMANA PAWONTANI BEKERJA ==================== -->
-    <section id="cara-kerja" class="py-12 md:py-16 bg-white relative">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- ==================== 6. SECTION: CARA KERJA ==================== -->
+    <section id="cara-kerja" class="py-14 md:py-20 bg-white relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Header Text Centered -->
         <div class="text-center max-w-2xl mx-auto mb-10 md:mb-12 space-y-3">
           <span class="badge-pill">Alur Kerja Sistem</span>
           <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Bagaimana PawonTani Bekerja?
+            Tiga Langkah, Panen Terverifikasi
           </h2>
           <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Alur terstruktur pengelolaan kegiatan pertanian kelompok tani dari pendataan kelompok hingga penjualan hasil panen.
+            Dari catatan petani di lapangan sampai pembeli menerima hasil bumi &mdash; setiap langkah punya
+            bukti dan pihak yang memverifikasi.
           </p>
         </div>
 
-        <!-- 7 Structured Process Cards List -->
-        <div class="space-y-3.5 sm:space-y-4">
+        <!-- 3 Structured Process Cards (Grid 3 Columns on Desktop with Flow Arrows) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
 
-          <!-- Card 01: Kelompok Tani -->
+          <!-- Langkah 01: Petani Mencatat -->
           <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">01</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Kelompok Tani</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Pendaftaran dan pendataan kelembagaan kelompok tani dalam sistem digital.
+            class="group relative bg-[#f8fafc] hover:bg-white transition-all duration-300 rounded-3xl p-6 border border-slate-200/80 hover:border-pawon-600/50 shadow-xs hover:shadow-xl hover:shadow-pawon-700/5 hover:-translate-y-1 flex flex-col justify-between">
+            <div class="space-y-4">
+              <!-- Top Row: Badge Step & Icon -->
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-12 h-12 rounded-2xl bg-[#0a5c2b] text-white font-extrabold text-base flex items-center justify-center shadow-md shadow-[#0a5c2b]/20 group-hover:scale-105 transition-transform">
+                  01
+                </span>
+                <div class="w-10 h-10 rounded-xl bg-pawon-100/70 text-pawon-700 flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <rect width="14" height="20" x="5" y="2" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M12 18h.01" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div>
+                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-pawon-800 transition-colors">
+                  Petani Mencatat via Mobile
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  Anggota mencatat lahan, aktivitas tanam harian, dan hasil panen lengkap dengan foto timbangan langsung dari lapangan.
                 </p>
               </div>
             </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
+
+            <!-- Bottom Tag -->
+            <div class="pt-5 mt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-semibold text-pawon-700">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Aplikasi Mobile Petani
             </div>
           </div>
 
-          <!-- Card 02: Anggota -->
+          <!-- Langkah 02: Pengurus Validasi -->
           <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">02</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Anggota</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Pengelolaan data anggota kelompok tani yang terdaftar dan terorganisir.
+            class="group relative bg-[#f8fafc] hover:bg-white transition-all duration-300 rounded-3xl p-6 border border-slate-200/80 hover:border-pawon-600/50 shadow-xs hover:shadow-xl hover:shadow-pawon-700/5 hover:-translate-y-1 flex flex-col justify-between">
+            <div class="space-y-4">
+              <!-- Top Row: Badge Step & Icon -->
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-12 h-12 rounded-2xl bg-[#0a5c2b] text-white font-extrabold text-base flex items-center justify-center shadow-md shadow-[#0a5c2b]/20 group-hover:scale-105 transition-transform">
+                  02
+                </span>
+                <div class="w-10 h-10 rounded-xl bg-emerald-100/70 text-emerald-700 flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div>
+                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-pawon-800 transition-colors">
+                  Pengurus Validasi via Web
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  Pengurus atau PPL memverifikasi data lahan dan kuantitas panen, memeriksa bukti foto, lalu memberikan approval resmi.
                 </p>
               </div>
             </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
+
+            <!-- Bottom Tag -->
+            <div class="pt-5 mt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Dashboard Web Pengurus
             </div>
           </div>
 
-          <!-- Card 03: Lahan -->
+          <!-- Langkah 03: Publik Membeli -->
           <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">03</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Lahan</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Pencatatan data petak lahan dan tanaman yang dikelola oleh anggota kelompok.
+            class="group relative bg-[#f8fafc] hover:bg-white transition-all duration-300 rounded-3xl p-6 border border-slate-200/80 hover:border-pawon-600/50 shadow-xs hover:shadow-xl hover:shadow-pawon-700/5 hover:-translate-y-1 flex flex-col justify-between">
+            <div class="space-y-4">
+              <!-- Top Row: Badge Step & Icon -->
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-12 h-12 rounded-2xl bg-[#0a5c2b] text-white font-extrabold text-base flex items-center justify-center shadow-md shadow-[#0a5c2b]/20 group-hover:scale-105 transition-transform">
+                  03
+                </span>
+                <div class="w-10 h-10 rounded-xl bg-amber-100/70 text-amber-700 flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div>
+                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-pawon-800 transition-colors">
+                  Publik Membeli di Marketplace
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  Panen yang lolos verifikasi langsung terbit di katalog publik. Pembeli dapat memesan tanpa perantara panjang.
                 </p>
               </div>
             </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" stroke-linecap="round" stroke-linejoin="round" />
-                <line x1="8" y1="2" x2="8" y2="18" stroke-linecap="round" stroke-linejoin="round" />
-                <line x1="16" y1="6" x2="16" y2="22" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+
+            <!-- Bottom Tag -->
+            <div class="pt-5 mt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              Marketplace Publik
             </div>
           </div>
 
-          <!-- Card 04: Musim Tanam -->
-          <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">04</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Musim Tanam</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Perencanaan dan penjadwalan musim tanam komoditas kelompok tani.
-                </p>
-              </div>
-            </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" />
-                <line x1="16" y1="2" x2="16" y2="6" stroke-linecap="round" stroke-linejoin="round" />
-                <line x1="8" y1="2" x2="8" y2="6" stroke-linecap="round" stroke-linejoin="round" />
-                <line x1="3" y1="10" x2="21" y2="10" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
+        </div>
+
+        <!-- Sub-blok: Alur Panen Transparan -->
+        <div class="mt-10 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Alur Panen Transparan &amp; Terverifikasi</h3>
+            <span class="text-[11px] sm:text-xs font-semibold text-pawon-700">Setiap tahap terekam di sistem</span>
           </div>
 
-          <!-- Card 05: Aktivitas & Kondisi -->
-          <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">05</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Aktivitas & Kondisi</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Pencatatan aktivitas pertanian harian serta pemantauan kondisi tanaman anggota.
-                </p>
-              </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="bg-white rounded-xl border border-slate-100 p-4">
+              <div class="text-[11px] font-extrabold text-pawon-700 mb-1">TAHAP 1</div>
+              <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">Petani mencatat panen di lapangan</p>
             </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13l3.5 3.5L13 7M16 11h5M16 15h5" />
-              </svg>
+            <div class="bg-white rounded-xl border border-slate-100 p-4">
+              <div class="text-[11px] font-extrabold text-pawon-700 mb-1">TAHAP 2</div>
+              <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">Mandor / pengurus poktan memverifikasi</p>
             </div>
-          </div>
-
-          <!-- Card 06: Panen -->
-          <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">06</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Panen</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Pencatatan dan verifikasi data hasil panen pertanian anggota kelompok tani.
-                </p>
-              </div>
+            <div class="bg-white rounded-xl border border-slate-100 p-4">
+              <div class="text-[11px] font-extrabold text-pawon-700 mb-1">TAHAP 3</div>
+              <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">Bukti foto &amp; timbangan terekam jelas</p>
             </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 00-.586-1.414L12 12l-4.414 4.414A2 2 0 007 17.828V22M7 2v4.172a2 2 0 00.586 1.414L12 12l4.414-4.414A2 2 0 0017 6.172V2" />
-              </svg>
+            <div class="bg-white rounded-xl border border-slate-100 p-4">
+              <div class="text-[11px] font-extrabold text-pawon-700 mb-1">TAHAP 4</div>
+              <p class="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">Siap terbit ke penjualan &amp; dokumen PDF</p>
             </div>
           </div>
-
-          <!-- Card 07: Penjualan -->
-          <div
-            class="bg-[#f2f7fb] hover:bg-[#eaf3f9] transition-colors rounded-2xl p-4 sm:py-5 sm:px-6 flex items-center justify-between gap-4 border border-slate-100/60 shadow-xs">
-            <div class="flex items-center gap-4 sm:gap-5 min-w-0">
-              <span
-                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0a5c2b] text-white font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs">07</span>
-              <div class="min-w-0">
-                <h3 class="font-bold text-base sm:text-lg text-slate-900 leading-snug">Penjualan</h3>
-                <p class="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">
-                  Pencatatan dan pengelolaan penjualan hasil panen kelompok tani secara terorganisir.
-                </p>
-              </div>
-            </div>
-            <div class="shrink-0 text-pawon-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-1.5-6h3a1 1 0 010 2h-3a1 1 0 000 2h3" />
-              </svg>
-            </div>
-          </div>
-
         </div>
 
       </div>
     </section>
 
-    <!-- ==================== 7. SECTION: TARGET PENGGUNA (KELOMPOK TANI) ==================== -->
+    <!-- ==================== 7. SECTION: TARGET PENGGUNA ==================== -->
     <section id="pengguna" class="py-12 md:py-16 bg-gradient-to-b from-skycard/50 via-softblue/30 to-white relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Header Text Centered -->
         <div class="text-center max-w-3xl mx-auto mb-14 space-y-3">
-          <span class="badge-pill">Target Pengguna</span>
+          <span class="badge-pill">Siapa yang Memakai</span>
           <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Dikhususkan untuk Kelompok Tani
+            Tiga Peran, Satu Ekosistem
           </h2>
           <p class="text-base text-slate-600 leading-relaxed">
-            PawonTani dirancang untuk menjawab kebutuhan nyata kelembagaan kelompok tani secara terpadu.
+            Pengurus mengelola lewat web, anggota mencatat lewat mobile, dan konsumen membeli lewat marketplace.
           </p>
         </div>
 
-        <!-- 3 Kelompok Tani Ecosystem Cards -->
+        <!-- 3 Peran Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
 
-          <!-- Pillar 1: Pengurus Kelompok Tani -->
+          <!-- Peran 1: Pengurus & PPL -->
           <div
             class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
@@ -1082,41 +930,42 @@
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">PENGELOLA KELOMPOK</span>
-              <h3 class="text-xl font-bold text-slate-900 mb-2">Pengurus Kelompok Tani</h3>
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">DASHBOARD WEB</span>
+              <h3 class="text-xl font-bold text-slate-900 mb-2">Pengurus &amp; PPL</h3>
               <p class="text-sm text-slate-600 leading-relaxed mb-6">
-                Membantu pengurus mengelola anggota, lahan, serta memantau aktivitas pertanian kelompok secara lebih terorganisir.
+                Mengelola keanggotaan, memverifikasi data lapangan, dan memantau statistik kelompok dalam satu
+                dashboard.
               </p>
 
               <ul class="space-y-2.5 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-5">
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Kelola data anggota</span>
+                  <span>Verifikasi lahan &amp; nomor revisi</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Kelola data lahan</span>
+                  <span>Validasi kuantitas hasil panen</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Monitoring aktivitas pertanian</span>
+                  <span>Monitoring statistik kelompok real-time</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Pantau panen dan penjualan</span>
+                  <span>Kelola anggota &amp; konten edukasi</span>
                 </li>
               </ul>
             </div>
             <div class="pt-6">
-              <a href="#fitur"
+              <a href="{{ route('login') }}"
                 class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
-                <span>Pelajari Peran Pengurus</span>
+                <span>Masuk sebagai pengurus</span>
                 <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
           </div>
 
-          <!-- Pillar 2: Petani / Anggota (Highlighted Card) -->
+          <!-- Peran 2: Petani / Anggota (Highlighted) -->
           <div
             class="bg-white rounded-3xl p-8 border-2 border-pawon-600 shadow-xl shadow-pawon-700/10 flex flex-col justify-between relative">
             <div class="absolute -top-3 left-8">
@@ -1129,78 +978,84 @@
             <div>
               <div class="w-12 h-12 rounded-2xl bg-pawon-700 text-white flex items-center justify-center mb-6 mt-1 shadow-sm">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                  <path d="M12 18h.01" />
                 </svg>
               </div>
-              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">ANGGOTA KELOMPOK</span>
+              <span class="text-[11px] font-bold text-pawon-700 uppercase tracking-wider block mb-1">APLIKASI MOBILE</span>
               <h3 class="text-xl font-bold text-slate-900 mb-2">Petani / Anggota</h3>
               <p class="text-sm text-slate-600 leading-relaxed mb-6">
-                Memberikan kemudahan bagi setiap anggota kelompok tani untuk mencatat kegiatan pertanian, kondisi tanaman, hasil panen, dan penjualan.
+                Mencatat seluruh kegiatan tani dari sawah: lahan garapan, perawatan harian, sampai panen dengan
+                bukti timbangan.
               </p>
 
               <ul class="space-y-2.5 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-5">
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span class="font-medium text-slate-900">Kelola lahan dan musim tanam</span>
+                  <span class="font-medium text-slate-900">Catat lahan, luas, &amp; koordinat GPS</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Catat aktivitas & kondisi tanaman</span>
+                  <span>Log aktivitas tanam harian</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Catat panen dan penjualan</span>
+                  <span>Catat panen + foto bukti timbangan</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
+                  <span>Baca edukasi &amp; tips dari penyuluh</span>
                 </li>
               </ul>
             </div>
             <div class="pt-6">
               <a href="#fitur"
                 class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
-                <span>Pelajari Manfaat Anggota</span>
+                <span>Lihat fitur anggota</span>
                 <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
           </div>
 
-          <!-- Pillar 3: Informasi Pertanian -->
+          <!-- Peran 3: Konsumen & Mitra -->
           <div
             class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
             <div>
               <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-pawon-700 flex items-center justify-center mb-6">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                  <path d="M8 7h8M8 11h6" />
+                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
               </div>
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">INFORMASI & EDUKASI</span>
-              <h3 class="text-xl font-bold text-slate-900 mb-2">Informasi Pertanian</h3>
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">MARKETPLACE PUBLIK</span>
+              <h3 class="text-xl font-bold text-slate-900 mb-2">Konsumen &amp; Mitra</h3>
               <p class="text-sm text-slate-600 leading-relaxed mb-6">
-                Menyediakan informasi yang membantu anggota dan pengurus dalam mendukung kegiatan pertanian.
+                Melihat hasil panen riil petani binaan, lengkap dengan asal kelompok tani dan harga yang
+                transparan.
               </p>
 
               <ul class="space-y-2.5 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-5">
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Informasi cuaca</span>
+                  <span>Katalog komoditas langsung dari petani</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Harga komoditas</span>
+                  <span>Harga, satuan, dan stok terbuka</span>
                 </li>
                 <li class="flex items-center gap-2">
                   <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
-                  <span>Artikel, tips, dan panduan</span>
+                  <span>Hubungi petani via WhatsApp</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-pawon-600 shrink-0"></span>
+                  <span>Tanpa perantara panjang</span>
                 </li>
               </ul>
             </div>
             <div class="pt-6">
-              <a href="#edukasi"
+              <a href="{{ route('marketplace.home') }}"
                 class="text-xs font-bold text-pawon-700 hover:text-pawon-800 inline-flex items-center gap-1">
-                <span>Lihat Informasi</span>
+                <span>Jelajahi marketplace</span>
                 <span aria-hidden="true">&rarr;</span>
               </a>
             </div>
@@ -1219,10 +1074,11 @@
         <div class="text-center max-w-3xl mx-auto mb-14 space-y-3">
           <span class="badge-pill">Pusat Edukasi</span>
           <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Edukasi Pertanian
+            Edukasi &amp; Bimbingan Penyuluh
           </h2>
           <p class="text-base text-slate-600 leading-relaxed">
-            Tingkatkan wawasan dan keterampilan bertani anggota serta pengurus kelompok tani dengan panduan, artikel, dan tips aplikatif.
+            Artikel, panduan budidaya seperti Jajar Legowo dan polybag, serta tips lapangan langsung dari
+            penyuluh (PPL). Materi yang sama bisa dibaca anggota lewat aplikasi mobile.
           </p>
         </div>
 
@@ -1402,9 +1258,141 @@
       </div>
     </section>
 
+    <!-- ==================== 8b. SECTION: TEASER MARKETPLACE ==================== -->
+    <section id="marketplace-teaser" class="py-10 bg-gradient-to-b from-white to-softblue/50 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div class="space-y-3 max-w-2xl">
+            <span class="badge-pill">Marketplace Hasil Bumi</span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Panen Petani Binaan, Langsung ke Pembeli
+            </h2>
+            <p class="text-base text-slate-600 leading-relaxed">
+              Produk di bawah berasal dari panen yang sudah dicatat di aplikasi mobile dan diverifikasi
+              pengurus kelompok tani. Harga terbuka, asal jelas, tanpa perantara panjang.
+            </p>
+          </div>
+          <div class="shrink-0">
+            <a href="{{ route('marketplace.home') }}"
+              class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-base font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-lg shadow-pawon-700/25 transition-all hover:translate-y-[-1px]">
+              <span>Jelajahi Marketplace</span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        @php
+          $produkTeaser = $produkUnggulan ?? collect();
+          $jumlahTeaser = $produkTeaser->count();
+          // Kartu ajakan mengisi sisa baris agar grid tetap rapi walau produk masih sedikit.
+          // Kelas ditulis literal agar tetap terdeteksi oleh Tailwind.
+          $kelasAjakan = match (true) {
+              $jumlahTeaser === 1 => 'lg:col-span-3',
+              $jumlahTeaser === 2 => 'lg:col-span-2',
+              default => '',
+          };
+        @endphp
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+          @forelse($produkTeaser as $produk)
+            <a href="{{ route('marketplace.detail', $produk->id_produk) }}"
+              class="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-lg transition-all flex flex-col">
+              <div class="relative h-40 overflow-hidden bg-[#EBF6E0]">
+                <div class="absolute inset-0 flex items-center justify-center text-4xl">🌾</div>
+                @if($produk->foto_produk)
+                  <img src="{{ $produk->foto_produk }}" alt="{{ $produk->nama_produk }}"
+                    class="relative w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    onerror="this.onerror=null;this.style.display='none';">
+                @endif
+                @if($produk->komoditas)
+                  <div class="absolute top-3 left-3">
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/95 backdrop-blur text-emerald-800 shadow-xs">
+                      {{ $produk->komoditas->nama_komoditas }}
+                    </span>
+                  </div>
+                @endif
+              </div>
+              <div class="p-5 flex flex-col justify-between grow">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 group-hover:text-pawon-700 transition-colors leading-snug mb-1">
+                    {{ $produk->nama_produk }}
+                  </h3>
+                  <p class="text-[11px] text-slate-500">
+                    {{ $produk->pengguna->kelompokTani->nama_kelompok ?? ($produk->pengguna->nama ?? 'Petani PawonTani') }}
+                  </p>
+                </div>
+                <div class="mt-4 flex items-end justify-between">
+                  <div>
+                    <div class="text-sm font-extrabold text-pawon-700">{{ $produk->harga_formatted }}</div>
+                    <div class="text-[11px] text-slate-400">per {{ $produk->satuan ?? 'kg' }}</div>
+                  </div>
+                  <span class="text-[11px] font-bold text-pawon-700 inline-flex items-center gap-1">
+                    Lihat
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          @empty
+            <div class="bg-white rounded-2xl border border-dashed border-slate-200 p-6 flex flex-col items-center justify-center text-center min-h-[240px]">
+              <div class="text-4xl mb-3">🌾</div>
+              <p class="text-sm font-semibold text-slate-700">Produk sedang disiapkan</p>
+              <p class="text-xs text-slate-500 mt-1">Panen petani binaan tampil di sini setelah diverifikasi pengurus.</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-dashed border-slate-200 p-6 flex flex-col items-center justify-center text-center min-h-[240px]">
+              <div class="text-4xl mb-3">🌽</div>
+              <p class="text-sm font-semibold text-slate-700">Komoditas menyusul</p>
+              <p class="text-xs text-slate-500 mt-1">Gabah, jagung, cabai, dan hasil bumi lain dari kelompok tani binaan.</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-dashed border-slate-200 p-6 flex flex-col items-center justify-center text-center min-h-[240px]">
+              <div class="text-4xl mb-3">🌶️</div>
+              <p class="text-sm font-semibold text-slate-700">Harga transparan</p>
+              <p class="text-xs text-slate-500 mt-1">Harga, satuan, dan stok ditampilkan terbuka untuk pembeli.</p>
+            </div>
+          @endforelse
+
+          <!-- Kartu ajakan mengisi sisa kolom -->
+          <a href="{{ route('marketplace.home') }}"
+            class="{{ $kelasAjakan }} group rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-[#0c6b32] to-[#074b21] text-white shadow-xl shadow-pawon-900/15 flex flex-col justify-between min-h-[240px]">
+            <div>
+              <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur text-white flex items-center justify-center mb-4 border border-white/10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold leading-snug mb-2">Belanja Langsung dari Petani</h3>
+              <p class="text-xs sm:text-sm text-emerald-50/90 leading-relaxed max-w-md">
+                Lihat seluruh komoditas yang tersedia, lengkap dengan asal kelompok tani dan kontak petani.
+                Tanpa perantara panjang, harga lebih masuk akal untuk kedua pihak.
+              </p>
+            </div>
+            <div class="pt-6 flex items-center justify-between border-t border-white/10 mt-6">
+              <span class="text-xs font-semibold text-emerald-100">Buka katalog marketplace</span>
+              <span class="inline-flex items-center gap-1.5 text-xs font-bold text-white">
+                Mulai
+                <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </span>
+            </div>
+          </a>
+
+        </div>
+
+      </div>
+    </section>
+
     <!-- ==================== 9. SECTION: CTA BANNER ==================== -->
     <section id="kontak" class="py-16 bg-gradient-to-b from-white to-softblue/60 relative">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div
           class="relative rounded-3xl bg-gradient-to-b from-skycard via-softblue to-white border border-sky-200/70 p-8 sm:p-14 text-center overflow-hidden shadow-xl shadow-sky-900/5">
@@ -1418,31 +1406,32 @@
 
             <div
               class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100/80 text-pawon-800 text-xs font-bold uppercase tracking-wider">
-              SISTEM INFORMASI KELOMPOK TANI
+              MULAI DARI SATU KELOMPOK TANI
             </div>
 
             <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Bersama PawonTani, <br class="hidden sm:inline">
-              Pertanian Lebih Terorganisir
+              Saatnya Data Petani <br class="hidden sm:inline">
+              Bisa Dibuktikan, Bukan Hanya Diceritakan
             </h2>
 
             <p class="text-base sm:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
-              Bergabung dalam ekosistem digital untuk membantu kelompok tani mengelola kegiatan pertanian dengan lebih mudah dan terorganisir.
+              Daftarkan kelompok tani Anda, ajak anggota mencatat lewat aplikasi mobile, dan buka hasil panen
+              ke marketplace publik &mdash; semuanya dalam satu sistem.
             </p>
 
             <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <a href="javascript:void(0)" onclick="openRegistrationModal()"
                 class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 text-base font-bold text-white bg-pawon-700 hover:bg-pawon-800 rounded-full shadow-lg shadow-pawon-700/25 transition-all hover:scale-105">
-                <span>Daftar untuk Kelompok</span>
+                <span>Daftarkan Kelompok Tani</span>
                 <span aria-hidden="true">&rarr;</span>
               </a>
-              <a href="https://wa.me/" target="_blank" rel="noopener noreferrer"
+              <a href="{{ route('marketplace.home') }}"
                 class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-emerald-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-full transition-all">
-                <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.698.077-2.222-.556-1.951-.81-3.21-2.8-3.307-2.931-.097-.132-.782-1.039-.782-1.981 0-.943.493-1.408.669-1.599.176-.192.383-.24.51-.24.127 0 .254.001.365.006.118.006.275-.045.431.328.163.388.552 1.345.6 1.443.048.099.08.216.016.345-.064.129-.096.21-.192.321-.096.112-.202.25-.288.336-.097.096-.198.2-.086.393.112.193.498.823 1.069 1.332.735.654 1.355.857 1.547.953.192.096.304.08.416-.048.112-.129.48-.56.608-.752.128-.193.256-.16.432-.096.176.064 1.119.528 1.312.624.192.096.32.144.368.224.048.08.048.464-.096.869z" />
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <span>Hubungi Tim Konsultan</span>
+                <span>Lihat Hasil Bumi</span>
               </a>
             </div>
 
@@ -1454,21 +1443,21 @@
                   stroke-width="3">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Mudah digunakan oleh poktan
+                Mobile untuk anggota, web untuk pengurus
               </span>
               <span class="flex items-center gap-1.5">
                 <svg class="w-4 h-4 text-pawon-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                   stroke-width="3">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Data anggota & lahan aman
+                Panen tervalidasi &amp; berbukti foto
               </span>
               <span class="flex items-center gap-1.5">
                 <svg class="w-4 h-4 text-pawon-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                   stroke-width="3">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Pendampingan sistem langsung
+                Terhubung ke marketplace publik
               </span>
             </div>
 
@@ -1493,7 +1482,8 @@
               class="h-10 sm:h-12 w-auto object-contain hover:opacity-95 transition-opacity">
           </a>
           <p class="text-slate-500 max-w-sm text-sm leading-relaxed">
-            Sistem informasi digital yang dirancang khusus untuk membantu kelompok tani mengelola anggota, lahan, aktivitas pertanian, panen, hingga penjualan secara terpadu.
+            Ekosistem digital kelompok tani: aplikasi mobile untuk anggota, dashboard web untuk pengurus dan
+            PPL, serta marketplace hasil bumi yang terbuka untuk konsumen dan mitra.
           </p>
 
           <!-- Social Icons -->
@@ -1538,11 +1528,11 @@
         <div class="md:col-span-2 space-y-3">
           <h4 class="font-bold text-slate-900 text-sm tracking-wide">Fitur Sistem</h4>
           <ul class="space-y-2 text-xs sm:text-sm">
-            <li><a href="#tentang" class="hover:text-pawon-700 transition-colors">Data Anggota</a></li>
-            <li><a href="#tentang" class="hover:text-pawon-700 transition-colors">Pengelolaan Lahan</a></li>
-            <li><a href="#tentang" class="hover:text-pawon-700 transition-colors">Musim Tanam</a></li>
-            <li><a href="#tentang" class="hover:text-pawon-700 transition-colors">Aktivitas & Kondisi</a></li>
-            <li><a href="#tentang" class="hover:text-pawon-700 transition-colors">Panen & Penjualan</a></li>
+            <li><a href="#fitur" class="hover:text-pawon-700 transition-colors">Lahan &amp; Geo-lokasi</a></li>
+            <li><a href="#fitur" class="hover:text-pawon-700 transition-colors">Aktivitas Tanam</a></li>
+            <li><a href="#cara-kerja" class="hover:text-pawon-700 transition-colors">Panen Terverifikasi</a></li>
+            <li><a href="{{ route('marketplace.home') }}" class="hover:text-pawon-700 transition-colors">Marketplace Hasil Bumi</a></li>
+            <li><a href="#edukasi" class="hover:text-pawon-700 transition-colors">Edukasi &amp; PPL</a></li>
           </ul>
         </div>
 

@@ -54,6 +54,7 @@ body {
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.nav-link:hover::after,
 .nav-link.active::after {
   width: 100%;
 }

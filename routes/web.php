@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\TipsController;
 use App\Models\Tip;
 use App\Models\Artikel;
 use App\Models\Panduan;
+use App\Models\Produk;
 use App\Http\Controllers\Customer\MarketplaceController;
 
 /* ============================================================
@@ -51,7 +52,15 @@ Route::get('/', function () {
         ->latest('tanggal')
         ->first();
 
-    return view('home', compact('tipsTerbaru', 'artikelTerbaru', 'panduanTerbaru'));
+    // Cuplikan produk marketplace untuk section teaser di landing page
+    $produkUnggulan = Produk::with(['pengguna.kelompokTani', 'komoditas'])
+        ->publik()
+        ->where('status', 'aktif')
+        ->latest()
+        ->take(4)
+        ->get();
+
+    return view('home', compact('tipsTerbaru', 'artikelTerbaru', 'panduanTerbaru', 'produkUnggulan'));
 })->name('home');
 
 /* ============================================================

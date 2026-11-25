@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AktivitasController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BerandaController;
+use App\Http\Controllers\Api\V1\EdukasiController;
 use App\Http\Controllers\Api\V1\KomoditasController;
 use App\Http\Controllers\Api\V1\LahanController;
 use App\Http\Controllers\Api\V1\PanenController;
@@ -37,6 +38,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('api.v1.notifikasi.baca-semua');
         Route::patch('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('api.v1.notifikasi.baca');
         Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('api.v1.notifikasi.index');
+
+        // Konten Edukasi Pertanian (Tips, Panduan, Artikel)
+        Route::get('/edukasi', [EdukasiController::class, 'index'])->name('api.v1.edukasi.index');
+        Route::get('/edukasi/{type}/{id}', [EdukasiController::class, 'show'])->name('api.v1.edukasi.show');
 
         // Master komoditas dapat dibaca oleh pengguna mobile yang sudah login.
         Route::get('/komoditas', [KomoditasController::class, 'index'])->name('api.v1.komoditas.index');

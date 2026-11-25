@@ -14,7 +14,7 @@
             <span>/</span>
             <span class="text-pawon-800 font-bold">Katalog Produk</span>
           </nav>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Katalog Hasil Tani PawonTani
           </h1>
           <p class="text-sm text-slate-500 mt-1">
@@ -40,18 +40,18 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Filter and Search Controls Bar -->
-      <form action="{{ route('marketplace.katalog') }}" method="GET" class="bg-white rounded-3xl p-5 border border-[#E4F0D6] shadow-xs mb-8 space-y-4">
+      <form action="{{ route('marketplace.katalog') }}" method="GET" class="bg-white rounded-3xl p-5 sm:p-6 border border-[#E4F0D6] shadow-sm mb-8 space-y-5">
         
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center">
           
           <!-- Search Input (6 Cols) -->
           <div class="md:col-span-6 relative">
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari beras, jagung, gabah, cabai..." class="w-full pl-11 pr-4 py-3 bg-[#F5F8F1] border border-[#E4F0D6] rounded-2xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-pawon-700 focus:bg-white transition-all">
+            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari beras, jagung, gabah, cabai..." class="w-full pl-11 pr-10 py-3 bg-[#F5F8F1] hover:bg-[#ebf3e4]/60 border border-[#D5E8C2] rounded-2xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-pawon-700 focus:bg-white focus:ring-2 focus:ring-pawon-700/10 transition-all">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             @if(request('q'))
-              <a href="{{ route('marketplace.katalog', request()->except('q')) }}" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs text-slate-400 hover:text-slate-600">
+              <a href="{{ route('marketplace.katalog', request()->except('q')) }}" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors">
                 ✕ Reset
               </a>
             @endif
@@ -59,37 +59,53 @@
 
           <!-- Commodity Filter Dropdown (3 Cols) -->
           <div class="md:col-span-3">
-            <select name="komoditas" onchange="this.form.submit()" class="w-full px-4 py-3 bg-[#F5F8F1] border border-[#E4F0D6] rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-pawon-700 focus:bg-white transition-all">
-              <option value="">Semua Komoditas</option>
-              @foreach($komoditasList as $kmdt)
-                <option value="{{ $kmdt->id_komoditas }}" {{ request('komoditas') == $kmdt->id_komoditas ? 'selected' : '' }}>
-                  {{ $kmdt->nama_komoditas }}
-                </option>
-              @endforeach
-            </select>
+            <div class="relative">
+              <select name="komoditas" onchange="this.form.submit()" class="w-full pl-4 pr-10 py-3 bg-[#F5F8F1] hover:bg-[#ebf3e4]/60 border border-[#D5E8C2] rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-pawon-700 focus:bg-white focus:ring-2 focus:ring-pawon-700/10 transition-all appearance-none cursor-pointer">
+                <option value="">Semua Komoditas</option>
+                @foreach($komoditasList as $kmdt)
+                  <option value="{{ $kmdt->id_komoditas }}" {{ request('komoditas') == $kmdt->id_komoditas ? 'selected' : '' }}>
+                    {{ $kmdt->nama_komoditas }}
+                  </option>
+                @endforeach
+              </select>
+              <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
           </div>
 
           <!-- Sorting Dropdown (3 Cols) -->
           <div class="md:col-span-3">
-            <select name="sort" onchange="this.form.submit()" class="w-full px-4 py-3 bg-[#F5F8F1] border border-[#E4F0D6] rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-pawon-700 focus:bg-white transition-all">
-              <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-              <option value="nama_asc" {{ request('sort') == 'nama_asc' ? 'selected' : '' }}>Nama Produk (A - Z)</option>
-              <option value="nama_desc" {{ request('sort') == 'nama_desc' ? 'selected' : '' }}>Nama Produk (Z - A)</option>
-              <option value="harga_asc" {{ request('sort') == 'harga_asc' ? 'selected' : '' }}>Harga Terendah</option>
-              <option value="harga_desc" {{ request('sort') == 'harga_desc' ? 'selected' : '' }}>Harga Tertinggi</option>
-            </select>
+            <div class="relative">
+              <select name="sort" onchange="this.form.submit()" class="w-full pl-4 pr-10 py-3 bg-[#F5F8F1] hover:bg-[#ebf3e4]/60 border border-[#D5E8C2] rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-pawon-700 focus:bg-white focus:ring-2 focus:ring-pawon-700/10 transition-all appearance-none cursor-pointer">
+                <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                <option value="nama_asc" {{ request('sort') == 'nama_asc' ? 'selected' : '' }}>Nama Produk (A - Z)</option>
+                <option value="nama_desc" {{ request('sort') == 'nama_desc' ? 'selected' : '' }}>Nama Produk (Z - A)</option>
+                <option value="harga_asc" {{ request('sort') == 'harga_asc' ? 'selected' : '' }}>Harga Terendah</option>
+                <option value="harga_desc" {{ request('sort') == 'harga_desc' ? 'selected' : '' }}>Harga Tertinggi</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
           </div>
 
         </div>
 
-        <!-- Quick Commodity Pills Row -->
-        <div class="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100 no-scrollbar">
-          <span class="text-xs font-bold text-slate-500 shrink-0">Filter Cepat:</span>
-          <a href="{{ route('marketplace.katalog', request()->except('komoditas')) }}" class="shrink-0 px-3 py-1 rounded-full text-xs font-semibold {{ !request('komoditas') ? 'bg-pawon-700 text-white' : 'bg-[#F5F8F1] text-slate-600 hover:bg-pawon-100' }}">
+        <!-- Quick Commodity Pills Row (Clean Scroll, Hidden Scrollbar) -->
+        <div class="flex items-center gap-2 overflow-x-auto pt-3.5 pb-1 border-t border-slate-100" style="scrollbar-width: none; -ms-overflow-style: none;">
+          <style>
+            .hide-scroll::-webkit-scrollbar { display: none; }
+          </style>
+          <span class="text-xs font-bold text-slate-500 shrink-0 mr-1 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 text-pawon-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            Filter Cepat:
+          </span>
+          <a href="{{ route('marketplace.katalog', request()->except('komoditas')) }}" class="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all {{ !request('komoditas') ? 'bg-pawon-700 text-white shadow-xs' : 'bg-[#F5F8F1] text-slate-600 hover:bg-pawon-100 border border-[#E4F0D6]' }}">
             Semua
           </a>
           @foreach($komoditasList as $kmdt)
-            <a href="{{ route('marketplace.katalog', array_merge(request()->all(), ['komoditas' => $kmdt->id_komoditas])) }}" class="shrink-0 px-3 py-1 rounded-full text-xs font-semibold {{ request('komoditas') == $kmdt->id_komoditas ? 'bg-pawon-700 text-white' : 'bg-[#F5F8F1] text-slate-600 hover:bg-pawon-100' }}">
+            <a href="{{ route('marketplace.katalog', array_merge(request()->all(), ['komoditas' => $kmdt->id_komoditas])) }}" class="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all {{ request('komoditas') == $kmdt->id_komoditas ? 'bg-pawon-700 text-white font-bold shadow-xs' : 'bg-[#F5F8F1] text-slate-600 hover:bg-pawon-100 border border-[#E4F0D6]' }}">
               {{ $kmdt->nama_komoditas }}
             </a>
           @endforeach
