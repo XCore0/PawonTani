@@ -38,11 +38,25 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center gap-2.5 shrink-0">
-      <!-- Cetak / Export Button (matching SVG: bg #EBF6E0, border #C5DFB0, text #4D9830) -->
+      <!-- Cetak halaman yang sedang tampil -->
       <button type="button" onclick="exportData()"
-        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-[#EBF6E0] text-xs sm:text-sm font-semibold text-[#4D9830] hover:bg-[#e0f1d2] hover:border-[#9AB880] transition-all shadow-2xs cursor-pointer">
+        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm font-semibold text-[#4A6030] hover:bg-[#F5F8F1] transition-all shadow-2xs cursor-pointer">
         <i data-lucide="printer" class="w-4 h-4 text-[#4D9830]"></i>
-        <span>Cetak / Export</span>
+        <span>Cetak</span>
+      </button>
+
+      <!-- Ekspor Excel -->
+      <button type="button" onclick="exportExcel()"
+        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-[#EBF6E0] text-xs sm:text-sm font-semibold text-[#4D9830] hover:bg-[#e0f1d2] transition-all shadow-2xs cursor-pointer">
+        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+        <span>Excel</span>
+      </button>
+
+      <!-- Ekspor PDF -->
+      <button type="button" onclick="exportPdf()"
+        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#C5DFB0] bg-white text-xs sm:text-sm font-semibold text-[#4A6030] hover:bg-[#F5F8F1] transition-all shadow-2xs cursor-pointer">
+        <i data-lucide="file-pdf" class="w-4 h-4 text-[#4D9830]"></i>
+        <span>PDF</span>
       </button>
 
       <!-- + Tambah Kelompok Button (matching SVG: bg #4D9830, text white, plus icon) -->
@@ -716,9 +730,27 @@
     }, 150);
   }
 
-  // Export / Print
+  // Cetak, ekspor Excel, dan ekspor PDF memakai filter yang sedang dipilih.
   function exportData() {
     window.print();
+  }
+
+  function buildExportUrl(baseUrl) {
+    const params = new URLSearchParams();
+    const search = document.getElementById('search-input')?.value.trim() || '';
+    const status = document.getElementById('filter-status')?.value || '';
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
+    const query = params.toString();
+    return query ? `${baseUrl}?${query}` : baseUrl;
+  }
+
+  function exportExcel() {
+    window.location.href = buildExportUrl(@json(route('admin.kelompok.export.excel')));
+  }
+
+  function exportPdf() {
+    window.open(buildExportUrl(@json(route('admin.kelompok.export.pdf'))), '_blank', 'noopener');
   }
 
   document.addEventListener('DOMContentLoaded', () => {

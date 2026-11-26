@@ -22,6 +22,9 @@ class TransaksiPenjualan extends Model
         'id_penjualan',
         'kode_transaksi',
         'id_pengguna',
+        'id_kelompok',
+        'id_pengurus',
+        'id_panen',
         'id_produk',
         'id_komoditas',
         'nama_produk',
@@ -58,12 +61,21 @@ class TransaksiPenjualan extends Model
     {
         parent::boot();
 
-        static::creating(function ($model) {
+        static::creating(function (self $model): void {
             if (empty($model->id_penjualan)) {
                 $model->id_penjualan = self::generateIdPenjualan();
             }
+
             if (empty($model->kode_transaksi)) {
                 $model->kode_transaksi = $model->id_penjualan;
+            }
+
+            // Simpan snapshot kelompok penjual agar transaksi Mobile/Marketplace
+            // tetap dapat dilaporkan ke kelompok yang benar.
+            if (empty($model->id_kelompok) && filled($model->id_pengguna)) {
+                $model->id_kelompok = Pengguna::query()
+                    ->where('id_pengguna', $model->id_pengguna)
+                    ->value('id_kelompok');
             }
         });
     }
@@ -71,6 +83,7 @@ class TransaksiPenjualan extends Model
     public static function generateIdPenjualan(): string
     {
         $date = now()->format('Ymd');
+
         do {
             $random = strtoupper(Str::random(4));
             $id = "TRX-PN-{$date}-{$random}";
@@ -82,6 +95,21 @@ class TransaksiPenjualan extends Model
     public function penjual(): BelongsTo
     {
         return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    public function pencatat(): BelongsTo
+    {
+        return $this->belongsTo(Pengguna::class, 'id_pengurus', 'id_pengguna');
+    }
+
+    public function kelompokTani(): BelongsTo
+    {
+        return $this->belongsTo(KelompokTani::class, 'id_kelompok', 'id_kelompok');
+    }
+
+    public function panen(): BelongsTo
+    {
+        return $this->belongsTo(Panen::class, 'id_panen', 'id_panen');
     }
 
     public function produk(): BelongsTo
@@ -96,7 +124,8 @@ class TransaksiPenjualan extends Model
 
     public function riwayatPembayaran(): HasMany
     {
-        return $this->hasMany(RiwayatPembayaranPenjualan::class, 'id_penjualan', 'id_penjualan')->orderBy('created_at', 'asc');
+        return $this->hasMany(RiwayatPembayaranPenjualan::class, 'id_penjualan', 'id_penjualan')
+            ->orderBy('created_at', 'asc');
     }
 
     public function getSisaPembayaranAttribute(): float

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pengurus;
 use App\Http\Controllers\Controller;
 use App\Models\Komoditas;
 use App\Models\Panen;
+use App\Models\TransaksiPenjualan;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -139,6 +140,16 @@ class PanenController extends Controller
 
         $statusLama = $panen->status;
         $statusBaru = $request->input('status');
+
+        // Panen yang sudah menjadi sumber transaksi tidak boleh ditolak atau
+        // dikembalikan ke status menunggu agar riwayat penjualan tetap valid.
+        if ($statusBaru !== 'disetujui' && TransaksiPenjualan::where('id_panen', $panen->id_panen)
+    ->where('status_pembayaran', '!=', 'dibatalkan')
+    ->exists()) {
+            return redirect()->back()
+                ->withErrors(['status' => 'Status panen tidak dapat diubah karena sudah memiliki transaksi penjualan.'])
+                ->withInput();
+        }
 
         $panen->status = $statusBaru;
         $panen->diverifikasi_oleh = $pengurus->nama;

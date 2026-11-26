@@ -1,0 +1,88 @@
+PANDUAN PENERAPAN REVISI PAWONTANI 53–55
+========================================
+
+PAKET INI BERISI PERUBAHAN KODE SAJA.
+File .env, vendor, node_modules, dan konfigurasi pribadi tidak disertakan atau diubah.
+Tidak ada paket Composer baru yang ditambahkan.
+
+SEBELUM MEMASANG
+----------------
+1. Tutup/akhiri proses edit pada proyek PawonTani yang sedang berjalan.
+2. Buat salinan cadangan folder C:\laragon\www\PawonTani.
+3. Ekstrak ZIP patch ini ke C:\laragon\www\ sehingga file di dalam folder PawonTani menyatu dengan proyek yang sudah ada.
+4. Saat Windows menanyakan penggabungan folder atau penggantian file, pilih gabungkan dan timpa file yang sama.
+
+JALANKAN MIGRATION
+------------------
+Buka Terminal/PowerShell Laragon, lalu jalankan:
+
+cd C:\laragon\www\PawonTani
+php artisan migrate
+php artisan optimize:clear
+
+Migration baru membuat tabel penjualan. Jangan menghapus database atau menjalankan migrate:fresh karena itu dapat menghapus data proyek.
+
+JALANKAN WEBSITE
+----------------
+Jalankan seperti biasanya. Untuk mode pengembangan, buka terminal kedua dan jalankan:
+
+npm run dev
+
+Jika proyek menggunakan aset produksi, jalankan npm install terlebih dahulu bila diperlukan, kemudian npm run build.
+
+CARA MEMERIKSA REVISI 53 DAN 54
+-------------------------------
+1. Login menggunakan akun Pengurus yang berstatus Aktif dan terhubung ke kelompok tani Aktif.
+2. Buka sidebar > Laporan.
+3. Atur Tanggal Mulai dan Tanggal Selesai, lalu tekan Terapkan.
+4. Halaman merangkum anggota saat ini, lahan, aktivitas pertanian, hasil panen, biaya aktivitas, dan transaksi penjualan pada kelompok Pengurus yang sedang login.
+5. Tekan Cetak / PDF untuk membuka lembar laporan yang siap dicetak. Pada dialog cetak browser, pilih Save as PDF.
+
+Data anggota dan lahan menunjukkan kondisi saat ini. Data aktivitas, panen, serta penjualan mengikuti periode tanggal yang dipilih. Anggota dengan status keanggotaan Keluar tidak dihitung sebagai anggota aktif.
+
+CARA MENCATAT PENJUALAN AKTUAL
+------------------------------
+Tabel transaksi penjualan sebelumnya belum tersedia dalam database. Karena itu, patch ini menambahkan pencatatan penjualan agar laporan tidak menganggap estimasi nilai panen sebagai transaksi penjualan.
+
+1. Pastikan anggota sudah mempunyai catatan hasil panen.
+2. Login sebagai Pengurus, buka menu Panen, lalu setujui hasil panen yang akan dijual.
+3. Buka sidebar > Penjualan.
+4. Pilih hasil panen yang sudah disetujui dan masih mempunyai sisa berat.
+5. Isi tanggal penjualan, berat yang benar-benar dijual, harga per kg, serta nama pembeli/catatan bila diperlukan.
+6. Tekan Simpan Transaksi.
+
+Sistem menolak jumlah penjualan yang melebihi sisa berat hasil panen. Hasil panen yang sudah memiliki transaksi tidak dapat diubah kembali menjadi Menunggu atau Ditolak.
+
+CARA MEMERIKSA REVISI 55
+------------------------
+1. Login sebagai Admin/PPL.
+2. Buka menu Kelompok Tani.
+3. Gunakan tombol Cetak, Excel, atau PDF di bagian atas halaman.
+4. Filter pencarian dan status yang sedang dipilih ikut diterapkan pada ekspor Excel dan PDF.
+
+Catatan format:
+- Tombol Cetak tetap mempertahankan fungsi cetak halaman yang sebelumnya sudah ada.
+- Tombol Excel mengunduh file .xls SpreadsheetML yang dapat dibuka dengan Microsoft Excel. Ini bukan format .xlsx Open XML. Bila membutuhkan ekstensi .xlsx, buka file hasil unduhan di Excel lalu pilih Save As > Excel Workbook (*.xlsx).
+- Tombol PDF membuka lembar cetak khusus. Pilih Save as PDF pada dialog cetak browser untuk menyimpan PDF.
+
+BATASAN PEMERIKSAAN PADA SAAT PAKET DIBUAT
+-----------------------------------------
+Pemeriksaan sintaks PHP, kompilasi Blade, daftar route Laravel, dan git diff --check berhasil.
+Pengujian yang memerlukan koneksi database belum dapat dijalankan pada lingkungan pembuat paket ini karena instalasi PHP di lingkungan tersebut tidak memiliki PDO database driver. Build aset Vite juga belum dapat dijalankan di lingkungan Linux ini karena dependensi Rollup Linux tidak tersedia pada node_modules dari arsip Windows.
+Karena itu, setelah dipasang, jalankan migration dan uji halaman menggunakan database lokal PawonTani.
+
+FILE YANG DIUBAH / DITAMBAHKAN
+------------------------------
+- app/Http/Controllers/Admin/KelompokTaniController.php
+- app/Http/Controllers/Pengurus/LaporanController.php (baru)
+- app/Http/Controllers/Pengurus/PenjualanController.php (baru)
+- app/Http/Controllers/Pengurus/PanenController.php
+- app/Models/Panen.php
+- app/Models/Penjualan.php (baru)
+- database/migrations/2026_11_26_000001_create_penjualan_table.php (baru)
+- routes/web.php
+- resources/views/Admin/Content/Kelompok.blade.php
+- resources/views/Admin/Content/Kelompok/Print.blade.php (baru)
+- resources/views/Pengurus/Content/Laporan/Index.blade.php (baru)
+- resources/views/Pengurus/Content/Laporan/Print.blade.php (baru)
+- resources/views/Pengurus/Content/Penjualan/Index.blade.php (baru)

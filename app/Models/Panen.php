@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Panen extends Model
@@ -78,23 +78,21 @@ class Panen extends Model
         });
     }
 
-    /**
-     * Generate ID: PN-YYYYMMDD-XXXX
-     */
+    /** Generate ID: PN-YYYYMMDD-XXXX */
     public static function generateIdPanen(): string
     {
         $prefix = 'PN-' . now()->format('Ymd');
         $random = strtoupper(Str::random(4));
+
         return "{$prefix}-{$random}";
     }
 
-    /**
-     * Generate Kode Panen terurut: PN-YYYYMM-XXX
-     */
+    /** Generate Kode Panen terurut: PN-YYYYMM-XXX */
     public static function generateKodePanen(): string
     {
         $prefix = 'PN-' . now()->format('Ym');
         $count = static::withTrashed()->where('kode_panen', 'like', "{$prefix}-%")->count() + 1;
+
         return sprintf('%s-%03d', $prefix, $count);
     }
 
@@ -108,6 +106,7 @@ class Panen extends Model
                 if (empty($this->kode_panen)) {
                     $this->kode_panen = static::generateKodePanen();
                 }
+
                 return $this->save();
             } catch (QueryException $e) {
                 $isUniqueViolation = in_array((string) $e->getCode(), ['23505', '23000'], true)
@@ -119,9 +118,11 @@ class Panen extends Model
                     $this->kode_panen = 'PN-' . now()->format('Ym') . '-' . strtoupper(Str::random(3));
                     continue;
                 }
+
                 throw $e;
             }
         }
+
         return false;
     }
 
@@ -158,5 +159,10 @@ class Panen extends Model
     public function scopeLegacy($query)
     {
         return $query->whereNull('id_siklus');
+    }
+
+    public function transaksiPenjualan(): HasMany
+    {
+        return $this->hasMany(TransaksiPenjualan::class, 'id_panen', 'id_panen');
     }
 }

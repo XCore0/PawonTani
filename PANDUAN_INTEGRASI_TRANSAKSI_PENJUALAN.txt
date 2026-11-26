@@ -1,0 +1,83 @@
+PANDUAN INTEGRASI TRANSAKSI PENJUALAN PAWONTANI
+
+Tujuan
+- Menggunakan tabel transaksi_penjualan sebagai satu sumber data transaksi utama.
+- Menampilkan transaksi dari aplikasi Mobile/Marketplace pada menu Penjualan dan Laporan Pengurus.
+- Menghubungkan transaksi yang dicatat Pengurus dengan data panen yang dipilih.
+- Menyimpan snapshot id_kelompok supaya transaksi tetap masuk laporan kelompok yang benar.
+- Mempertahankan transaksi lama pada tabel penjualan dengan menyalinnya ke transaksi_penjualan saat migration.
+
+FILE YANG DIGANTI / DITAMBAHKAN
+1. app/Models/TransaksiPenjualan.php
+2. app/Models/Panen.php
+3. app/Http/Controllers/Pengurus/PenjualanController.php
+4. app/Http/Controllers/Pengurus/LaporanController.php
+5. resources/views/Pengurus/Content/Penjualan/Index.blade.php
+6. resources/views/Pengurus/Content/Laporan/Index.blade.php
+7. resources/views/Pengurus/Content/Laporan/Print.blade.php
+8. database/migrations/2026_11_26_000001_create_penjualan_table.php (kolom legacy disesuaikan panjangnya)
+9. database/migrations/2026_11_26_000002_add_group_harvest_and_recorder_to_transaksi_penjualan.php (migration baru)
+
+PENTING: LANGKAH MANUAL PADA PanenController
+Jangan replace seluruh PanenController karena file lokalmu juga sudah menerima perubahan terbaru dari GitHub.
+Buka app/Http/Controllers/Pengurus/PanenController.php lalu lakukan dua perubahan kecil:
+
+A. Ganti import:
+   Hapus:  use App\Models\Penjualan;
+   Tambahkan: use App\Models\TransaksiPenjualan;
+
+B. Cari pemeriksaan status panen yang memakai:
+   Penjualan::where('id_panen', $panen->id_panen)->exists()
+
+   Ganti ekspresi tersebut menjadi:
+   TransaksiPenjualan::where('id_panen', $panen->id_panen)
+       ->where('status_pembayaran', '!=', 'dibatalkan')
+       ->exists()
+
+Pertahankan bagian kondisi if dan isi redirect/error lainnya.
+
+HAPUS MODEL SEMENTARA
+Setelah semua file di atas digabungkan dan referensi PanenController diperbarui, hapus model sementara yang tidak lagi dipakai:
+   app/Models/Penjualan.php
+
+Jangan menghapus tabel database secara manual. Migration integrasi akan menyalin catatan lama dari tabel penjualan (jika tabel tersebut sudah ada) ke transaksi_penjualan. Tabel penjualan lama dibiarkan sebagai arsip agar tidak ada penghapusan data mendadak.
+
+CARA MEMASANG
+1. Backup folder PawonTani dan export database melalui phpMyAdmin.
+2. Ekstrak ZIP ini.
+3. Gabungkan folder PawonTani dari ZIP ke folder proyek C:\laragon\www\PawonTani.
+4. Pilih Replace hanya untuk file dengan nama dan lokasi yang sama.
+5. Lakukan dua edit manual PanenController seperti petunjuk di atas.
+6. Hapus app/Models/Penjualan.php seperti petunjuk di atas.
+7. Periksa referensi model lama:
+   Get-ChildItem app -Recurse -Filter *.php | Select-String -Pattern 'App\\Models\\Penjualan|Penjualan::'
+   Pastikan tidak ada pemakaian model sementara Penjualan yang tertinggal.
+8. Jalankan:
+   php artisan migrate
+   php artisan optimize:clear
+
+TIDAK PERLU npm run dev untuk patch integrasi ini karena tidak mengubah CSS/JavaScript Vite.
+
+PERILAKU DATA SETELAH INTEGRASI
+- Transaksi dari API Mobile/Marketplace akan menyimpan id_kelompok berdasarkan kelompok pemilik transaksi.
+- Migration mengisi id_kelompok untuk transaksi lama berdasarkan kelompok penjual saat migration dijalankan.
+- Transaksi yang dicatat Pengurus dari halaman Penjualan terhubung ke id_panen, id_kelompok, dan id_pengurus.
+- Laporan Pengurus hanya membaca transaksi dengan id_kelompok milik Pengurus yang sedang login.
+- Transaksi dibatalkan tidak dihitung dalam total transaksi, berat terjual, dan nilai transaksi.
+- Berat terjual hanya menjumlah transaksi dengan satuan kg. Nilai transaksi menjumlah semua satuan yang tidak dibatalkan.
+- Transaksi Mobile/Marketplace yang tidak mengirim hubungan id_panen tetap tampil di laporan kelompok, tetapi tidak dikaitkan ke satu catatan panen tertentu. Transaksi dari form Pengurus terhubung langsung ke panen yang dipilih.
+- Migration mencoba memindahkan transaksi dari tabel penjualan lama (jika ada dan masih aktif) ke transaksi_penjualan. Tabel lama tidak dihapus.
+
+PENGUJIAN SETELAH MIGRATION
+1. Login sebagai Pengurus.
+2. Buka Penjualan. Pastikan riwayat transaksi Mobile/Marketplace milik anggota kelompok yang sama tampil.
+3. Catat transaksi dari panen yang disetujui. Pastikan berat tidak melebihi sisa hasil panen.
+4. Buka Laporan dan pastikan transaksi yang sama ikut tampil.
+5. Login dengan Pengurus dari kelompok lain dan pastikan transaksi kelompok pertama tidak terlihat.
+6. Periksa Cetak/PDF dan pastikan data penjualan yang sama ikut tercetak.
+
+CATATAN
+- Migration menambahkan kolom nullable dan melakukan backfill; tidak menggunakan migrate:fresh dan tidak menghapus data lama.
+- Jangan menjalankan php artisan migrate:fresh.
+- Status pembayaran transaksi yang dicatat Pengurus dimulai sebagai Belum Dibayar karena formulir saat ini tidak meminta bukti/status pembayaran. Total transaksi tetap dicatat, tetapi bukan berarti uang sudah diterima.
+- Simpan backup sebelum menjalankan migration.

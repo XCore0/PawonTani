@@ -15,6 +15,8 @@ use App\Http\Controllers\Pengurus\AnggotaController;
 use App\Http\Controllers\Pengurus\DashboardController as PengurusDashboardController;
 use App\Http\Controllers\Pengurus\LahanController;
 use App\Http\Controllers\Pengurus\MonitoringController;
+use App\Http\Controllers\Pengurus\LaporanController;
+use App\Http\Controllers\Pengurus\PenjualanController;
 use App\Http\Controllers\Pengurus\PanenController as PengurusPanenController;
 use App\Services\CommodityService;
 use App\Services\HarvestPredictionService;
@@ -148,17 +150,11 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     Route::get('/panen/{id}', [PengurusPanenController::class, 'show'])->name('panen.show');
     Route::post('/panen/{id}/verifikasi', [PengurusPanenController::class, 'verifikasi'])->name('panen.verifikasi');
 
-    Route::get('/penjualan', fn () => $errorPage(
-        'Penjualan',
-        'Kelola transaksi dan riwayat penjualan hasil pertanian.',
-        'Pengurus.Layout._layout'
-    ))->name('penjualan');
+    Route::get('/penjualan', [PenjualanController::class, 'index'])->name('penjualan');
+    Route::post('/penjualan', [PenjualanController::class, 'store'])->name('penjualan.store');
 
-    Route::get('/laporan', fn () => $errorPage(
-        'Laporan',
-        'Lihat dan unduh laporan aktivitas kelompok tani.',
-        'Pengurus.Layout._layout'
-    ))->name('laporan');
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
+    Route::get('/laporan/cetak', [LaporanController::class, 'cetak'])->name('laporan.cetak');
 
     Route::get('/informasi', function () {
         /** @var \App\Models\Pengguna|null $pengurus */
@@ -332,6 +328,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
 
     // Kelompok Tani CRUD
     Route::get('/kelompok', [KelompokTaniController::class, 'index'])->name('kelompok');
+    Route::get('/kelompok/export/excel', [KelompokTaniController::class, 'exportExcel'])->name('kelompok.export.excel');
+    Route::get('/kelompok/export/pdf', [KelompokTaniController::class, 'exportPdf'])->name('kelompok.export.pdf');
     Route::post('/kelompok', [KelompokTaniController::class, 'store'])->name('kelompok.store');
     Route::put('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'update'])->name('kelompok.update');
     Route::delete('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'destroy'])->name('kelompok.destroy');
