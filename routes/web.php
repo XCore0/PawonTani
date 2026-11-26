@@ -30,6 +30,22 @@ use App\Models\Produk;
 use App\Http\Controllers\Customer\MarketplaceController;
 
 /* ============================================================
+   CORS MEDIA SERVING (STORAGE FALLBACK)
+   ============================================================ */
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+    $mime = mime_content_type($filePath) ?: 'application/octet-stream';
+    return response()->file($filePath, [
+        'Content-Type' => $mime,
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+    ]);
+})->where('path', '.*');
+
+/* ============================================================
    AUTH ROUTES
    ============================================================ */
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

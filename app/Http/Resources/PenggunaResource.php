@@ -22,7 +22,11 @@ class PenggunaResource extends JsonResource
             'email' => $this->email,
             'no_telepon' => $this->no_telepon,
             'alamat' => $this->alamat,
-            'foto_profil' => $this->foto_profil,
+            'foto_profil' => $this->foto_profil ? (
+                str_contains($this->foto_profil, '/storage/')
+                    ? preg_replace('/^https?:\/\/[^\/]+\/storage\//', url('/api/v1/media') . '/', $this->foto_profil)
+                    : $this->foto_profil
+            ) : null,
             'role' => $this->role,
             'status' => $this->status,
             'lokasi' => [

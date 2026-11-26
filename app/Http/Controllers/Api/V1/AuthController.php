@@ -121,6 +121,78 @@ class AuthController extends Controller
     }
 
     /**
+     * Update data profil anggota yang sedang login.
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        /** @var \App\Models\Pengguna $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'nama' => ['required', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:pengguna,username,' . $user->id_pengguna . ',id_pengguna'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:pengguna,email,' . $user->id_pengguna . ',id_pengguna'],
+            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'alamat' => ['nullable', 'string', 'max:500'],
+            'foto_profil' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'password_baru' => ['nullable', 'string', 'min:6'],
+        ], [
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'username.unique' => 'Username telah digunakan akun lain.',
+            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, tanda hubung (-), dan garis bawah (_).',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan oleh akun lain.',
+            'foto_profil.image' => 'Berkas foto profil harus berupa gambar.',
+            'foto_profil.max' => 'Ukuran foto profil maksimal 2 MB.',
+            'password_baru.min' => 'Kata sandi baru minimal 6 karakter.',
+        ]);
+
+        $user->nama = $validated['nama'];
+        if (!empty($validated['username'])) {
+            $user->username = $validated['username'];
+        }
+        if (array_key_exists('email', $validated)) {
+            $user->email = $validated['email'];
+        }
+        if (array_key_exists('no_telepon', $validated)) {
+            $user->no_telepon = $validated['no_telepon'];
+        }
+        if (array_key_exists('alamat', $validated)) {
+            $user->alamat = $validated['alamat'];
+        }
+        if (!empty($validated['password_baru'])) {
+            $user->password = Hash::make($validated['password_baru']);
+        }
+
+        // Upload foto profil jika ada
+        if ($request->hasFile('foto_profil')) {
+            try {
+                $cloudinary = app(\App\Services\CloudinaryService::class);
+                $uploadedUrl = $cloudinary->upload(
+                    $request->file('foto_profil')->getRealPath(),
+                    'pawontani/profil'
+                );
+                if ($uploadedUrl) {
+                    $user->foto_profil = $uploadedUrl;
+                }
+            } catch (\Exception $e) {
+                // Ignore upload failure or log
+            }
+        }
+
+        $user->save();
+        $user->load(['kelompokTani', 'anggota']);
+
+        AuditLogger::log('auth.mobile_update_profile', 'Anggota memperbarui profil biodata.', 'Pengguna', $user->id_pengguna, $user->id_kelompok, $request);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui.',
+            'data' => new PenggunaResource($user),
+        ]);
+    }
+
+    /**
      * Revokasi token aktif (logout).
      */
     public function logout(Request $request): JsonResponse

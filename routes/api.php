@@ -21,12 +21,29 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::prefix('v1')->group(function () {
+    // Media Serving dengan CORS penuh untuk Mobile & Web
+    Route::get('/media/{path}', function (string $path) {
+        $filePath = storage_path('app/public/' . $path);
+        if (!file_exists($filePath)) {
+            return response()->json(['success' => false, 'message' => 'Berkas tidak ditemukan.'], 404);
+        }
+        $mime = mime_content_type($filePath) ?: 'application/octet-stream';
+        return response()->file($filePath, [
+            'Content-Type' => $mime,
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    })->where('path', '.*')->name('api.v1.media');
+
     // Autentikasi Mobile Anggota
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('api.v1.auth.login');
 
     // Rute Terproteksi Bearer Token Sanctum
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me'])->name('api.v1.auth.me');
+        Route::put('/auth/me', [AuthController::class, 'updateProfile'])->name('api.v1.auth.update-profile');
+        Route::post('/auth/me', [AuthController::class, 'updateProfile'])->name('api.v1.auth.update-profile.post');
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.v1.auth.logout');
         Route::delete('/auth/account', [AuthController::class, 'deleteAccount'])->middleware('throttle:3,1')->name('api.v1.auth.account.delete');
 
