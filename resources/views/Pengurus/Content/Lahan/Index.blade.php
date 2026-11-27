@@ -196,7 +196,6 @@
             <th class="py-3.5 px-4">Nama Anggota</th>
             <th class="py-3.5 px-4">Komoditas</th>
             <th class="py-3.5 px-4">Luas</th>
-            <th class="py-3.5 px-4">Musim Tanam</th>
             <th class="py-3.5 px-4 text-center">Status Verifikasi</th>
             <th class="py-3.5 px-4 text-center">Revisi</th>
             <th class="py-3.5 px-4 text-center w-28">Aksi</th>
@@ -254,11 +253,6 @@
                 {{ number_format((float)$item->luas, 2, ',', '.') }} <span class="text-[11px] font-normal text-[#9AB880]">ha</span>
               </td>
 
-              <!-- Musim Tanam -->
-              <td class="py-3.5 px-4 text-[#4A6030]">
-                {{ $item->musim_tanam ?? '-' }}
-              </td>
-
               <!-- Status Verifikasi Badge -->
               <td class="py-3.5 px-4 text-center">
                 @if($item->status_verifikasi === 'menunggu_verifikasi')
@@ -300,7 +294,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="9" class="py-14 text-center">
+              <td colspan="8" class="py-14 text-center">
                 <div class="flex flex-col items-center justify-center space-y-3">
                   <div class="w-14 h-14 rounded-2xl bg-[#F5F8F1] border border-[#E4F0D6] flex items-center justify-center text-[#9AB880]">
                     <i data-lucide="map-off" class="w-7 h-7"></i>

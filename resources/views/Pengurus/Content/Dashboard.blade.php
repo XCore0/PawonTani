@@ -24,8 +24,18 @@
         </h1>
 
         <p class="text-xs sm:text-sm text-emerald-50 leading-relaxed font-medium">
-          @if ($lahanMenunggu > 0)
-            Perhatian: Terdapat <span class="font-bold underline text-white">{{ $lahanMenunggu }} petak lahan</span> anggota yang menunggu verifikasi lapangan.
+          @if ($lahanMenunggu > 0 || ($siklusMenunggu ?? 0) > 0)
+            Perhatian: Terdapat
+            @if ($lahanMenunggu > 0)
+              <span class="font-bold underline text-white">{{ $lahanMenunggu }} petak lahan</span> menunggu verifikasi
+            @endif
+            @if ($lahanMenunggu > 0 && ($siklusMenunggu ?? 0) > 0)
+              dan
+            @endif
+            @if (($siklusMenunggu ?? 0) > 0)
+              <span class="font-bold underline text-white">{{ $siklusMenunggu }} pengajuan pengakhiran siklus</span> menunggu approval
+            @endif
+            .
           @else
             Pantau perkembangan budidaya tanaman, administrasi anggota, dan aktivitas perawatan harian lahan anggota secara terpadu.
           @endif
@@ -43,7 +53,7 @@
           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1A2D10]/40 hover:bg-[#1A2D10]/60 border border-white/25 text-white text-xs sm:text-sm font-bold backdrop-blur-xs transition-all">
           <i data-lucide="activity" class="w-4 h-4 text-emerald-300"></i>
           <span>Monitoring Lahan</span>
-          @if ($lahanMenunggu > 0)
+          @if ($lahanMenunggu > 0 || ($siklusMenunggu ?? 0) > 0)
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           @endif
         </a>
@@ -161,11 +171,17 @@
             @endphp
             <div class="p-4 rounded-xl border border-[#E4F0D6] bg-[#FBFDF9] hover:bg-[#F5F8F1] transition-colors mb-3 last:mb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="space-y-1">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-sm font-bold text-[#1A2D10]">{{ $itemLahan->nama_lahan }}</span>
                   <span class="text-[11px] font-bold px-2 py-0.5 rounded-full {{ $statusBadge['bg'] }} {{ $statusBadge['text'] }} border {{ $statusBadge['border'] }}">
                     {{ $statusBadge['label'] }}
                   </span>
+                  @if($itemLahan->siklusBerjalan && in_array($itemLahan->siklusBerjalan->status, ['menunggu_selesai', 'menunggu_gagal']))
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Pengajuan {{ $itemLahan->siklusBerjalan->status === 'menunggu_gagal' ? 'Gagal' : 'Selesai' }} Siklus
+                    </span>
+                  @endif
                 </div>
                 <div class="text-xs text-slate-600 flex items-center gap-2 flex-wrap">
                   <span class="flex items-center gap-1 font-medium text-[#1A2D10]">
