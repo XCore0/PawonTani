@@ -25,8 +25,10 @@ class DashboardController extends Controller
 
         $totalPetani = Pengguna::where('role', 'Anggota')->count();
         $totalPengurus = Pengguna::where('role', 'Pengurus')->count();
+        $totalPenggunaAktif = Pengguna::where('status', 'Aktif')->count();
+        $totalPenggunaNonaktif = Pengguna::where('status', 'Nonaktif')->count();
 
-        $permintaanPending = PermintaanKeanggotaan::where('status', 'menunggu')->count();
+        $permintaanPending = 0;
 
         $totalLuasLahan = (float) Lahan::sum('luas');
         $totalLahan = Lahan::count();
@@ -50,12 +52,12 @@ class DashboardController extends Controller
             $q->whereDoesntHave('dokumenSppt');
         })->count();
 
-        // 3. DAFTAR PERMINTAAN KEANGGOTAAN TERBARU (Pending)
-        $permintaanTerbaru = PermintaanKeanggotaan::with(['pengguna', 'kelompokTani'])
-            ->where('status', 'menunggu')
-            ->latest()
+        // 3. DAFTAR LOG AKTIVITAS TERBARU
+        $aktivitasTerbaru = LogAktivitasSistem::with('actor')
+            ->latest('created_at')
             ->take(5)
             ->get();
+        $permintaanTerbaru = collect();
 
         // 4. DAFTAR LAHAN BUTUH VERIFIKASI / PERHATIAN
         $lahanButuhPerhatian = Lahan::with(['pengguna', 'kelompokTani', 'komoditas'])
@@ -106,6 +108,8 @@ class DashboardController extends Controller
             'persenKelompokAktif',
             'totalPetani',
             'totalPengurus',
+            'totalPenggunaAktif',
+            'totalPenggunaNonaktif',
             'permintaanPending',
             'totalLuasLahan',
             'totalLahan',

@@ -27,6 +27,7 @@ class Lahan extends Model
         'id_kelompok',
         'nama_lahan',
         'luas',
+        'status_penguasaan',
         'provinsi_id',
         'kabupaten_id',
         'kecamatan_id',

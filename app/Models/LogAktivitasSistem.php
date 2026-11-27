@@ -24,4 +24,9 @@ class LogAktivitasSistem extends Model
     {
         return $this->belongsTo(Pengguna::class, 'actor_id', 'id_pengguna');
     }
+
+    public function pengguna(): BelongsTo
+    {
+        return $this->actor();
+    }
 }

@@ -112,6 +112,14 @@ class SecurityHardeningTest extends TestCase
         $this->actingAs($pengurus)->get('/pengurus/dashboard')->assertOk();
     }
 
+    public function test_active_pengurus_can_access_pengurus_dokumen_page(): void
+    {
+        $kelompok = $this->createKelompok('KT-PENGURUS-DOK', 'Kelompok Dok');
+        $pengurus = $this->createPengguna('USR-PENGURUS-DOK', 'Pengurus', 'Aktif', $kelompok->id_kelompok);
+
+        $this->actingAs($pengurus)->get(route('pengurus.dokumen'))->assertOk();
+    }
+
     public function test_active_ppl_can_access_admin_route(): void
     {
         $ppl = $this->createPengguna('USR-ROLE-PPL', 'PPL', 'Aktif');

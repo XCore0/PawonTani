@@ -918,9 +918,27 @@
                 <p class="mt-1 text-[10px] text-[#78965F]">{{ number_format($document->size_bytes / 1024, 0) }} KB · Diunggah {{ $document->created_at?->format('d M Y, H:i') }}</p>
               </div>
             </div>
-            <div class="flex shrink-0 flex-wrap gap-2">
-              <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax href="{{ route('pengurus.dokumen.sppt.preview', $document->id) }}" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DCE9D0] bg-white px-3 py-2 text-xs font-bold text-[#536F3F] hover:bg-[#F0F6E9]"><i data-lucide="eye" class="h-3.5 w-3.5"></i> Lihat</a>
-              <a download data-no-admin-ajax href="{{ route('pengurus.dokumen.sppt.download', $document->id) }}" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E8F2DF] px-3 py-2 text-xs font-bold text-[#3D8024] hover:bg-[#DCECCF]"><i data-lucide="download" class="h-3.5 w-3.5"></i> Unduh</a>
+            @php
+              $canPreviewSppt = in_array($lahan->status_verifikasi, ['menunggu_verifikasi', 'menunggu'], true) || \App\Models\AksesDokumen::where('id_pengguna', $lahan->id_pengguna)
+                  ->where('id_kelompok', $pengurus->id_kelompok)
+                  ->where('tipe_dokumen', 'sppt')
+                  ->where('status_akses', 'aktif')
+                  ->where(function ($q) {
+                      $q->whereNull('waktu_berakhir')->orWhere('waktu_berakhir', '>=', now());
+                  })
+                  ->exists();
+            @endphp
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+              @if($canPreviewSppt)
+                <a target="_blank" rel="noopener noreferrer" data-no-admin-ajax href="{{ route('pengurus.dokumen.sppt.preview', $document->id) }}" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DCE9D0] bg-white px-3 py-2 text-xs font-bold text-[#536F3F] hover:bg-[#F0F6E9]"><i data-lucide="eye" class="h-3.5 w-3.5"></i> Lihat</a>
+                @if(!in_array($lahan->status_verifikasi, ['menunggu_verifikasi', 'menunggu'], true))
+                  <a download data-no-admin-ajax href="{{ route('pengurus.dokumen.sppt.download', $document->id) }}" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E8F2DF] px-3 py-2 text-xs font-bold text-[#3D8024] hover:bg-[#DCECCF]"><i data-lucide="download" class="h-3.5 w-3.5"></i> Unduh</a>
+                @endif
+              @else
+                <span class="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800" title="Keputusan verifikasi sudah dibuat. Petani harus memberikan izin dokumen terlebih dahulu untuk melihat SPPT ini kembali.">
+                  <i data-lucide="lock" class="h-3.5 w-3.5 text-amber-600"></i> Terkunci (Butuh Izin Petani)
+                </span>
+              @endif
             </div>
           </div>
         @endforeach
@@ -932,17 +950,6 @@
       </div>
     @endif
 
-    <form method="POST" action="{{ route('pengurus.lahan.sppt.upload', $lahan->id_lahan) }}" enctype="multipart/form-data" class="space-y-2 border-t border-[#E3ECD9] pt-4">
-      @csrf
-      <label class="block text-xs font-semibold text-[#27451B]">Tambahkan dokumen SPPT</label>
-      <input type="file" name="dokumen_sppt[]" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple required class="w-full rounded-xl border border-[#C9DDB9] bg-white p-2 text-xs text-[#536F3F] file:mr-3 file:rounded-lg file:border-0 file:bg-[#E8F2DF] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#3D8024]">
-      <p class="text-[11px] text-[#78965F]">Bisa memilih beberapa file sekaligus (maksimal 10 file). Format PDF/JPG, maksimal 5 MB per file. Upload baru tidak menghapus dokumen sebelumnya.</p>
-      @error('dokumen_sppt')<p class="text-[11px] font-semibold text-red-600">{{ $message }}</p>@enderror
-      @foreach($errors->get('dokumen_sppt.*') as $messages)
-        @foreach($messages as $message)<p class="text-[11px] font-semibold text-red-600">{{ $message }}</p>@endforeach
-      @endforeach
-      <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-[#4D9830] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#3D8024]"><i data-lucide="upload" class="h-3.5 w-3.5"></i> Tambahkan Dokumen SPPT</button>
-    </form>
   </div>
 
 </div>

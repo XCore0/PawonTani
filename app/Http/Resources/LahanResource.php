@@ -96,6 +96,7 @@ class LahanResource extends JsonResource
 
             // Atribut Operasional & Dokumen (Read-Only)
             'musim_tanam' => $this->musim_tanam,
+            'status_penguasaan' => $this->status_penguasaan ?? 'Milik Sendiri',
             'foto_lahan' => $fotoLahanUrl,
             'foto_lahan_list' => $fotoLahanListUrls,
             'photos' => $fotoLahanListUrls,

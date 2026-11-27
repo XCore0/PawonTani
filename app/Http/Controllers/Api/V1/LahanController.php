@@ -9,6 +9,7 @@ use App\Http\Resources\LahanResource;
 use App\Services\LahanService;
 use App\Services\AuditLogger;
 use App\Services\SiklusTanamService;
+use App\Services\DocumentStorageService;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -22,7 +23,8 @@ use Throwable;
 class LahanController extends Controller
 {
     public function __construct(
-        protected LahanService $lahanService
+        protected LahanService $lahanService,
+        protected DocumentStorageService $documentStorageService
     ) {}
 
     /**
@@ -150,6 +152,15 @@ class LahanController extends Controller
                 $fotoLahanList
             );
 
+            // Simpan dokumen SPPT jika disertakan (1 Lahan = 1 SPPT)
+            if ($request->hasFile('dokumen_sppt')) {
+                try {
+                    $this->documentStorageService->storeSppt($lahan, $request->file('dokumen_sppt'), $request->user());
+                } catch (\Throwable $e) {
+                    Log::warning('Gagal menyimpan SPPT saat pendaftaran lahan: ' . $e->getMessage());
+                }
+            }
+
             AuditLogger::log(
                 'lahan.dibuat',
                 'Anggota mendaftarkan lahan baru.',
@@ -197,6 +208,15 @@ class LahanController extends Controller
                 $fotoLahan,
                 $fotoLahanList
             );
+
+            // Perbarui/simpan dokumen SPPT jika disertakan
+            if ($request->hasFile('dokumen_sppt')) {
+                try {
+                    $this->documentStorageService->storeSppt($lahan, $request->file('dokumen_sppt'), $request->user());
+                } catch (\Throwable $e) {
+                    Log::warning('Gagal menyimpan SPPT saat pembaruan lahan: ' . $e->getMessage());
+                }
+            }
 
             AuditLogger::log(
                 'lahan.diperbarui',
