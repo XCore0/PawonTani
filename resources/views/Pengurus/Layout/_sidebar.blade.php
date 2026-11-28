@@ -47,6 +47,13 @@
             <span>Kelola Lahan</span>
           </a>
 
+          <!-- Dokumen Anggota dan Lahan -->
+          <a href="{{ route('pengurus.dokumen') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group {{ request()->routeIs('pengurus.dokumen*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : '' }}">
+            <i data-lucide="file-check" class="w-4 h-4 shrink-0 transition-colors {{ request()->routeIs('pengurus.dokumen*') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }}"></i>
+            <span>Dokumen Anggota & Lahan</span>
+          </a>
+
           <!-- Monitoring Pertanian -->
           <a href="{{ route('pengurus.monitoring') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10] transition-all group {{ request()->routeIs('pengurus.monitoring') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : '' }}">

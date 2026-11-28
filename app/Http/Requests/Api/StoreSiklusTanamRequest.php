@@ -20,7 +20,10 @@ class StoreSiklusTanamRequest extends FormRequest
             'id_lahan' => ['required', 'string', 'exists:lahan,id_lahan'],
             'id_komoditas' => ['required', 'string', 'exists:komoditas,id_komoditas'],
             'varietas' => ['nullable', 'string', 'max:100'],
-            'musim_tanam' => ['required', 'string', 'max:50'],
+            // Musim tanam kini opsional: banyak anggota tidak punya acuan resmi
+            // dan mengisinya asal-asalan, sehingga estimasi panen dibuat otomatis
+            // dari umur panen komoditas.
+            'musim_tanam' => ['nullable', 'string', 'max:50'],
             'tanggal_mulai' => ['required', 'date', 'before_or_equal:today'],
             'estimasi_panen' => ['nullable', 'date', 'after_or_equal:tanggal_mulai'],
             'target_panen_ton' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],

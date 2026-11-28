@@ -9,6 +9,7 @@ use App\Models\Panen;
 use App\Models\Pengguna;
 use App\Models\RiwayatPengakhiranSiklus;
 use App\Models\SiklusTanam;
+use Carbon\Carbon;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -156,9 +157,16 @@ class SiklusTanamService
             $siklus->id_komoditas = $komoditas->id_komoditas;
             $siklus->komoditas_nama = $komoditas->nama_komoditas;
             $siklus->varietas = $data['varietas'] ?? null;
-            $siklus->musim_tanam = $data['musim_tanam'];
+            $siklus->musim_tanam = $data['musim_tanam'] ?? null;
             $siklus->tanggal_mulai = $tanggalMulai;
-            $siklus->estimasi_panen = $data['estimasi_panen'] ?? null;
+
+            // Estimasi panen dihitung otomatis dari umur panen komoditas bila anggota
+            // tidak mengirimkannya. Nilai manual tetap dihormati (mis. koreksi lapangan).
+            $siklus->estimasi_panen = $data['estimasi_panen']
+                ?? ($komoditas->umur_panen_hari
+                    ? Carbon::parse($tanggalMulai)->addDays((int) $komoditas->umur_panen_hari)->toDateString()
+                    : null);
+
             $siklus->target_panen_ton = $data['target_panen_ton'] ?? null;
             $siklus->status = SiklusTanam::STATUS_AKTIF;
             $siklus->save();

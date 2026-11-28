@@ -18,6 +18,11 @@ class Komoditas extends Model
         'id_komoditas',
         'nama_komoditas',
         'kategori',
+        'umur_panen_hari',
+    ];
+
+    protected $casts = [
+        'umur_panen_hari' => 'integer',
     ];
 
     /**

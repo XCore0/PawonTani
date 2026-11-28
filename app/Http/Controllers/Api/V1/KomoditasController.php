@@ -19,7 +19,7 @@ class KomoditasController extends Controller
         $komoditas = Komoditas::query()
             ->orderBy('kategori')
             ->orderBy('nama_komoditas')
-            ->get(['id_komoditas', 'nama_komoditas', 'kategori']);
+            ->get(['id_komoditas', 'nama_komoditas', 'kategori', 'umur_panen_hari']);
 
         return response()->json([
             'success' => true,
@@ -28,6 +28,7 @@ class KomoditasController extends Controller
                 'id_komoditas' => (string) $item->id_komoditas,
                 'nama_komoditas' => (string) $item->nama_komoditas,
                 'kategori' => (string) $item->kategori,
+                'umur_panen_hari' => $item->umur_panen_hari !== null ? (int) $item->umur_panen_hari : null,
             ]),
         ]);
     }

@@ -25,7 +25,15 @@ Route::prefix('v1')->group(function () {
     Route::get('/media/{path}', function (string $path) {
         $filePath = storage_path('app/public/' . $path);
         if (!file_exists($filePath)) {
-            return response()->json(['success' => false, 'message' => 'Berkas tidak ditemukan.'], 404);
+            // Jika berkas media profil/lahan belum ada di storage lokal,
+            // kembalikan gambar transparan 1x1 PNG dengan HTTP 200 agar NetworkImage mobile tidak crash
+            $transparentPng = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+            return response($transparentPng, 200, [
+                'Content-Type' => 'image/png',
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                'Cache-Control' => 'no-cache',
+            ]);
         }
         $mime = mime_content_type($filePath) ?: 'application/octet-stream';
         return response()->file($filePath, [
@@ -115,6 +123,10 @@ Route::prefix('v1')->group(function () {
             ]);
 
             Route::get('/documents', [DokumenController::class, 'apiIndex'])->name('api.v1.documents.index');
+            Route::get('/documents/permissions', [DokumenController::class, 'apiGetPermissions'])->name('api.v1.documents.permissions.index');
+            Route::post('/documents/permissions/grant', [DokumenController::class, 'apiGrantPermission'])->name('api.v1.documents.permissions.grant');
+            Route::post('/documents/permissions/{id}/revoke', [DokumenController::class, 'apiRevokePermission'])->name('api.v1.documents.permissions.revoke');
+            Route::get('/documents/permissions/logs', [DokumenController::class, 'apiGetAccessLogs'])->name('api.v1.documents.permissions.logs');
             Route::post('/documents/identity/{jenis}', [DokumenController::class, 'apiUploadIdentity'])->name('api.v1.documents.identity.upload');
             Route::get('/documents/identity/{jenis}', [DokumenController::class, 'apiDownloadIdentity'])->name('api.v1.documents.identity.download');
             Route::post('/lahan/{idLahan}/sppt', [DokumenController::class, 'apiUploadSppt'])->name('api.v1.documents.sppt.upload');

@@ -57,12 +57,14 @@ class UpdateLahanRequest extends FormRequest
             'latitude' => ['nullable', 'numeric', 'between:-11.0,6.0'],
             'longitude' => ['nullable', 'numeric', 'between:95.0,141.0'],
             'id_komoditas' => ['nullable', 'string', 'exists:komoditas,id_komoditas'],
+            'status_penguasaan' => ['nullable', 'string', 'in:Milik Sendiri,Sewa,Garap,Bagi Hasil,Lainnya'],
             'musim_tanam' => ['nullable', 'string', 'max:50'],
             'foto_lahan' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
             'foto_lahan_list' => ['nullable', 'array', 'max:10'],
             'foto_lahan_list.*' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
             'existing_photos' => ['nullable', 'array'],
             'existing_photos.*' => ['nullable', 'string'],
+            'dokumen_sppt' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
             'keterangan' => ['nullable', 'string'],
         ];
     }

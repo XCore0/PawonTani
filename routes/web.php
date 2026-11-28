@@ -128,6 +128,7 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
     Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
     Route::put('/anggota/{id_pengguna}', [AnggotaController::class, 'update'])->name('anggota.update');
     Route::delete('/anggota/{id_pengguna}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
+    Route::get('/dokumen', [App\Http\Controllers\Pengurus\DokumenController::class, 'index'])->name('dokumen');
     Route::get('/dokumen/anggota/{idPengguna}/{jenis}', [DokumenController::class, 'downloadIdentity'])->name('dokumen.identity.download');
     Route::get('/dokumen/anggota/{idPengguna}/{jenis}/preview', [DokumenController::class, 'previewIdentity'])->name('dokumen.identity.preview');
     Route::get('/dokumen/sppt/{idDokumen}/download', [DokumenController::class, 'downloadSppt'])->name('dokumen.sppt.download');
@@ -336,15 +337,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:PPL'])->group(
     Route::put('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'update'])->name('kelompok.update');
     Route::delete('/kelompok/{id_kelompok}', [KelompokTaniController::class, 'destroy'])->name('kelompok.destroy');
 
-    // Dokumen e-RDKK: Admin/PPL hanya melihat dan mengunduh.
-    Route::get('/dokumen-erdkk', [DokumenERdkkController::class, 'index'])->name('dokumen.erdkk');
+    // Dokumen Anggota & Lahan: Admin/PPL hanya melihat ringkasan agregat tanpa akses unduh file pribadi anggota.
+    Route::get('/dokumen-ringkasan', [DokumenERdkkController::class, 'index'])->name('dokumen.ringkasan');
+    Route::get('/dokumen-erdkk', fn () => redirect()->route('admin.dokumen.ringkasan'))->name('dokumen.erdkk');
     Route::get('/dokumen-erdkk/anggota/{idPengguna}/download-all', [DokumenController::class, 'downloadMemberArchive'])->middleware('throttle:10,1')->name('dokumen.member.download-all');
     Route::get('/dokumen-erdkk/anggota/{idPengguna}/{jenis}', [DokumenController::class, 'downloadIdentity'])->name('dokumen.identity.download');
     Route::get('/dokumen-erdkk/anggota/{idPengguna}/{jenis}/preview', [DokumenController::class, 'previewIdentity'])->name('dokumen.identity.preview');
     Route::get('/dokumen-erdkk/sppt/{idDokumen}/download', [DokumenController::class, 'downloadSppt'])->name('dokumen.sppt.download');
     Route::get('/dokumen-erdkk/sppt/{idDokumen}/preview', [DokumenController::class, 'previewSppt'])->name('dokumen.sppt.preview');
     // Alias rute lama agar bookmark sebelumnya tidak putus.
-    Route::get('/verifikasi-lapangan', fn () => redirect()->route('admin.dokumen.erdkk'))->name('verifikasi');
+    Route::get('/verifikasi-lapangan', fn () => redirect()->route('admin.dokumen.ringkasan'))->name('verifikasi');
 
     Route::get('/log-aktivitas', [LogAktivitasController::class, 'index'])->name('log-aktivitas');
     Route::get('/aktivitas', fn () => redirect()->route('admin.log-aktivitas'))->name('aktivitas');

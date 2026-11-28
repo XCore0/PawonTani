@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AksesDokumen;
 use App\Models\DokumenAnggota;
 use App\Models\DokumenLahan;
 use App\Models\Lahan;
+use App\Models\LogAksesDokumen;
 use App\Models\Pengguna;
 use App\Services\AuditLogger;
 use App\Services\DocumentStorageService;
@@ -13,7 +15,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -22,16 +23,52 @@ class DokumenController extends Controller
 {
     public function __construct(private readonly DocumentStorageService $documents) {}
 
-
     public function previewIdentity(Request $request, string $idPengguna, string $jenis)
     {
         $member = Pengguna::where('role', 'Anggota')->where('id_pengguna', $idPengguna)->firstOrFail();
-        $this->authorizeMemberDocument($request, $member);
         $jenis = strtoupper($jenis);
         abort_unless(in_array($jenis, ['KTP', 'KK'], true), 404);
 
         $document = DokumenAnggota::where('id_pengguna', $member->id_pengguna)->where('jenis', $jenis)->firstOrFail();
-        return $this->inlineDocument($document->file_path, $document->mime_type, $document->original_name, 'DokumenAnggota', $document->id, $member->id_kelompok, $request);
+        $permission = $this->authorizeMemberDocument($request, $member, $document);
+
+        $this->recordAccessLog($request, $permission, 'identitas', $document->id, 'preview');
+
+        return $this->inlineDocument(
+            $document->file_path,
+            $document->mime_type,
+            $document->original_name,
+            'DokumenAnggota',
+            $document->id,
+            $member->id_kelompok,
+            $request
+        );
+    }
+
+    public function downloadIdentity(Request $request, string $idPengguna, string $jenis): StreamedResponse
+    {
+        $member = Pengguna::where('role', 'Anggota')->where('id_pengguna', $idPengguna)->firstOrFail();
+        $jenis = strtoupper($jenis);
+        abort_unless(in_array($jenis, ['KTP', 'KK'], true), 404);
+
+        $document = DokumenAnggota::where('id_pengguna', $member->id_pengguna)->where('jenis', $jenis)->firstOrFail();
+        $permission = $this->authorizeMemberDocument($request, $member, $document);
+
+        abort_unless(Storage::disk('documents')->exists($document->file_path), 404, 'File dokumen tidak ditemukan.');
+
+        $this->recordAccessLog($request, $permission, 'identitas', $document->id, 'download');
+
+        AuditLogger::log('dokumen.download', 'Mengunduh ' . $document->jenis . ' milik ' . $member->nama, 'DokumenAnggota', $document->id, $member->id_kelompok, $request);
+
+        return Storage::disk('documents')->download(
+            $document->file_path,
+            $this->safeDownloadName($document->original_name),
+            [
+                'Content-Type' => $document->mime_type,
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store, max-age=0',
+            ]
+        );
     }
 
     public function previewSppt(Request $request, string $idDokumen)
@@ -39,16 +76,28 @@ class DokumenController extends Controller
         $document = DokumenLahan::with('lahan.pengguna')->findOrFail($idDokumen);
         $land = $document->lahan;
         abort_unless($land, 404);
-        $this->authorizeLandDocument($request, $land);
+        $permission = $this->authorizeLandDocument($request, $land, $document);
 
-        return $this->inlineDocument($document->file_path, $document->mime_type, $document->original_name, 'DokumenLahan', $document->id, $land->id_kelompok, $request);
+        $this->recordAccessLog($request, $permission, 'sppt', $document->id, 'preview');
+
+        return $this->inlineDocument(
+            $document->file_path,
+            $document->mime_type,
+            $document->original_name,
+            'DokumenLahan',
+            $document->id,
+            $land->id_kelompok,
+            $request
+        );
     }
 
     public function downloadSppt(Request $request, string $idDokumen): StreamedResponse
     {
         $document = DokumenLahan::with('lahan')->findOrFail($idDokumen);
         abort_unless($document->lahan, 404);
-        $this->authorizeLandDocument($request, $document->lahan);
+        $permission = $this->authorizeLandDocument($request, $document->lahan, $document);
+
+        $this->recordAccessLog($request, $permission, 'sppt', $document->id, 'download');
 
         return $this->downloadSpptDocument($request, $document);
     }
@@ -71,8 +120,6 @@ class DokumenController extends Controller
 
         $saved = 0;
         try {
-            // Periksa seluruh file sebelum menyimpan file pertama agar format yang salah
-            // tidak meninggalkan upload setengah jalan.
             foreach ($validated['dokumen_sppt'] as $file) {
                 $this->documents->validateUpload($file);
             }
@@ -87,75 +134,92 @@ class DokumenController extends Controller
         }
 
         return redirect()->route('pengurus.lahan.show', $land->id_lahan)
-            ->with('success', $saved . ' dokumen SPPT berhasil ditambahkan. Dokumen lama tetap tersimpan.');
+            ->with('success', $saved . ' dokumen SPPT berhasil ditambahkan.');
     }
+
+    /* ============================================================
+       API ANGGOTA PETANI (MOBILE)
+       ============================================================ */
 
     public function apiIndex(Request $request): JsonResponse
     {
         $user = $request->user();
         $identitas = DokumenAnggota::where('id_pengguna', $user->id_pengguna)
-            ->get(['jenis', 'original_name', 'mime_type', 'size_bytes', 'updated_at'])
+            ->get(['id', 'jenis', 'original_name', 'mime_type', 'size_bytes', 'updated_at'])
             ->keyBy('jenis');
+
         $lands = Lahan::where('id_pengguna', $user->id_pengguna)
             ->where('id_kelompok', $user->id_kelompok)
             ->with('dokumenSppt:id,id_lahan,original_name,mime_type,size_bytes,updated_at')
-            ->get(['id_lahan', 'nama_lahan']);
+            ->get(['id_lahan', 'nama_lahan', 'status_penguasaan']);
+
+        $activePermissions = AksesDokumen::where('id_pengguna', $user->id_pengguna)
+            ->where('status_akses', 'aktif')
+            ->where(function ($q) {
+                $q->whereNull('waktu_berakhir')->orWhere('waktu_berakhir', '>=', now());
+            })
+            ->with('kelompokTani:id_kelompok,nama_kelompok')
+            ->latest('waktu_persetujuan')
+            ->get();
 
         return response()->json([
             'success' => true,
+            'message' => 'Dokumen anggota berhasil dimuat.',
             'data' => [
-                'identitas' => collect(['KTP', 'KK'])->map(fn ($type) => [
-                    'jenis' => $type,
-                    'tersedia' => $identitas->has($type),
-                    'dokumen' => $identitas->get($type),
-                    'download_url' => $identitas->has($type) ? route('api.v1.documents.identity.download', ['jenis' => $type]) : null,
-                ]),
-                'lahan' => $lands->map(fn ($land) => [
-                    'id_lahan' => $land->id_lahan,
-                    'nama_lahan' => $land->nama_lahan,
-                    'sppt_tersedia' => $land->dokumenSppt->isNotEmpty(),
-                    // Field `sppt` dan URL lama dipertahankan untuk kompatibilitas Flutter versi sebelumnya.
-                    'sppt' => $land->dokumenSppt->first(),
-                    'sppt_download_url' => $land->dokumenSppt->isNotEmpty()
-                        ? route('api.v1.documents.sppt.download', ['idLahan' => $land->id_lahan])
-                        : null,
-                    'sppt_documents' => $land->dokumenSppt->map(fn ($document) => [
-                        'id' => $document->id,
-                        'original_name' => $document->original_name,
-                        'mime_type' => $document->mime_type,
-                        'size_bytes' => $document->size_bytes,
-                        'updated_at' => $document->updated_at,
-                        'download_url' => route('api.v1.documents.sppt.document.download', ['idDokumen' => $document->id]),
-                    ])->values(),
-                ]),
+                'identitas' => [
+                    'ktp' => $identitas->get('KTP'),
+                    'kk' => $identitas->get('KK'),
+                ],
+                'lahan' => $lands->map(function ($lahan) {
+                    return [
+                        'id_lahan' => $lahan->id_lahan,
+                        'nama_lahan' => $lahan->nama_lahan,
+                        'status_penguasaan' => $lahan->status_penguasaan,
+                        'sppt_documents' => $lahan->dokumenSppt,
+                    ];
+                }),
+                'izin_aktif' => $activePermissions,
             ],
         ]);
     }
 
     public function apiUploadIdentity(Request $request, string $jenis): JsonResponse
     {
-        $user = $request->user();
         $jenis = strtoupper($jenis);
         abort_unless(in_array($jenis, ['KTP', 'KK'], true), 404);
-        $validated = $request->validate([
+
+        $request->validate([
             'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
         ], [
+            'file.required' => 'Pilih file dokumen ' . $jenis . '.',
             'file.mimes' => 'Format file tidak didukung. Gunakan PDF atau JPG.',
-            'file.max' => 'Ukuran file maksimal 5 MB.',
+            'file.max' => 'Ukuran file dokumen maksimal 5 MB.',
         ]);
 
+        $user = $request->user();
         try {
-            $document = $this->documents->storeIdentity($user, $jenis, $validated['file'], $user);
+            $document = $this->documents->storeIdentity($user, $jenis, $request->file('file'), $user);
         } catch (\RuntimeException $exception) {
-            return response()->json(['success' => false, 'message' => $exception->getMessage()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
         }
-        AuditLogger::log('dokumen.upload', 'Anggota mengunggah atau mengganti dokumen ' . $jenis, 'DokumenAnggota', $document->id, $user->id_kelompok, $request);
 
-        return response()->json(['success' => true, 'message' => 'Dokumen berhasil disimpan.', 'data' => [
-            'jenis' => $document->jenis,
-            'original_name' => $document->original_name,
-            'size_bytes' => $document->size_bytes,
-        ]]);
+        AuditLogger::log('dokumen.upload', 'Mengunggah dokumen ' . $jenis . ' mandiri.', 'DokumenAnggota', $document->id, $user->id_kelompok, $request);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dokumen ' . $jenis . ' berhasil diunggah dan tersimpan privat.',
+            'data' => [
+                'id' => $document->id,
+                'jenis' => $document->jenis,
+                'original_name' => $document->original_name,
+                'mime_type' => $document->mime_type,
+                'size_bytes' => $document->size_bytes,
+                'updated_at' => $document->updated_at,
+            ],
+        ]);
     }
 
     public function apiUploadSppt(Request $request, string $idLahan): JsonResponse
@@ -166,174 +230,59 @@ class DokumenController extends Controller
             ->where('id_kelompok', $user->id_kelompok)
             ->firstOrFail();
 
-        // Ambil file SPPT yang dikirim dari aplikasi Flutter.
-$uploadedFiles = $request->file('files');
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
+        ], [
+            'file.required' => 'Pilih file dokumen SPPT.',
+            'file.mimes' => 'Format file tidak didukung. Gunakan PDF atau JPG.',
+            'file.max' => 'Ukuran file dokumen maksimal 5 MB.',
+        ]);
 
-// Jika hanya satu file yang diterima, ubah menjadi array.
-if ($uploadedFiles instanceof \Illuminate\Http\UploadedFile) {
-    $uploadedFiles = [$uploadedFiles];
-}
-
-// Mendukung format upload lama dengan nama field "file".
-if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
-    $singleFile = $request->file('file');
-
-    $uploadedFiles = $singleFile ? [$singleFile] : [];
-}
-
-// Pastikan seluruh file tersusun dalam satu array.
-$files = [];
-
-array_walk_recursive($uploadedFiles, function ($file) use (&$files) {
-    if ($file instanceof \Illuminate\Http\UploadedFile) {
-        $files[] = $file;
-    }
-});
-
-// Validasi dokumen SPPT.
-$validated = validator(
-    ['files' => $files],
-    [
-        'files' => ['required', 'array', 'min:1', 'max:10'],
-        'files.*' => ['required', 'file', 'mimes:pdf,jpg,jpeg', 'max:5120'],
-    ],
-    [
-        'files.required' => 'Dokumen SPPT wajib diunggah.',
-        'files.array' => 'Dokumen SPPT harus berupa daftar file.',
-        'files.min' => 'Pilih minimal satu dokumen SPPT.',
-        'files.max' => 'Maksimal 10 file dapat diunggah sekaligus.',
-        'files.*.mimes' => 'Format file tidak didukung. Gunakan PDF atau JPG.',
-        'files.*.max' => 'Setiap file harus berukuran maksimal 5 MB.',
-    ]
-)->validate();
-
-$files = $validated['files'];
-        $savedDocuments = [];
         try {
-            foreach ($files as $file) {
-                $this->documents->validateUpload($file);
-            }
-
-            foreach ($files as $file) {
-                $document = $this->documents->storeSppt($land, $file, $user);
-                $savedDocuments[] = [
-                    'id' => $document->id,
-                    'original_name' => $document->original_name,
-                    'size_bytes' => $document->size_bytes,
-                    'download_url' => route('api.v1.documents.sppt.document.download', ['idDokumen' => $document->id]),
-                ];
-                AuditLogger::log('dokumen.upload', 'Anggota menambahkan SPPT untuk lahan ' . $land->nama_lahan, 'DokumenLahan', $document->id, $land->id_kelompok, $request);
-            }
+            $document = $this->documents->storeSppt($land, $request->file('file'), $user);
         } catch (\RuntimeException $exception) {
-            return response()->json(['success' => false, 'message' => $exception->getMessage()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
         }
 
-        $responseData = [
-            'id_lahan' => $land->id_lahan,
-            'documents' => $savedDocuments,
-            'count' => count($savedDocuments),
-        ];
-        // Pertahankan field respons lama saat hanya satu file diunggah.
-        if (count($savedDocuments) === 1) {
-            $responseData = array_merge($savedDocuments[0], $responseData);
-        }
+        AuditLogger::log('dokumen.upload', 'Mengunggah dokumen SPPT lahan ' . $land->nama_lahan . ' mandiri.', 'DokumenLahan', $document->id, $land->id_kelompok, $request);
 
         return response()->json([
             'success' => true,
-            'message' => count($savedDocuments) . ' dokumen SPPT berhasil ditambahkan.',
-            'data' => $responseData,
-        ], 201);
-    }
-
-    public function downloadIdentity(Request $request, string $idPengguna, string $jenis): StreamedResponse
-    {
-        $member = Pengguna::where('role', 'Anggota')->where('id_pengguna', $idPengguna)->firstOrFail();
-        $this->authorizeMemberDocument($request, $member);
-        $jenis = strtoupper($jenis);
-        abort_unless(in_array($jenis, ['KTP', 'KK'], true), 404);
-
-        $document = DokumenAnggota::where('id_pengguna', $member->id_pengguna)->where('jenis', $jenis)->firstOrFail();
-        abort_unless(Storage::disk('documents')->exists($document->file_path), 404, 'File dokumen tidak ditemukan.');
-
-        AuditLogger::log('dokumen.download', 'Mengunduh dokumen ' . $jenis . ' anggota ' . $member->nama, 'DokumenAnggota', $document->id, $member->id_kelompok, $request);
-
-        return Storage::disk('documents')->download($document->file_path, $this->safeDownloadName($document->original_name), [
-            'Content-Type' => $document->mime_type,
-            'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, no-store, max-age=0',
+            'message' => 'Dokumen SPPT berhasil ditambahkan.',
+            'data' => [
+                'id' => (string) $document->id,
+                'id_lahan' => $land->id_lahan,
+                'original_name' => $document->original_name,
+                'mime_type' => $document->mime_type,
+                'size_bytes' => $document->size_bytes,
+                'updated_at' => $document->updated_at,
+            ],
         ]);
     }
 
-    /**
-     * Menghapus satu dokumen SPPT yang dimiliki anggota pada lahannya sendiri.
-     * Dokumen lain, akun anggota, dan data lahannya tidak ikut dihapus.
-     */
     public function apiDeleteSppt(Request $request, string $idDokumen): JsonResponse
     {
         $user = $request->user();
-        abort_unless(
-            $user
-                && $user->role === 'Anggota'
-                && $user->status === 'Aktif'
-                && $user->anggota?->status_keanggotaan === 'Aktif',
-            403,
-            'Hanya anggota aktif yang dapat mengelola dokumen SPPT miliknya.'
-        );
-
-        $document = DokumenLahan::with('lahan')->findOrFail($idDokumen);
+        $document = DokumenLahan::where('id', $idDokumen)->with('lahan')->firstOrFail();
         $land = $document->lahan;
+
         abort_unless(
-            $land
-                && $land->id_pengguna === $user->id_pengguna
-                && $land->id_kelompok === $user->id_kelompok,
+            $land && $land->id_pengguna === $user->id_pengguna && $land->id_kelompok === $user->id_kelompok,
             403,
             'Anda tidak memiliki akses untuk menghapus dokumen SPPT ini.'
         );
 
-        $disk = Storage::disk('documents');
-        $filePath = $document->file_path;
+        $this->documents->deleteSppt($document);
 
-        try {
-            DB::transaction(function () use ($document, $disk, $filePath, $user, $land) {
-                $lockedDocument = DokumenLahan::whereKey($document->id)->lockForUpdate()->firstOrFail();
-                $lockedLand = Lahan::where('id_lahan', $lockedDocument->id_lahan)->firstOrFail();
-
-                abort_unless(
-                    $lockedLand->id_pengguna === $user->id_pengguna
-                        && $lockedLand->id_kelompok === $user->id_kelompok,
-                    403,
-                    'Akses dokumen SPPT ditolak.'
-                );
-
-                if ($disk->exists($filePath) && !$disk->delete($filePath)) {
-                    throw new \RuntimeException('File SPPT gagal dihapus dari penyimpanan.');
-                }
-
-                $lockedDocument->delete();
-            });
-        } catch (\Throwable $exception) {
-            report($exception);
-            return response()->json([
-                'success' => false,
-                'message' => $exception instanceof \RuntimeException
-                    ? $exception->getMessage()
-                    : 'Dokumen SPPT gagal dihapus. Silakan coba kembali.',
-            ], 500);
-        }
-
-        AuditLogger::log(
-            'dokumen.sppt.dihapus',
-            'Anggota menghapus dokumen SPPT ' . $document->original_name . ' dari lahan ' . $land->nama_lahan,
-            'DokumenLahan',
-            $document->id,
-            $land->id_kelompok,
-            $request
-        );
+        AuditLogger::log('dokumen.delete', 'Menghapus dokumen SPPT lahan ' . $land->nama_lahan, 'DokumenLahan', $idDokumen, $land->id_kelompok, $request);
 
         return response()->json([
             'success' => true,
             'message' => 'Dokumen SPPT berhasil dihapus.',
-            'data' => ['id' => (string) $document->id, 'id_lahan' => $land->id_lahan],
+            'data' => ['id' => (string) $idDokumen, 'id_lahan' => $land->id_lahan],
         ]);
     }
 
@@ -344,10 +293,9 @@ $files = $validated['files'];
 
     public function apiDownloadSppt(Request $request, string $idLahan): StreamedResponse
     {
-        // Endpoint lama dipertahankan: unduh dokumen SPPT terbaru pada lahan.
         $land = Lahan::where('id_lahan', $idLahan)->firstOrFail();
-        $this->authorizeLandDocument($request, $land);
         $document = DokumenLahan::where('id_lahan', $land->id_lahan)->latest()->firstOrFail();
+        $this->authorizeLandDocument($request, $land, $document);
 
         return $this->downloadSpptDocument($request, $document);
     }
@@ -356,84 +304,164 @@ $files = $validated['files'];
     {
         $document = DokumenLahan::with('lahan')->findOrFail($idDokumen);
         abort_unless($document->lahan, 404);
-        $this->authorizeLandDocument($request, $document->lahan);
+        $this->authorizeLandDocument($request, $document->lahan, $document);
 
         return $this->downloadSpptDocument($request, $document);
     }
 
+    /* ============================================================
+       API SISTEM PERSETUJUAN & IZIN DOKUMEN (PETANI MEMBERIKAN IZIN)
+       ============================================================ */
+
+    /**
+     * Mengambil riwayat dan daftar izin akses dokumen milik petani aktif.
+     */
+    public function apiGetPermissions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $permissions = AksesDokumen::where('id_pengguna', $user->id_pengguna)
+            ->with(['kelompokTani:id_kelompok,nama_kelompok', 'logs'])
+            ->latest('waktu_persetujuan')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar izin dokumen berhasil diambil.',
+            'data' => $permissions,
+        ]);
+    }
+
+    /**
+     * Petani memberikan izin akses dokumen kepada Pengurus kelompok taninya.
+     */
+    public function apiGrantPermission(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user->role === 'Anggota' && $user->id_kelompok, 403, 'Hanya anggota dengan kelompok terdaftar yang dapat memberikan izin.');
+
+        // Normalisasi input jika client mengirimkan 'jenis_dokumen' atau 'tipe_dokumen'
+        $rawTipe = strtolower((string) ($request->input('tipe_dokumen') ?? $request->input('jenis_dokumen') ?? 'semua'));
+        if (in_array($rawTipe, ['ktp', 'kk'], true)) {
+            $rawTipe = 'identitas';
+        }
+
+        $rawTujuan = (string) ($request->input('tujuan_penggunaan') ?? $request->input('tujuan_akses') ?? 'Administrasi Kelompok Tani');
+        $rawDurasi = (int) ($request->input('durasi_hari') ?? $request->input('masa_berlaku_hari') ?? 30);
+
+        $request->merge([
+            'tipe_dokumen' => $rawTipe,
+            'tujuan_penggunaan' => $rawTujuan,
+            'durasi_hari' => $rawDurasi,
+        ]);
+
+        $validated = $request->validate([
+            'tipe_dokumen' => ['required', 'in:identitas,sppt,semua'],
+            'id_dokumen' => ['nullable', 'integer'],
+            'tujuan_penggunaan' => ['required', 'string', 'max:255'],
+            'durasi_hari' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'keterangan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $durasi = (int) ($validated['durasi_hari'] ?? 30);
+        $waktuBerakhir = now()->addDays($durasi);
+
+        // Jika memilih 'semua', berikan izin untuk identitas dan sppt
+        $tipeList = $validated['tipe_dokumen'] === 'semua' ? ['identitas', 'sppt'] : [$validated['tipe_dokumen']];
+        $createdPermissions = [];
+
+        foreach ($tipeList as $tipe) {
+            $perm = AksesDokumen::create([
+                'id_pengguna' => $user->id_pengguna,
+                'tipe_dokumen' => $tipe,
+                'id_dokumen' => $validated['id_dokumen'] ?? 0, // 0 = seluruh dokumen kategori ini
+                'id_kelompok' => $user->id_kelompok,
+                'tujuan_penggunaan' => $validated['tujuan_penggunaan'],
+                'waktu_persetujuan' => now(),
+                'waktu_berakhir' => $waktuBerakhir,
+                'status_akses' => 'aktif',
+                'keterangan' => $validated['keterangan'] ?? null,
+            ]);
+            $createdPermissions[] = $perm;
+        }
+
+        AuditLogger::log(
+            'dokumen.grant_permission',
+            'Memberikan izin akses dokumen ' . $validated['tipe_dokumen'] . ' kepada pengurus kelompok selama ' . $durasi . ' hari.',
+            'AksesDokumen',
+            $createdPermissions[0]->id,
+            $user->id_kelompok,
+            $request
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Izin akses dokumen berhasil diberikan kepada pengurus kelompok tani.',
+            'data' => $createdPermissions,
+        ]);
+    }
+
+    /**
+     * Petani mencabut izin akses dokumen seketika (instant revocation).
+     */
+    public function apiRevokePermission(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+        $permission = AksesDokumen::where('id', $id)
+            ->where('id_pengguna', $user->id_pengguna)
+            ->firstOrFail();
+
+        $permission->update([
+            'status_akses' => 'dicabut',
+            'waktu_berakhir' => now(),
+        ]);
+
+        AuditLogger::log(
+            'dokumen.revoke_permission',
+            'Mencabut izin akses dokumen ID ' . $permission->id,
+            'AksesDokumen',
+            $permission->id,
+            $user->id_kelompok,
+            $request
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Izin akses dokumen telah berhasil dicabut. Pengurus tidak lagi dapat membuka dokumen ini.',
+            'data' => $permission,
+        ]);
+    }
+
+    /**
+     * Melihat riwayat akses oleh pengurus terhadap dokumen milik petani.
+     */
+    public function apiGetAccessLogs(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $logs = LogAksesDokumen::whereHas('aksesDokumen', fn ($q) => $q->where('id_pengguna', $user->id_pengguna))
+            ->with(['pengguna:id_pengguna,nama,role'])
+            ->latest('waktu_akses')
+            ->take(50)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Riwayat akses dokumen berhasil diambil.',
+            'data' => $logs,
+        ]);
+    }
+
+    /* ============================================================
+       FUNGSI NONAKTIF SESUAI KETENTUAN PRIVASI PAWONTANI
+       ============================================================ */
+
     public function downloadMemberArchive(Request $request, string $idPengguna): BinaryFileResponse
     {
-        $member = Pengguna::where('role', 'Anggota')->where('id_pengguna', $idPengguna)
-            ->with(['dokumenIdentitas', 'lahan.dokumenSppt'])
-            ->firstOrFail();
-        $this->authorizeMemberDocument($request, $member);
-
-        abort_unless(class_exists(\ZipArchive::class), 503, 'Fitur unduh semua dokumen memerlukan ekstensi PHP ZIP (php_zip). Aktifkan ekstensi ZIP pada PHP lalu coba lagi.');
-
-        $archiveDirectory = storage_path('app/private/document-exports');
-        if (!is_dir($archiveDirectory)) {
-            mkdir($archiveDirectory, 0700, true);
-        }
-        // Bersihkan arsip unduhan yang tertinggal lebih dari satu jam (misalnya
-        // saat browser menutup koneksi sebelum response selesai dikirim).
-        foreach (glob($archiveDirectory . DIRECTORY_SEPARATOR . '*.zip') ?: [] as $oldArchive) {
-            if (is_file($oldArchive) && filemtime($oldArchive) < (time() - 3600)) {
-                @unlink($oldArchive);
-            }
-        }
-        $archivePath = $archiveDirectory . DIRECTORY_SEPARATOR . 'dokumen-' . Str::uuid() . '.zip';
-        $zip = new \ZipArchive();
-        $opened = $zip->open($archivePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        abort_unless($opened === true, 500, 'Arsip dokumen gagal dibuat.');
-
-        $added = 0;
-        $usedNames = [];
-        $addFile = function (string $path, string $folder, ?string $originalName) use ($zip, &$added, &$usedNames): void {
-            if (!Storage::disk('documents')->exists($path)) {
-                return;
-            }
-            $baseName = $this->safeDownloadName($originalName);
-            $archiveName = $folder . '/' . $baseName;
-            $counter = 1;
-            while (isset($usedNames[$archiveName])) {
-                $info = pathinfo($baseName);
-                $archiveName = $folder . '/' . ($info['filename'] ?? 'dokumen') . '-' . $counter++ . (isset($info['extension']) ? '.' . $info['extension'] : '');
-            }
-            $usedNames[$archiveName] = true;
-            $success = $zip->addFile(Storage::disk('documents')->path($path), $archiveName);
-            if ($success) {
-                $added++;
-            }
-        };
-
-        foreach ($member->dokumenIdentitas as $document) {
-            $addFile($document->file_path, 'Identitas', $document->jenis . '_' . $document->original_name);
-        }
-        foreach ($member->lahan as $land) {
-            foreach ($land->dokumenSppt as $document) {
-                $landFolder = 'SPPT/' . $this->safeDownloadName($land->nama_lahan ?: $land->id_lahan);
-                $addFile($document->file_path, $landFolder, $document->original_name);
-            }
-        }
-
-        $closed = $zip->close();
-        if (!$closed) {
-            @unlink($archivePath);
-            abort(500, 'Arsip dokumen tidak dapat diselesaikan.');
-        }
-        if ($added === 0) {
-            @unlink($archivePath);
-            abort(404, 'Belum ada dokumen yang dapat diunduh untuk anggota ini.');
-        }
-
-        AuditLogger::log('dokumen.download_all', 'Mengunduh seluruh dokumen anggota ' . $member->nama, 'Pengguna', $member->id_pengguna, $member->id_kelompok, $request);
-
-        return response()->download($archivePath, 'Dokumen-' . $this->safeDownloadName($member->nama) . '.zip', [
-            'Content-Type' => 'application/zip',
-            'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, no-store, max-age=0',
-        ])->deleteFileAfterSend(true);
+        abort(403, 'Fitur pengunduhan arsip massal seluruh dokumen anggota telah dinonaktifkan demi perlindungan privasi data pribadi petani.');
     }
+
+    /* ============================================================
+       HELPER INTERNAL & OTORISASI
+       ============================================================ */
 
     private function downloadSpptDocument(Request $request, DokumenLahan $document): StreamedResponse
     {
@@ -441,58 +469,118 @@ $files = $validated['files'];
         $land = $document->lahan;
         AuditLogger::log('dokumen.download', 'Mengunduh dokumen SPPT untuk lahan ' . ($land?->nama_lahan ?? '-'), 'DokumenLahan', $document->id, $land?->id_kelompok, $request);
 
-        return Storage::disk('documents')->download($document->file_path, $this->safeDownloadName($document->original_name), [
-            'Content-Type' => $document->mime_type,
-            'X-Content-Type-Options' => 'nosniff',
-            'Cache-Control' => 'private, no-store, max-age=0',
-        ]);
+        return Storage::disk('documents')->download(
+            $document->file_path,
+            $this->safeDownloadName($document->original_name),
+            [
+                'Content-Type' => $document->mime_type,
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store, max-age=0',
+            ]
+        );
     }
 
-    private function authorizeMemberDocument(Request $request, Pengguna $member): void
+    /**
+     * Memeriksa otorisasi dokumen identitas (KTP/KK).
+     * Mengembalikan model AksesDokumen jika diakses oleh Pengurus berizin, atau null jika pemilik sendiri.
+     */
+    private function authorizeMemberDocument(Request $request, Pengguna $member, ?DokumenAnggota $document = null): ?AksesDokumen
     {
         $actor = $request->user();
         abort_unless($actor, 401);
 
-        // Hanya Admin dan PPL yang diizinkan melihat / mengunduh dokumen identitas sensitif (KTP/KK)
+        // Administrator dan PPL tidak diizinkan membuka dokumen pribadi anggota
         if (in_array($actor->role, ['Admin', 'PPL'], true)) {
-            return;
+            abort(403, 'Akses langsung terhadap dokumen pribadi anggota tidak diizinkan untuk peran Administrator demi perlindungan privasi data petani.');
         }
 
         // Pengurus diizinkan melihat atau mengunduh KTP & KK anggota kelompoknya sendiri
         if ($actor->role === 'Pengurus') {
             abort_unless($actor->status === 'Aktif' && $actor->id_kelompok && $actor->id_kelompok === $member->id_kelompok, 403, 'Anda hanya dapat mengakses dokumen anggota di kelompok tani Anda.');
-            return;
+            return null;
         }
 
-        abort_unless(
-            $actor->role === 'Anggota'
-                && $actor->status === 'Aktif'
-                && $actor->anggota?->status_keanggotaan === 'Aktif'
-                && $actor->id_pengguna === $member->id_pengguna,
-            403
-        );
+        // Anggota pemilik dokumen selalu memiliki akses
+        if ($actor->role === 'Anggota' && $actor->id_pengguna === $member->id_pengguna) {
+            abort_unless($actor->status === 'Aktif' && $actor->anggota?->status_keanggotaan === 'Aktif', 403, 'Akun anggota Anda sedang tidak aktif.');
+            return null;
+        }
+
+        abort(403, 'Anda tidak memiliki hak akses terhadap dokumen ini.');
     }
 
-    private function authorizeLandDocument(Request $request, Lahan $land): void
+    /**
+     * Memeriksa otorisasi dokumen lahan (SPPT).
+     * Mengembalikan model AksesDokumen jika diakses oleh Pengurus berizin, atau null jika pemilik sendiri.
+     */
+    private function authorizeLandDocument(Request $request, Lahan $land, ?DokumenLahan $document = null): ?AksesDokumen
     {
         $actor = $request->user();
         abort_unless($actor, 401);
 
+        // Administrator dan PPL tidak diizinkan membuka dokumen SPPT anggota
         if (in_array($actor->role, ['Admin', 'PPL'], true)) {
-            return;
+            abort(403, 'Akses langsung terhadap dokumen SPPT tidak diizinkan untuk peran Administrator demi perlindungan privasi data petani.');
         }
+
+        // Anggota pemilik lahan selalu memiliki akses
+        if ($actor->role === 'Anggota' && $actor->id_pengguna === $land->id_pengguna) {
+            abort_unless($actor->status === 'Aktif' && $actor->anggota?->status_keanggotaan === 'Aktif', 403, 'Akun anggota Anda sedang tidak aktif.');
+            return null;
+        }
+
+        // Pengurus:
         if ($actor->role === 'Pengurus') {
-            abort_unless($actor->status === 'Aktif' && $actor->id_kelompok && $actor->id_kelompok === $land->id_kelompok, 403);
+            abort_unless($actor->status === 'Aktif' && $actor->id_kelompok && $actor->id_kelompok === $land->id_kelompok, 403, 'Pengurus hanya dapat mengakses lahan pada kelompoknya sendiri.');
+
+            // Jika status verifikasi masih 'menunggu_verifikasi' atau 'menunggu', Pengurus diizinkan preview untuk keperluan verifikasi lahan
+            $isReviewing = in_array($land->status_verifikasi, ['menunggu_verifikasi', 'menunggu'], true);
+
+            $activePermission = AksesDokumen::where('id_pengguna', $land->id_pengguna)
+                ->where('id_kelompok', $actor->id_kelompok)
+                ->where('tipe_dokumen', 'sppt')
+                ->where(function ($q) use ($document) {
+                    if ($document) {
+                        $q->where('id_dokumen', $document->id)->orWhere('id_dokumen', 0);
+                    }
+                })
+                ->where('status_akses', 'aktif')
+                ->where(function ($q) {
+                    $q->whereNull('waktu_berakhir')->orWhere('waktu_berakhir', '>=', now());
+                })
+                ->first();
+
+            if (!$activePermission && !$isReviewing) {
+                abort(403, 'Akses dokumen SPPT belum diberikan atau telah dicabut oleh pemilik lahan setelah proses peninjauan selesai. Silakan minta persetujuan izin kepada petani.');
+            }
+
+            return $activePermission;
+        }
+
+        abort(403, 'Anda tidak memiliki hak akses terhadap dokumen lahan ini.');
+    }
+
+    private function recordAccessLog(Request $request, ?AksesDokumen $permission, string $tipeDokumen, int|string $idDokumen, string $activity): void
+    {
+        $actor = $request->user();
+        if (!$actor || $actor->role === 'Anggota') {
+            // Akses pemilik sendiri tidak perlu dicatat sebagai log audit pengurus
             return;
         }
-        abort_unless(
-            $actor->role === 'Anggota'
-                && $actor->status === 'Aktif'
-                && $actor->anggota?->status_keanggotaan === 'Aktif'
-                && $actor->id_pengguna === $land->id_pengguna
-                && $actor->id_kelompok === $land->id_kelompok,
-            403
-        );
+
+        try {
+            LogAksesDokumen::create([
+                'id_akses_dokumen' => $permission?->id,
+                'id_pengguna' => $actor->id_pengguna,
+                'tipe_dokumen' => $tipeDokumen,
+                'id_dokumen' => (int) $idDokumen,
+                'jenis_aktivitas' => $activity,
+                'waktu_akses' => now(),
+                'keterangan' => 'Aktivitas ' . $activity . ' oleh Pengurus ' . $actor->nama . ' (IP: ' . $request->ip() . ')',
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     private function inlineDocument(string $path, string $mime, ?string $originalName, string $subjectType, int|string $subjectId, ?string $groupId, Request $request)

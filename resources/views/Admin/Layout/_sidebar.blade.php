@@ -54,18 +54,11 @@
             <span>Data Anggota</span>
           </a>
 
-          <!-- Permintaan Keanggotaan -->
-          <a href="{{ route('admin.permintaan-keanggotaan') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.permintaan-keanggotaan*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
-            <i data-lucide="user-round-plus" class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.permintaan-keanggotaan*') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }} transition-colors"></i>
-            <span>Permintaan Anggota</span>
-          </a>
-
-          <!-- Dokumen e-RDKK -->
-          <a href="{{ route('admin.dokumen.erdkk') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.dokumen.erdkk') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
-            <i data-lucide="folder-check" class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.dokumen.erdkk') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }} transition-colors"></i>
-            <span>Dokumen e-RDKK</span>
+          <!-- Ringkasan Dokumen -->
+          <a href="{{ route('admin.dokumen.ringkasan') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.dokumen.*') ? 'bg-[#EBF6E0] text-[#4D9830] font-semibold' : 'text-[#4A6030] hover:bg-[#F5F8F1] hover:text-[#1A2D10]' }}">
+            <i data-lucide="folder-check" class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.dokumen.*') ? 'text-[#4D9830]' : 'text-[#4A6030] group-hover:text-[#1A2D10]' }} transition-colors"></i>
+            <span>Dokumen Anggota & Lahan</span>
           </a>
 
           <!-- Edukasi -->

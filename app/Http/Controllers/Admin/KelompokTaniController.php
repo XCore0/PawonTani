@@ -222,8 +222,26 @@ class KelompokTaniController extends Controller
             'status.in' => 'Status harus berupa Aktif atau Tidak Aktif.',
         ]);
 
+        $oldStatus = $kelompok->status;
         $validated['nama_kelompok'] = trim(preg_replace('/\s+/', ' ', $validated['nama_kelompok']));
         $kelompok->update($validated);
+
+        // Jika status kelompok berubah, sinkronkan status akun seluruh anggota dan pengurus di kelompok ini
+        if ($oldStatus !== $validated['status']) {
+            \App\Models\Pengguna::where('id_kelompok', $kelompok->id_kelompok)
+                ->whereIn('role', ['Anggota', 'Pengurus'])
+                ->update(['status' => $validated['status']]);
+
+            AuditLogger::log(
+                'kelompok.sinkron_status_akun',
+                "Status seluruh akun kelompok {$kelompok->nama_kelompok} disinkronkan menjadi {$validated['status']}.",
+                'KelompokTani',
+                $kelompok->id_kelompok,
+                $kelompok->id_kelompok,
+                $request
+            );
+        }
+
         AuditLogger::log('kelompok.ubah', 'Admin memperbarui data kelompok tani.', 'KelompokTani', $kelompok->id_kelompok, $kelompok->id_kelompok, $request);
 
         if ($request->wantsJson() || $request->ajax()) {
