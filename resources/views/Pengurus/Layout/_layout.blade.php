@@ -202,9 +202,27 @@
             }
           });
 
+          // Jika session habis (redirect ke halaman login atau status 401/redirected)
+          if (response.redirected && response.url.includes('/login')) {
+            window.location.href = response.url;
+            return;
+          }
+          if (response.status === 401 || response.headers.get('X-Session-Expired') === 'true') {
+            window.location.href = '{{ route("login") }}';
+            return;
+          }
+
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const htmlText = await response.text();
+
+          // Deteksi pengaman: jika konten yang diterima adalah form login PawonTani
+          if (htmlText.includes('Masuk ke PawonTani') || htmlText.includes('name="password"')) {
+            window.location.href = '{{ route("login") }}';
+            return;
+          }
+
           document.querySelectorAll('[data-page-modal]').forEach((el) => el.remove());
-          pengurusContent.innerHTML = await response.text();
+          pengurusContent.innerHTML = htmlText;
           runContentScripts();
           updatePengurusNavigation(url);
           if (addHistory) window.history.pushState({}, '', url);

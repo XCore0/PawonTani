@@ -14,30 +14,36 @@ class CommodityService
     protected const CACHE_TTL = 43200;
 
     /**
-     * Mendapatkan daftar harga komoditas terkini dengan tren & sparkline
+     * Mendapatkan daftar harga komoditas terkini dengan tren & sparkline berbasis wilayah
      * Menggunakan Cache::remember untuk efisiensi kuota dan kecepatan render.
      */
-    public function getCommodityPrices(): array
+    public function getCommodityPrices(?string $wilayah = null): array
     {
-        return Cache::remember('commodity_prices_data', self::CACHE_TTL, function () {
+        $wilayahNama = !empty($wilayah) ? trim($wilayah) : 'Nasional / Jawa Timur';
+        $cacheKey = 'commodity_prices_data_' . md5($wilayahNama);
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($wilayahNama) {
             // Coba ambil dari Gemini API jika key tersedia
-            $geminiData = $this->fetchFromGeminiApi();
+            $geminiData = $this->fetchFromGeminiApi($wilayahNama);
             if (!empty($geminiData['commodities'])) {
                 return $geminiData['commodities'];
             }
 
-            // Fallback: Realistis dinamis berdasar tren pasar pertanian Indonesia
+            // Fallback: Realistis dinamis berdasar tren pasar pertanian Indonesia/lokal
             return $this->getRealisticCommoditiesFallback();
         });
     }
 
     /**
-     * Mendapatkan prediksi harga padi komprehensif (GKG / Beras)
+     * Mendapatkan prediksi harga padi komprehensif (GKG / Beras) berbasis wilayah
      */
-    public function getRicePricePrediction(): array
+    public function getRicePricePrediction(?string $wilayah = null): array
     {
-        return Cache::remember('rice_price_prediction_data', self::CACHE_TTL, function () {
-            $geminiData = $this->fetchFromGeminiApi();
+        $wilayahNama = !empty($wilayah) ? trim($wilayah) : 'Nasional / Jawa Timur';
+        $cacheKey = 'rice_price_prediction_data_' . md5($wilayahNama);
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($wilayahNama) {
+            $geminiData = $this->fetchFromGeminiApi($wilayahNama);
             if (!empty($geminiData['rice_prediction'])) {
                 return $geminiData['rice_prediction'];
             }
@@ -47,9 +53,9 @@ class CommodityService
     }
 
     /**
-     * Query ke Google Gemini API untuk mendapatkan estimasi tren pasar pertanian Indonesia terkini
+     * Query ke Google Gemini API untuk mendapatkan estimasi tren pasar pertanian terkini
      */
-    protected function fetchFromGeminiApi(): ?array
+    protected function fetchFromGeminiApi(string $wilayahNama = 'Nasional / Jawa Timur'): ?array
     {
         $apiKey = config('services.gemini.key', env('GEMINI_API_KEY'));
         if (empty($apiKey)) {
@@ -60,7 +66,7 @@ class CommodityService
             $bulanTahun = now()->locale('id')->isoFormat('MMMM YYYY');
             $prompt = <<<PROMPT
 Anda adalah analis ekonomi pangan dan pasar agribisnis Indonesia.
-Berikan estimasi harga komoditas pertanian tingkat petani/grosir Indonesia untuk bulan {$bulanTahun} dalam format JSON murni tanpa markdown/backticks.
+Berikan estimasi harga komoditas pertanian tingkat petani/produsen lokal untuk wilayah {$wilayahNama} (atau sentra pertanian sekitarnya) pada bulan {$bulanTahun} dalam format JSON murni tanpa markdown/backticks.
 
 Format JSON yang dibutuhkan persis seperti ini:
 {

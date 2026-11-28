@@ -453,13 +453,17 @@ $files = $validated['files'];
         $actor = $request->user();
         abort_unless($actor, 401);
 
+        // Hanya Admin dan PPL yang diizinkan melihat / mengunduh dokumen identitas sensitif (KTP/KK)
         if (in_array($actor->role, ['Admin', 'PPL'], true)) {
             return;
         }
+
+        // Pengurus diizinkan melihat atau mengunduh KTP & KK anggota kelompoknya sendiri
         if ($actor->role === 'Pengurus') {
-            abort_unless($actor->status === 'Aktif' && $actor->id_kelompok && $actor->id_kelompok === $member->id_kelompok, 403);
+            abort_unless($actor->status === 'Aktif' && $actor->id_kelompok && $actor->id_kelompok === $member->id_kelompok, 403, 'Anda hanya dapat mengakses dokumen anggota di kelompok tani Anda.');
             return;
         }
+
         abort_unless(
             $actor->role === 'Anggota'
                 && $actor->status === 'Aktif'

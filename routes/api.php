@@ -63,6 +63,7 @@ Route::prefix('v1')->group(function () {
         // Master komoditas dapat dibaca oleh pengguna mobile yang sudah login.
         Route::get('/komoditas', [KomoditasController::class, 'index'])->name('api.v1.komoditas.index');
         Route::get('/komoditas/harga-pasar', [KomoditasController::class, 'hargaPasar'])->name('api.v1.komoditas.harga-pasar');
+        Route::get('/komoditas/kalender-tanam', [KomoditasController::class, 'kalenderTanam'])->name('api.v1.komoditas.kalender-tanam');
         Route::get('/kelompok', [PermintaanKeanggotaanController::class, 'groups'])->name('api.v1.kelompok.index');
         Route::get('/membership-requests/me', [PermintaanKeanggotaanController::class, 'mine'])->name('api.v1.membership-requests.mine');
         Route::post('/membership-requests', [PermintaanKeanggotaanController::class, 'store'])->middleware('throttle:5,1')->name('api.v1.membership-requests.store');

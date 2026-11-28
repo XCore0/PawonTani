@@ -164,8 +164,10 @@ Route::prefix('pengurus')->name('pengurus.')->middleware(['auth', 'role:Pengurus
         $commodityService = app(CommodityService::class);
         $harvestService = app(HarvestPredictionService::class);
 
-        $commodities = $commodityService->getCommodityPrices();
-        $ricePrediction = $commodityService->getRicePricePrediction();
+        // Ambil nama wilayah dari profil pengurus/kelompok tani
+        $wilayahNama = $pengurus?->lokasi_nama ?: ($kelompok?->alamat ?: 'Jawa Timur');
+        $commodities = $commodityService->getCommodityPrices($wilayahNama);
+        $ricePrediction = $commodityService->getRicePricePrediction($wilayahNama);
         $harvestPredictions = $kelompok ? $harvestService->getPredictions($kelompok->id_kelompok) : [];
 
         // Weather data: fetch from Open-Meteo using stored coordinates
@@ -507,7 +509,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/media/{path}', function (string $path) {
     $path = ltrim(str_replace('\\', '/', $path), '/');
     abort_if(str_contains($path, '..') || str_contains($path, "\0"), 404);
-    abort_unless(preg_match('/^(lahan|aktivitas|panen|pawontani\/produk)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
+    abort_unless(preg_match('/^(lahan|aktivitas|panen|pawontani\/produk|pawontani\/profil)\/[A-Za-z0-9_\/.-]+\.(jpg|jpeg|png|webp)$/i', $path), 404);
 
     $root = realpath(storage_path('app/public'));
     $fullPath = realpath(storage_path('app/public/' . $path));

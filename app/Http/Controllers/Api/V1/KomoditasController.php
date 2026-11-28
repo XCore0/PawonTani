@@ -37,12 +37,72 @@ class KomoditasController extends Controller
      */
     public function hargaPasar(Request $request, CommodityService $commodityService): JsonResponse
     {
-        $prices = $commodityService->getCommodityPrices();
+        $user = $request->user();
+        $wilayahNama = $user?->lokasi_nama ?: ($user?->kelompokTani?->alamat ?: 'Jawa Timur');
+        $prices = $commodityService->getCommodityPrices($wilayahNama);
 
         return response()->json([
             'success' => true,
             'message' => 'Referensi harga pasar komoditas berhasil diambil.',
             'data' => $prices,
+        ]);
+    }
+
+    /**
+     * Mengambil kalender musim tanam aktif dan panduan agronomi (sinkron dengan web Pengurus).
+     */
+    public function kalenderTanam(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Data kalender musim tanam dan agronomi berhasil diambil.',
+            'data' => [
+                'musim_aktif' => 'MT-I (Rendeng)',
+                'periode' => 'Oktober - Februari',
+                'komoditas_utama' => 'Padi Sawah & Palawija',
+                'tahap_siklus' => [
+                    [
+                        'kode' => 'Fase 01',
+                        'judul' => 'Persiapan & Semai',
+                        'deskripsi' => 'Olah tanah, persemaian bibit, dan perbaikan pematang sawah.',
+                        'status' => 'selesai',
+                    ],
+                    [
+                        'kode' => 'Fase 02',
+                        'judul' => 'Vegetatif & Rawat',
+                        'deskripsi' => 'Pembentukan anakan aktif, penyiangan gulma, dan pemupukan susulan I & II.',
+                        'status' => 'berjalan',
+                    ],
+                    [
+                        'kode' => 'Fase 03',
+                        'judul' => 'Generatif & Panen',
+                        'deskripsi' => 'Fase bunting, pembungaan, pengisian bulir padi, dan persiapan panen raya.',
+                        'status' => 'mendatang',
+                    ],
+                ],
+                'rekomendasi_pekan_ini' => [
+                    [
+                        'judul' => 'Pengairan Berselang (Intermittent)',
+                        'deskripsi' => 'Keringkan lahan 2-3 hari untuk merangsang oksigenasi perakaran sebelum penggenangan kembali.',
+                        'kategori' => 'Pengairan',
+                    ],
+                    [
+                        'judul' => 'Monitoring Penggerek Batang & Wereng Coklat',
+                        'deskripsi' => 'Amati rumpun padi bagian bawah pada pagi hari sebelum aplikasi semprot bila melebihi ambang batas.',
+                        'kategori' => 'Pencegahan Hama',
+                    ],
+                    [
+                        'judul' => 'Pemupukan Susulan Lanjutan',
+                        'deskripsi' => 'Gunakan kombinasi NPK dan Urea berimbang sesuai dosis rekomendasi e-RDKK poktan.',
+                        'kategori' => 'Nutrisi & Pupuk',
+                    ],
+                ],
+                'jadwal_kegiatan' => [
+                    ['hari' => 'Senin', 'kegiatan' => 'Pemeriksaan debit saluran irigasi petak'],
+                    ['hari' => 'Rabu', 'kegiatan' => 'Pembersihan gulma liar pematang'],
+                    ['hari' => 'Jumat', 'kegiatan' => 'Pencatatan perkembangan tanaman di PawonTani'],
+                ],
+            ],
         ]);
     }
 }

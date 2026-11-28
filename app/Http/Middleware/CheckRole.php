@@ -17,6 +17,12 @@ class CheckRole
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!Auth::check()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Pengurus-Partial') || $request->header('X-Admin-Partial')) {
+                return response()->json([
+                    'message' => 'Sesi Anda telah berakhir. Silakan login kembali.',
+                    'redirect' => route('login'),
+                ], 401)->header('X-Session-Expired', 'true');
+            }
             return redirect()->route('login');
         }
 

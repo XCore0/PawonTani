@@ -73,6 +73,11 @@ class BerandaController extends Controller
                     'nama' => $user?->nama ?? 'Petani PawonTani',
                     'role' => $user?->role ?? 'Anggota',
                     'kelompok' => $user?->kelompokTani?->nama_kelompok ?? 'Kelompok Tani',
+                    'foto_profil' => $user?->foto_profil ? (
+                        str_contains($user->foto_profil, '/storage/')
+                            ? preg_replace('/^https?:\/\/[^\/]+\/storage\//', url('/api/v1/media') . '/', $user->foto_profil)
+                            : $user->foto_profil
+                    ) : null,
                 ],
                 'statistik' => [
                     'total_lahan' => $totalLahan,

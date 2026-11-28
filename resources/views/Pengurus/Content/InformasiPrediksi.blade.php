@@ -284,8 +284,15 @@
             <i data-lucide="coins" class="w-4 h-4"></i>
           </div>
           <div>
-            <h2 class="text-base sm:text-lg font-bold text-[#1A2D10]">Harga Komoditas Pasar</h2>
-            <p class="text-[11px] text-[#9AB880] font-medium">Monitoring pergerakan harga produsen tingkat petani</p>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base sm:text-lg font-bold text-[#1A2D10]">Harga Komoditas Pasar</h2>
+              @if(!empty($pengurus->lokasi_nama))
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF6E0] text-[#2E5A1C] border border-[#D1DFC4]">
+                {{ $pengurus->lokasi_nama }}
+              </span>
+              @endif
+            </div>
+            <p class="text-[11px] text-[#9AB880] font-medium">Monitoring pergerakan harga produsen tingkat petani lokal</p>
           </div>
         </div>
         <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#F5F8F1] text-[#2E5A1C] border border-[#D1DFC4]">

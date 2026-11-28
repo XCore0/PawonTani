@@ -327,10 +327,10 @@
                   </button>
                   @if(!$isArchive)
                   <button type="button" onclick="openEditAnggota(this)" data-id="{{ $item->id_pengguna }}" data-nama="{{ $item->nama }}" data-nik="{{ $item->nik }}" data-username="{{ $item->username }}" data-email="{{ $item->email }}" data-telepon="{{ $item->no_telepon }}" data-alamat="{{ $item->alamat }}" data-status="{{ $item->status }}"
-                    data-ktp-preview="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KTP') ? route('pengurus.dokumen.identity.preview', [$item->id_pengguna, 'KTP']) : '' }}"
-                    data-ktp-download="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KTP') ? route('pengurus.dokumen.identity.download', [$item->id_pengguna, 'KTP']) : '' }}"
-                    data-kk-preview="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KK') ? route('pengurus.dokumen.identity.preview', [$item->id_pengguna, 'KK']) : '' }}"
-                    data-kk-download="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KK') ? route('pengurus.dokumen.identity.download', [$item->id_pengguna, 'KK']) : '' }}" class="rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEF99] transition-colors cursor-pointer" title="Edit">
+                    data-has-ktp="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KTP') ? '1' : '0' }}"
+                    data-ktp-url="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KTP') ? url('/dokumen/preview/' . $item->dokumenIdentitas->firstWhere('jenis', 'KTP')->id) : '#' }}"
+                    data-has-kk="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KK') ? '1' : '0' }}"
+                    data-kk-url="{{ $item->dokumenIdentitas->firstWhere('jenis', 'KK') ? url('/dokumen/preview/' . $item->dokumenIdentitas->firstWhere('jenis', 'KK')->id) : '#' }}" class="rounded-lg bg-[#FFF4B8] px-2.5 py-1.5 text-[10px] font-bold text-[#8A5A0A] hover:bg-[#FFEF99] transition-colors cursor-pointer" title="Edit">
                     <i data-lucide="edit-3" class="inline h-3 w-3"></i>
                   </button>
                   <button type="button" data-member-id="{{ $item->id_pengguna }}" data-member-name="{{ $item->nama }}" onclick="confirmDeleteAnggota(this.dataset.memberId, this.dataset.memberName)" class="rounded-lg bg-[#FFE1E1] px-2.5 py-1.5 text-[10px] font-bold text-[#C24141] hover:bg-[#FFD0D0] transition-colors cursor-pointer" title="Keluarkan dari kelompok">
@@ -523,12 +523,30 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">NIK</label><input type="text" name="nik" id="edit-anggota-nik" inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" title="NIK harus tepat 16 digit angka." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">No. Telepon</label><input type="tel" name="no_telepon" id="edit-anggota-telepon" inputmode="numeric" pattern="[0-9]+" maxlength="15" title="Nomor HP hanya boleh berisi angka." class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div></div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"><div><label class="block font-semibold text-[#1A2D10] mb-1">Username <span class="text-red-500">*</span></label><input type="text" name="username" id="edit-anggota-username" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><span id="edit-anggota-username-feedback" class="text-[11px] mt-1 hidden"></span></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Status <span class="text-red-500">*</span></label><select name="status" id="edit-anggota-status" required class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"><option>Aktif</option><option>Tidak Aktif</option></select></div></div>
       <div><label class="block font-semibold text-[#1A2D10] mb-1">Email</label><input type="email" name="email" id="edit-anggota-email" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]"></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Alamat</label><textarea name="alamat" id="edit-anggota-alamat" rows="2" class="w-full p-3 rounded-xl border border-[#C5DFB0] resize-none"></textarea></div><div><label class="block font-semibold text-[#1A2D10] mb-1">Password Baru</label><input type="password" name="password" class="w-full h-10.5 px-3.5 rounded-xl border border-[#C5DFB0]" placeholder="Kosongkan jika tidak diubah"></div>
-      <div class="rounded-2xl border border-[#E4F0D6] bg-[#F5F8F1]/60 p-4 space-y-3"><div><h4 class="font-bold text-[#1A2D10]">Dokumen KTP &amp; KK</h4><p class="text-[11px] text-[#9AB880]">Lihat/unduh dokumen saat ini atau unggah pengganti. PDF/JPG maksimal 5 MB.</p></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <div id="edit-anggota-ktp-current" class="hidden rounded-xl border border-[#E4F0D6] bg-white p-3"><p class="font-semibold text-[#1A2D10]">KTP tersimpan</p><div class="mt-2 flex gap-2"><a id="edit-anggota-ktp-preview" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#4A6030] underline">Lihat</a><a id="edit-anggota-ktp-download" class="font-semibold text-[#3D8024] underline">Unduh</a></div></div>
-          <div id="edit-anggota-kk-current" class="hidden rounded-xl border border-[#E4F0D6] bg-white p-3"><p class="font-semibold text-[#1A2D10]">KK tersimpan</p><div class="mt-2 flex gap-2"><a id="edit-anggota-kk-preview" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#4A6030] underline">Lihat</a><a id="edit-anggota-kk-download" class="font-semibold text-[#3D8024] underline">Unduh</a></div></div>
+      <div class="rounded-2xl border border-[#E4F0D6] bg-[#F5F8F1]/60 p-4 space-y-3">
+        <div>
+          <h4 class="font-bold text-[#1A2D10]">Dokumen KTP &amp; KK</h4>
+          <p class="text-[11px] text-[#9AB880]">Pengurus dapat melihat, mengunduh, atau mengganti dokumen identitas anggota kelompok tani.</p>
         </div>
-        <div><label class="mb-1 block font-semibold text-[#1A2D10]">Ganti KTP</label><input type="file" name="dokumen_ktp" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div><div><label class="mb-1 block font-semibold text-[#1A2D10]">Ganti KK</label><input type="file" name="dokumen_kk" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div id="edit-anggota-ktp-current" class="hidden rounded-xl border border-[#E4F0D6] bg-white p-3 flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-[#1A2D10]">KTP tersimpan</p>
+              <p class="mt-1 text-[11px] text-[#4A6030]">✓ Berkas KTP aktif.</p>
+            </div>
+            <a id="edit-anggota-ktp-download" href="#" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-[#EAF5DE] text-[#4D9830] font-bold text-[10px] hover:bg-[#DFF7E7]">Lihat/Unduh</a>
+          </div>
+          <div id="edit-anggota-kk-current" class="hidden rounded-xl border border-[#E4F0D6] bg-white p-3 flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-[#1A2D10]">KK tersimpan</p>
+              <p class="mt-1 text-[11px] text-[#4A6030]">✓ Berkas KK aktif.</p>
+            </div>
+            <a id="edit-anggota-kk-download" href="#" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-[#EAF5DE] text-[#4D9830] font-bold text-[10px] hover:bg-[#DFF7E7]">Lihat/Unduh</a>
+          </div>
+        </div>
+        <div><label class="mb-1 block font-semibold text-[#1A2D10]">Ganti KTP</label><input type="file" name="dokumen_ktp" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div>
+        <div><label class="mb-1 block font-semibold text-[#1A2D10]">Ganti KK</label><input type="file" name="dokumen_kk" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" class="w-full rounded-xl border border-[#C5DFB0] bg-white p-2 text-xs"><p class="mt-1 text-[10px] text-[#9AB880]">Format tidak didukung? Gunakan PDF atau JPG, maksimal 5 MB.</p></div>
+      </div>
       <div class="flex justify-end gap-2 pt-3 border-t border-[#E4F0D6]"><button type="button" onclick="closeModal('modal-edit-anggota')" class="px-4 py-2.5 rounded-xl border border-[#C5DFB0] font-semibold cursor-pointer">Batal</button><button type="submit" class="px-5 py-2.5 rounded-xl bg-[#4D9830] text-white font-bold cursor-pointer">Simpan Perubahan</button></div>
     </form>
   </div>
@@ -727,12 +745,13 @@
     form.action = `{{ url('/pengurus/anggota') }}/${encodeURIComponent(button.dataset.id)}`;
     [['nama', 'nama'], ['nik', 'nik'], ['username', 'username'], ['email', 'email'], ['telepon', 'telepon'], ['alamat', 'alamat'], ['status', 'status']].forEach(([field, input]) => { document.getElementById(`edit-anggota-${input}`).value = button.dataset[field] || ''; });
     ['ktp', 'kk'].forEach((type) => {
-      const preview = document.getElementById(`edit-anggota-${type}-preview`);
-      const download = document.getElementById(`edit-anggota-${type}-download`);
       const card = document.getElementById(`edit-anggota-${type}-current`);
-      preview.href = button.dataset[`${type}Preview`] || '#';
-      download.href = button.dataset[`${type}Download`] || '#';
-      card.classList.toggle('hidden', !button.dataset[`${type}Preview`]);
+      const hasDoc = button.dataset[`has${type.toUpperCase()}`] === '1';
+      card.classList.toggle('hidden', !hasDoc);
+      if (hasDoc) {
+        const link = document.getElementById(`edit-anggota-${type}-download`);
+        if (link) link.href = button.dataset[`${type}Url`] || '#';
+      }
     });
     openModal('modal-edit-anggota');
   };
